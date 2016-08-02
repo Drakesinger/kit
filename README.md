@@ -16,6 +16,7 @@ Sharing this mainly for educational reasons, dont expect it to hold any "public 
 Kit depends on the following libraries:
 
 * GLFW3 (Window and input management)
+* GLM (Math)
 * Freetype 2 (Text rendering)
 * Chaiscript (Scripting)
 * OpenGL (Rendering)
