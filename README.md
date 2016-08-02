@@ -4,6 +4,8 @@
 
 This is a very shabby upload of my personal one-man project. It is not by any means complete. I have spent 1.5 years working on this in my sparetime. A lot of things will be very dirty, some things will be missing, and some things will seem to exist for no reason at all. This is NOT a cleaned up project. (yet!)
 
+It should be added that a lot in this readme is just plain wrong as well. Check http://svkonsult.se/kit for more information about this project and its uses.
+
 Sharing this mainly for educational reasons, dont expect it to hold any "public release" quality. Enjoy!
 
 
