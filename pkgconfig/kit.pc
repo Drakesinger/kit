@@ -1,0 +1,11 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib64
+includedir=${prefix}/include
+
+Name: kit
+Description: The Kit framework
+Version: 0.3.7
+Requires: glfw3 bullet freetype2 chaiscript sfml-system sfml-audio gl
+Libs: -L${libdir} -lkit
+Cflags: -I${includedir}

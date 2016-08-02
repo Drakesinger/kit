@@ -1,0 +1,2 @@
+submesh "IconBase" "IconBase.geometry" "PowerupShrapnel.material"
+submesh "Icon" "PowerupIcon.geometry" "PowerupIcon.material"

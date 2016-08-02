@@ -1,0 +1,36 @@
+# Albedo color properties
+albedomap "block_desert_albedo.tga"
+albedo 1 1 1
+
+# Occlusion properties
+occlusionmap "block_desert_occlusion.tga"
+occlusiongamma 1
+occlusioninput 0 1
+occlusionoutput 0 1
+
+# Normal map properties
+normalmap "block_desert_normal.tga"
+normalstrength 1
+
+# Emissive properties
+emissivestrength 1
+emissivecolor 0 0 0
+
+# Roughness properties
+roughnessmap "block_desert_roughness.tga"
+roughness 1
+roughnessinput 0 1
+roughnessoutput 0 0.971
+
+# Metalness properties
+metalness 0
+metalnessinput 0 1
+metalnessoutput 0 1
+
+# Other properties
+doublesided false
+depthwrite true
+depthread true
+castshadows true
+opacity 1
+blendmode none

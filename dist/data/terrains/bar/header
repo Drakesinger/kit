@@ -1,0 +1,7 @@
+xzscale 0.25
+yscale 32
+numlayers 3
+size 128 128
+layer 0 "WetDirt.material"
+layer 1 "GrassDark.material"
+layer 2 ""

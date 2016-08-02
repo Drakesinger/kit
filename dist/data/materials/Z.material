@@ -1,0 +1,22 @@
+# Albedo albedo properties
+albedo 0 0 0
+
+# Occlusion properties
+
+# Normal map properties
+normalstrength 1
+
+# Emissive properties
+emissivestrength 1
+emissivecolor 0 0 1
+
+# Roughness properties
+roughness 0
+roughnessinput 0 1
+roughnessoutput 0 1
+
+# Metalness properties
+metalness 1
+metalnessinput 0 1
+metalnessoutput 0 1
+

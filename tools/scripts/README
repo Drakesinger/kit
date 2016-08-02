@@ -1,0 +1,4 @@
+cmgen - Run this script in a folder that contains [pos/neg]_[x/y/z].jpg (all 6 sides jpg files) to convert them to a full environment map (with radiance and irradiance maps) to be used with Kit.
+
+
+hm2data - Run this script in a folder that contains heightmap.tga to generate a heightdata file to be used in terrains

@@ -1,0 +1,1 @@
+stream -map r -storage-type short heightmap.png heightmap

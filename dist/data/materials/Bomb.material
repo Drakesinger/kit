@@ -1,0 +1,33 @@
+# Albedo color properties
+albedomap "bomb_albedo.tga"
+albedo 1 1 1
+
+# Occlusion properties
+
+# Normal map properties
+normalmap "bomb_normal.tga"
+normalstrength 2
+
+# Emissive properties
+emissivestrength 1
+emissivecolor 0 0 0
+
+# Roughness properties
+roughnessmap "bomb_roughness.tga"
+roughness 3.033
+roughnessinput 0 1
+roughnessoutput 0 1
+
+# Metalness properties
+metalnessmap "bomb_metalness.tga"
+metalness 1
+metalnessinput 0 1
+metalnessoutput 0 1
+
+# Other properties
+doublesided false
+depthwrite true
+depthread true
+castshadows true
+opacity 1
+blendmode none

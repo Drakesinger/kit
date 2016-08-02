@@ -1,0 +1,2 @@
+submesh "IconBase" "IconBase.geometry" "UpgradeCarry.material"
+submesh "Icon" "UpgradeIcon.geometry" "UpgradeIcon.material"
