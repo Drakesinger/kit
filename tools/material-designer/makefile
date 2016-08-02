@@ -1,8 +1,9 @@
 CXX          := g++
 CXXFLAGS     := -std=c++14 -Wall -Wextra -Wpedantic -Wno-unused-parameter -DKIT_DEBUG
 #LDFLAGS      := -ldl -pthread
-LIBS         := $(shell pkg-config --libs kit)
-DEPFLAGS     := $(shell pkg-config --cflags kit)
+REQLIBS      := kit glfw3 freetype2 chaiscript gl
+LIBS         := $(shell pkg-config --libs $(REQLIBS))
+DEPFLAGS     := $(shell pkg-config --cflags $(REQLIBS))
 OUT_BINARY   := kit-material-designer
 BUILDDIR     := build
 

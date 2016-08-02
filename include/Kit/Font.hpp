@@ -7,7 +7,8 @@
 #ifdef _WIN32
   #include <ft2build.h>
 #elif __unix__
-#include <freetype2/ft2build.h>
+  #include <ft2build.h>
+//#include <freetype2/ft2build.h>
 #endif
 #include FT_FREETYPE_H
 #include <memory>
