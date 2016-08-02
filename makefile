@@ -17,9 +17,12 @@ OBJECTS      := $(addprefix $(BUILDDIR)/,$(SOURCES:%.cpp=%.o))
 PCFILE       := pkgconfig/kit.pc
 
 $(OUT_LIBRARY): $(OBJECTS) $(PCFILE)
+	$(shell mkdir lib)
 	$(CXX) $(CXXFLAGS) $(DEPFLAGS) $(LDFLAGS) $(LIBS) $(OBJECTS) -o lib/$(OUT_LIBRARY)
 
 $(BUILDDIR)/%.o: %.cpp
+	@echo 'Building ${notdir $@} ...'
+	$(shell mkdir -p  "${dir $@}")
 	$(CXX) $(CXXFLAGS) $(DEPFLAGS) -I$(INCLUDEDIR) -c $< -o $@
 
 $(PCFILE):
@@ -41,4 +44,6 @@ install: $(OUT_LIBRARY) $(PCFILE)
 	cp $(PCFILE) $(PREFIX)/lib64/pkgconfig/kit.pc
 	
 clean:
-	$(shell rm $(OBJECTS) lib/$(OUT_LIBRARY) $(PCFILE))
+	$(shell rm -rf ./build)
+	$(shell rm -rf ./lib)
+	$(shell rm -f $(OBJECTS) lib/$(OUT_LIBRARY) $(PCFILE))
