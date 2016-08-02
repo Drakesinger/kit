@@ -65,9 +65,9 @@ kit::Window::Window(kit::Window::Args const & args)
   //kit::Window::prepareGLFWHints(GLFW_SRGB_CAPABLE, GL_TRUE);
   kit::Window::prepareGLFWHints(GLFW_SAMPLES, 4);
   kit::Window::prepareGLFWHints(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  kit::Window::prepareGLFWHints(GLFW_CONTEXT_VERSION_MINOR, 1);
-  //kit::Window::prepareGLFWHints(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-  kit::Window::prepareGLFWHints(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
+  kit::Window::prepareGLFWHints(GLFW_CONTEXT_VERSION_MINOR, 3);
+  kit::Window::prepareGLFWHints(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  //kit::Window::prepareGLFWHints(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
 
   switch(args.mode)
   {
