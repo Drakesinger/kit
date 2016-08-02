@@ -54,6 +54,6 @@ void main()
   vec3 specular = cookTorranceSpecular(normalize(-uniform_lightDir), viewDir, normal, roughness, F0);
   vec3 lightSpecular =  (uniform_lightColor) * specular;
 
-  //out_color = vec4(lightDiffuse + lightSpecular, 1.0);
-  out_color = vec4(vec3(max(dot(normal, -uniform_lightDir), 0.0)), 1.0);
+  out_color = vec4(lightDiffuse + lightSpecular, 1.0);
+  //out_color = vec4(vec3(max(dot(normal, -uniform_lightDir), 0.0)), 1.0);
 }
