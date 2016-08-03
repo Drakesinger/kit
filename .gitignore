@@ -1,4 +1,9 @@
+# Manual entries below
+pkgconfig/
+lib/
+build/
 
+# Automatic entries below
 # Created by https://www.gitignore.io/api/c++,kdevelop4,visualstudio
 
 ### C++ ###

@@ -26,6 +26,7 @@ $(BUILDDIR)/%.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(DEPFLAGS) -I$(INCLUDEDIR) -c $< -o $@
 
 $(PCFILE):
+	$(shell mkdir pkgconfig)
 	echo 'prefix=$(PREFIX)' > $(PCFILE)
 	echo 'exec_prefix=$${prefix}' >> $(PCFILE)
 	echo 'libdir=$${exec_prefix}/lib64' >> $(PCFILE)
@@ -46,4 +47,5 @@ install: $(OUT_LIBRARY) $(PCFILE)
 clean:
 	$(shell rm -rf ./build)
 	$(shell rm -rf ./lib)
+	$(shell rm -rf ./pkgconfig)
 	$(shell rm -f $(OBJECTS) lib/$(OUT_LIBRARY) $(PCFILE))
