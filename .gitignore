@@ -2,6 +2,8 @@
 pkgconfig/
 lib/
 build/
+dist/data/materials/thumbs
+dist/imgui.ini
 
 # Automatic entries below
 # Created by https://www.gitignore.io/api/c++,kdevelop4,visualstudio
