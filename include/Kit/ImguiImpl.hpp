@@ -47,9 +47,9 @@ namespace kit
       
       static void allocateShared();
       static void releaseShared();
-      static void m__imgui_renderDrawLists(ImDrawData* draw_data);
-      static const char* m__imgui_getClipboardText();
-      static void m__imgui_setClipboardText(const char* text);
+      static void imgui_renderDrawLists(ImDrawData* draw_data);
+      static const char* imgui_getClipboardText();
+      static void imgui_setClipboardText(const char* text);
 
       static uint32_t m_instanceCount;
       static kit::WindowWPtr m_window;
@@ -57,20 +57,20 @@ namespace kit
       static bool m_usesMouse;
       static bool m_usesTextInput;
 
-      static bool m__imgui_mousePressed[3];
-      static float m__imgui_mouseWheel;
-      static GLuint m__imgui_fontTexture;
-      static int m__imgui_shaderHandle;
-      static int m__imgui_vertHandle;
-      static int m__imgui_fragHandle;
-      static int m__imgui_attribLocationTex;
-      static int m__imgui_attribLocationProjMtx;
-      static int m__imgui_attribLocationPosition;
-      static int m__imgui_attribLocationUV;
-      static int m__imgui_attribLocationColor;
-      static unsigned int m__imgui_vboHandle;
-      static unsigned int m__imgui_vaoHandle;
-      static unsigned int m__imgui_elementsHandle;
+      static bool imgui_mousePressed[3];
+      static float imgui_mouseWheel;
+      static GLuint imgui_fontTexture;
+      static int imgui_shaderHandle;
+      static int imgui_vertHandle;
+      static int imgui_fragHandle;
+      static int imgui_attribLocationTex;
+      static int imgui_attribLocationProjMtx;
+      static int imgui_attribLocationPosition;
+      static int imgui_attribLocationUV;
+      static int imgui_attribLocationColor;
+      static unsigned int imgui_vboHandle;
+      static unsigned int imgui_vaoHandle;
+      static unsigned int imgui_elementsHandle;
   };
 };
 
