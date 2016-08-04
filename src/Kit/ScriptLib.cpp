@@ -466,7 +466,7 @@ chaiscript::ModulePtr kit::getScriptLibrary()
         {chaiscript::fun(&kit::Application::getConsole), "getConsole"},
         {chaiscript::fun(&kit::Application::popState), "popState"},
         {chaiscript::fun(&kit::Application::quit), "quit"},
-        //{chaiscript::fun([](kit::Application& a, bool b) { a.getWindow()->setVSync(b); }), "setVSync"}
+        {chaiscript::fun<void(kit::Application&,bool)>([](kit::Application& a, bool b) { a.getWindow()->setVSync(b); }), "setVSync"}
       }
     );
     
