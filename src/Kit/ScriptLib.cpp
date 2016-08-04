@@ -177,7 +177,6 @@ chaiscript::ModulePtr kit::getScriptLibrary()
     moduleKit->add_global_const(chaiscript::const_var(kit::WindowEvent::Type::Closing), "WindowEventTypeClosing");
     moduleKit->add_global_const(chaiscript::const_var(kit::WindowEvent::Type::FocusChanged), "WindowEventTypeFocusChanged");
     moduleKit->add_global_const(chaiscript::const_var(kit::WindowEvent::Type::FramebufferResized), "WindowEventTypeFramebufferResized");
-    moduleKit->add_global_const(chaiscript::const_var(kit::WindowEvent::Type::Invalidated), "WindowEventTypeInvalidated");
     moduleKit->add_global_const(chaiscript::const_var(kit::WindowEvent::Type::KeyPressed), "WindowEventTypeKeyPressed");
     moduleKit->add_global_const(chaiscript::const_var(kit::WindowEvent::Type::KeyReleased), "WindowEventTypeKeyReleasd");
     moduleKit->add_global_const(chaiscript::const_var(kit::WindowEvent::Type::Minimized), "WindowEventTypeMinimized");
@@ -384,7 +383,6 @@ chaiscript::ModulePtr kit::getScriptLibrary()
       {
         {chaiscript::fun(&kit::WindowEvent::type), "type"},
         {chaiscript::fun(&kit::WindowEvent::hasFocus), "hasFocus"},
-        {chaiscript::fun(&kit::WindowEvent::isMinimized), "isMinimized"},
         {chaiscript::fun(&kit::WindowEvent::resized), "isResized"},
         {chaiscript::fun(&kit::WindowEvent::moved), "moved"},
         {chaiscript::fun(&kit::WindowEvent::mouse), "mouse"},
