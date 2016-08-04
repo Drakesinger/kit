@@ -4,6 +4,10 @@ lib/
 build/
 dist/data/materials/thumbs
 dist/imgui.ini
+dist/import/
+dist/kit-importer
+dist/kit-world-editor
+dist/kit-material-designer
 
 # Automatic entries below
 # Created by https://www.gitignore.io/api/c++,kdevelop4,visualstudio
