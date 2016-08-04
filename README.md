@@ -1,4 +1,4 @@
-![The Kit Framework](https://raw.githubusercontent.com/haikarainen/kit/master/docs/kit.png)
+![The Kit Framework](http://svkonsult.se/kit-banner-small.png)
 
 # Notice
 
