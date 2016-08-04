@@ -4,88 +4,92 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <iostream>
 
 kit::VertexShader::VertexShader()
 {
-  
-	this->m_glHandle = glCreateShader(GL_VERTEX_SHADER);
-	KIT_ASSERT(this->m_glHandle);
+  this->m_glHandle = glCreateShader(GL_VERTEX_SHADER);
+  KIT_ASSERT(this->m_glHandle);
 }
 
 kit::VertexShader::~VertexShader()
 {
-  
-	KIT_GL(glDeleteShader(this->m_glHandle));
+  KIT_GL(glDeleteShader(this->m_glHandle));
 }
 
 kit::VertexShader::Ptr kit::VertexShader::create()
 {
- // return kit::VertexShader::Ptr(new kit::VertexShader());
   return std::make_shared<kit::VertexShader>();
 }
 
 bool kit::VertexShader::sourceFromFile(std::string filename)
 {
-  //std::cout << "Loading vertexshader from " << filename.c_str() << std::endl;
-	std::ifstream handle(filename);
-	if(!handle.is_open()){
-		KIT_ERR("Could not open file");
-		return false;
-	}
+  std::string line;
+  std::string source = "";
 
-	std::string line;
-	std::string source = "";
-	while(std::getline(handle,line)){
-		source.append(line);
-		source.append("\n");
-	}
+  std::ifstream handle(filename);
 
-	this->m_source = source;
+  if(!handle.is_open())
+  {
+    KIT_ERR("Could not open file");
+    return false;
+  }
 
-	const GLchar *src = (const GLchar *)this->m_source.c_str();
-	KIT_GL(glShaderSource(this->m_glHandle, 1, &src, 0));
+  while(std::getline(handle,line))
+  {
+    source.append(line);
+    source.append("\n");
+  }
 
-	return true;
+  this->m_source = source;
+
+  const GLchar * src = (const GLchar *)this->m_source.c_str();
+  KIT_GL(glShaderSource(this->m_glHandle, 1, &src, 0));
+
+  return true;
 }
 
 void kit::VertexShader::sourceFromString(std::string s)
 {
-  
-	this->m_source = s;
+  this->m_source = s;
 
-	const GLchar *source = (const GLchar *)this->m_source.c_str();
-	KIT_GL(glShaderSource(this->m_glHandle, 1, &source, 0));
+  const GLchar *source = (const GLchar *)this->m_source.c_str();
+  KIT_GL(glShaderSource(this->m_glHandle, 1, &source, 0));
 }
 
 void kit::VertexShader::clearSource()
 {
-  
-	this->m_source = "";
+  this->m_source = "";
 
-	std::string emptys = "";
-	const GLchar *source = (const GLchar *)emptys.c_str();
-	KIT_GL(glShaderSource(this->m_glHandle, 1, &source, 0));
+  std::string emptys = "";
+  const GLchar *source = (const GLchar *)emptys.c_str();
+  KIT_GL(glShaderSource(this->m_glHandle, 1, &source, 0));
 }
 
 bool kit::VertexShader::compile()
 {
-  
-	KIT_GL(glCompileShader(this->m_glHandle));
+  // Attempt to compile the shader
+  KIT_GL(glCompileShader(this->m_glHandle));
 
-	GLint status;
-	KIT_GL(glGetShaderiv(this->m_glHandle, GL_COMPILE_STATUS, &status));
-	if (!status){
-		GLint blen = 0;
-		GLsizei slen = 0;
-		KIT_GL(glGetShaderiv(this->m_glHandle, GL_INFO_LOG_LENGTH , &blen));
-		if (blen > 1){
-			GLchar* compiler_log = new GLchar[blen];
-			KIT_GL(glGetShaderInfoLog(this->m_glHandle, blen, &slen, compiler_log));
+  // Retrieve the compilation status
+  GLint status;
+  KIT_GL(glGetShaderiv(this->m_glHandle, GL_COMPILE_STATUS, &status));
 
-			std::stringstream ss;
-			ss << "Vertexshader compilation failed: " << compiler_log;
-			KIT_ERR(ss.str());
-			delete[] compiler_log;
+  // If compilation failed, dump source and return false
+  if (!status)
+  {
+    GLint blen = 0;
+    GLsizei slen = 0;
+    KIT_GL(glGetShaderiv(this->m_glHandle, GL_INFO_LOG_LENGTH , &blen));
+    if (blen > 1)
+    {
+      GLchar* compiler_log = new GLchar[blen];
+      KIT_GL(glGetShaderInfoLog(this->m_glHandle, blen, &slen, compiler_log));
+
+      std::stringstream ss;
+      ss << "Pixelshader compilation failed: " << compiler_log;
+      KIT_ERR(ss.str());
+      delete[] compiler_log;
       
       std::cout << "Dumping vertexshader source..." << std::endl;
       std::cout << "------------------------" << std::endl;
@@ -95,18 +99,20 @@ bool kit::VertexShader::compile()
       std::string currline;
       while (std::getline(sourcestream, currline))
       {
-        std::cout << linecount << ":  " << currline << std::endl;
+        std::cout << linecount << ":\t" << currline << std::endl;
         linecount++;
       }
+
       std::cout << "------------------------" << std::endl;
-		}
+    }
 
-		return false;
-	}
+    return false;
+  }
 
-	return true;
+  return true;
 }
 
-GLuint kit::VertexShader::getHandle(){
-	return this->m_glHandle;
+GLuint kit::VertexShader::getHandle()
+{
+  return this->m_glHandle;
 }

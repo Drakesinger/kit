@@ -23,7 +23,7 @@ namespace kit {
   class KITAPI Program {
     public:
       typedef std::shared_ptr<kit::Program> Ptr;
-  
+
       ///
       /// \brief Constructor (FOR INTERNAL USE ONLY)
       /// 
@@ -44,7 +44,7 @@ namespace kit {
       /// \returns A shared pointer pointing to the newly created program
       ///
       static kit::Program::Ptr create();
-      
+
       /// 
       /// \brief Creates, loads, compiles and links a program directly from lists of sourcefiles.
       ///
