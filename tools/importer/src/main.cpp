@@ -50,6 +50,10 @@ std::string selectFile()
 
 int main(int argc, char * argv[])
 {
+  kit::createDirectory("./import");
+  kit::createDirectory("./import/meshes");
+  kit::createDirectory("./import/geometry");
+  kit::createDirectory("./import/skeletons");
   std::string filename = selectFile();
   if (filename.size() == 0)
   {
