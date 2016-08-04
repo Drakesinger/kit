@@ -18,7 +18,7 @@ namespace kit {
   typedef std::weak_ptr<Texture> TextureWPtr;
 
   ///
-  /// \brief A class representing a GPU shaderprogram
+  /// \brief An OpenGL Program
   ///
   class KITAPI Program {
     public:

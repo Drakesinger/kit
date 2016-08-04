@@ -10,7 +10,7 @@
 namespace kit{
 
   ///
-  /// \brief A pixel (fragment) shader
+  /// \brief An OpenGL pixelshader
   ///
   class KITAPI PixelShader
   {

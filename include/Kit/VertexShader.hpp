@@ -10,7 +10,7 @@
 namespace kit{
 
   ///
-  /// \brief A vertex shader
+  /// \brief An OpenGL vertexshader
   ///
   class KITAPI VertexShader
   {
