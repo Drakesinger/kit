@@ -11,24 +11,33 @@
 
 namespace kit{
 
-  class KITAPI Texture{
+  ///
+  /// \brief An OpenGL texture
+  ///
+  class KITAPI Texture
+  {
     public:
 
+      ///
+      /// \brief An enum that represents different texture types, mapped directly to OpenGL constants
+      ///
       enum Type
       {
         Texture1D = GL_TEXTURE_1D,
         Texture1DArray = GL_TEXTURE_1D_ARRAY,
-        //TODO: TextureBuffer = GL_TEXTURE_BUFFER
+        TextureBuffer = GL_TEXTURE_BUFFER,
         Texture2D = GL_TEXTURE_2D,
         Texture2DMultisample = GL_TEXTURE_2D_MULTISAMPLE,
         Texture2DArray = GL_TEXTURE_2D_ARRAY,
-        //TODO: GL_TEXTURE_2D_MULTISAMPLE_ARRAY
+        Texture2DMultiSampleArray =  GL_TEXTURE_2D_MULTISAMPLE_ARRAY,
         Texture3D = GL_TEXTURE_3D,
         Cubemap = GL_TEXTURE_CUBE_MAP,
         CubemapArray = GL_TEXTURE_CUBE_MAP_ARRAY
-        
       };
 
+      ///
+      /// \brief An enum that represents different texture filtering modes, mapped directly to OpenGL constants
+      ///
       enum FilteringMode
       {
         Nearest = GL_NEAREST,
@@ -39,6 +48,9 @@ namespace kit{
         LinearMipmapLinear = GL_LINEAR_MIPMAP_LINEAR
       };
 
+      ///
+      /// \brief An enum that represents different texture sampling axes, mapped directly to OpenGL constants (with the exception of EdgeSamplingAxis:: All)
+      ///
       enum EdgeSamplingAxis
       {
         All,
@@ -47,6 +59,9 @@ namespace kit{
         R = GL_TEXTURE_WRAP_R
       };
 
+      ///
+      /// \brief An enum that represents different edge sampling modes, mapped directly to OpenGL constants
+      ///
       enum EdgeSamplingMode
       {
         Repeat = GL_REPEAT,
@@ -54,6 +69,9 @@ namespace kit{
         ClampToEdge = GL_CLAMP_TO_EDGE
       };
 
+      ///
+      /// \brief An enum that represents different texture formats, mapped directly to OpenGL constants
+      ///
       enum Format
       {
         Red = GL_RED,
@@ -65,19 +83,10 @@ namespace kit{
         DepthComponent = GL_DEPTH_COMPONENT,
         StencilIndex = GL_STENCIL_INDEX
       };
-      
-      enum Face 
-      {
-        FaceBegin = 0,
-        PositiveX = 0,
-        NegativeX = 1,
-        PositiveY = 2,
-        NegativeY = 3,
-        PositiveZ = 4,
-        NegativeZ = 5,
-        FaceEnd = 6
-      };
 
+      ///
+      /// \brief An enum that represents different internal texture formats, mapped directly to OpenGL constants
+      ///
       enum InternalFormat 
       {
         R8 = GL_R8,
@@ -148,7 +157,10 @@ namespace kit{
         Depth24Stencil8 = GL_DEPTH24_STENCIL8, 
         StencilIndex8 = GL_STENCIL_INDEX8
       };
-      
+
+      ///
+      /// \brief An enum that represents different texture datatypes, mapped directly to OpenGL constants
+      ///
       enum DataType
       {
         Byte = GL_BYTE,
@@ -174,83 +186,251 @@ namespace kit{
 
       typedef std::shared_ptr<kit::Texture> Ptr;
       typedef std::weak_ptr<kit::Texture> WPtr;
-      typedef std::array<std::string, 6> FaceList;
-      
+
+      ///
+      /// \brief Constructor (FOR INTERNAL USE ONLY)
+      /// 
+      /// \param t The texture type to initialize this texture with
+      ///
+      /// You should NEVER instance this as usual. ALWAYS use smart pointers (std::shared_ptr), and create them explicitly using the `create` methods!
+      ///
       Texture(Type t);
-      Texture(GLuint handle);
+
+      ///
+      /// \brief Destructor
+      ///
       ~Texture();
 
+
       // ---- Primary constructors
-      static kit::Texture::Ptr reference(GLuint handle);
+
+      /// 
+      /// \brief Creates an empty 2D texture
+      ///
+      /// You should only use the static `create` methods to create instances. Avoid instancing this class yourself!
+      ///
+      /// \param resolution Resolution of the new texture
+      /// \param format The internal format of the new texture
+      /// \param edgemode The edge sampling mode of the new texture
+      /// \param minfilter The minification filtering mode of the new texture.
+      /// \param magfilter The magnification filtering mode of the new texture. Valid paramters are Nearest and Linear.
+      ///
+      /// \returns A shared pointer pointing to the newly created texture
+      ///
       static kit::Texture::Ptr create2D(glm::uvec2 resolution, InternalFormat format, EdgeSamplingMode edgemode = ClampToEdge, FilteringMode minfilter = Linear, FilteringMode magfilter = Linear);
-      static kit::Texture::Ptr create2DMultisample(glm::uvec2 resolution, uint32_t samples);
-      static kit::Texture::Ptr createCubemap(glm::uvec2 faceresolution, InternalFormat format, FilteringMode minfilter = LinearMipmapLinear, FilteringMode magfilter = Linear);
-      
+
+
       // ---- Convenience constructors
+
+      /// 
+      /// \brief Creates a 2D texture fitting for a shadowmap
+      ///
+      /// You should only use the static `create` methods to create instances. Avoid instancing this class yourself!
+      ///
+      /// \param resolution Resolution of the new texture
+      ///
+      /// \returns A shared pointer pointing to the newly created texture
+      ///
       static kit::Texture::Ptr createShadowmap(glm::uvec2 resolution);
+
+      /// 
+      /// \brief Creates a 2D texture and loads its content from a file
+      ///
+      /// You should only use the static `create` methods to create instances. Avoid instancing this class yourself!
+      ///
+      /// \param filename Path to the source file, relative to the working directory.
+      /// \param format The internal format of the new texture
+      /// \param edgemode The edge sampling mode of the new texture
+      /// \param minfilter The minification filtering mode of the new texture.
+      /// \param magfilter The magnification filtering mode of the new texture. Valid paramters are Nearest and Linear.
+      ///
+      /// \returns A shared pointer pointing to the newly created texture
+      ///
       static kit::Texture::Ptr create2DFromFile(std::string filename, InternalFormat format = RGBA8, EdgeSamplingMode edgemode = ClampToEdge, FilteringMode minfilter = Linear, FilteringMode magfilter = Linear);
-      static kit::Texture::Ptr createRaw(std::string filename, glm::uvec2 resolution);
+
+      /// 
+      /// \brief Creates a 3D texture and loads its content from a 2D image file. It does this by evenly splicing it on the height. It has to perfectly cubical.
+      ///
+      /// You should only use the static `create` methods to create instances. Avoid instancing this class yourself!
+      ///
+      /// \param filename Path to the source file, relative to the working directory.
+      /// \param format The internal format of the new texture
+      /// \param edgemode The edge sampling mode of the new texture
+      /// \param minfilter The minification filtering mode of the new texture.
+      /// \param magfilter The magnification filtering mode of the new texture. Valid paramters are Nearest and Linear.
+      ///
+      /// \returns A shared pointer pointing to the newly created texture
+      ///
       static kit::Texture::Ptr create3DFromFile(std::string filename, InternalFormat format = RGBA8, EdgeSamplingMode edgemode = ClampToEdge, FilteringMode minfilter = Linear, FilteringMode magfilter = Linear);
-      //TODO: static kit::Texture::Ptr create3DFromFile(std::string filename, InternalFormat format = RGBA8, EdgeSamplingMode edgemode = Repeat, FilteringMode minfilter = LinearMipmapLinear, FilteringMode magfilter = Linear);
-      static kit::Texture::Ptr createCubemapFromFiles(FaceList filenames, InternalFormat format = RGBA8, FilteringMode minfilter = LinearMipmapLinear, FilteringMode magfilter = Linear);
-      static kit::Texture::Ptr loadContribMap(std::string name);
-      
+
+
       // ---- Resource-managed constructors
+
+      /// 
+      /// \brief Loads a texture from a file. This is probably want you want to use for regular 2D texture loading.
+      ///
+      /// You should only use the static `create` methods to create instances. Avoid instancing this class yourself!
+      ///
+      /// \param name Path to the source file, relative to ./data/textures/
+      /// \param srgb true if texture is sRGB-encoded
+      ///
+      /// \returns A shared pointer pointing to the newly created texture
+      ///
       static kit::Texture::Ptr load(std::string name, bool srgb = true);
-      static kit::Texture::Ptr loadRadianceMap(std::string name);
-      static kit::Texture::Ptr loadIrradianceMap(std::string name);
-      static kit::Texture::Ptr loadSkybox(std::string name);
-      
+
+
       // ---- Operations
-      bool          updatePixelsFromFile(std::string filename, Face cubeface = PositiveX);
-      bool          updatePixelsFromFiles(FaceList filenames);
+
+      ///
+      /// \brief Generates mipmaps for the current texture, based on its current contents
+      ///
       void          generateMipmap();
-      uint32_t   calculateMipLevels();
+
+      ///
+      /// \brief Calculates the mip levels of this texture
+      ///
+      uint32_t      calculateMipLevels();
+
+      ///
+      /// \brief Get a single pixel from this texture, stored as a vec4 (slow)
+      /// \param position The position of the pixel to get. position.z is ignored on 2D textures
+      /// \returns A vec4 containing the pixel information
+      ///
       glm::vec4     getPixelFloat(glm::vec3 position);
+
+      ///
+      /// \brief Get a single pixel from this texture, stored as a uvec4 (slow)
+      /// \param position The position of the pixel to get. position.z is ignored on 2D textures
+      /// \returns An uvec4 containing the pixel information
+      ///
       glm::uvec4    getPixelUint(glm::vec3 position);
-      
+
+
       // -- For saving images
+      ///
+      /// \brief Save texture to file as a tga image.
+      /// \param filename Path to output file, relative to working directory
+      /// \returns true on success, false on failure
+      ///
       bool          saveToFile(std::string filename);
 
+      ///
+      /// \brief Bind this texture
+      ///
       void          bind();
+
+      ///
+      /// \brief Unbind a certain texture type
+      /// \param t The type of texture to unbind
+      ///
       static void   unbind(Type t);
+
+      ///
+      /// \brief Flushes the resource managed cache. Cache will be empty but textures might still be used elsewhere.
+      ///
       static void   flushCache();
-      
+
+      ///
+      /// \brief Returns a list of textures in ./data/textures/prefix. The list is cached and has to be updated using the reload parameter.
+      /// \param prefix adds a prefix to the path before iterating the directory
+      /// \param reload set to true to force reloading the cache
+      /// \returns A list of filenames
+      ///
       static std::vector<std::string> getAvailableTextures(std::string prefix = "", bool reload = false);
+
 
       // ---- Properties
       // Mutable
+
+      ///
+      /// \brief Gets the minification filtering mode for this texture
+      /// \returns The minification filtering mode for this texture
+      ///
       kit::Texture::FilteringMode getMinFilteringMode();
+
+      ///
+      /// \brief Sets the minification filtering mode for this texture
+      /// \param mode The new minification filtering mode for this texture
+      ///
       void setMinFilteringMode(kit::Texture::FilteringMode mode);
-      
+
+      ///
+      /// \brief Gets the magnification filtering mode for this texture
+      /// \returns The magnification filtering mode for this texture
+      ///
       kit::Texture::FilteringMode getMagFilteringMode();
+
+      ///
+      /// \brief Sets the magnification filtering mode for this texture
+      /// \param mode The new magnification filtering mode for this texture
+      ///
       void setMagFilteringMode(kit::Texture::FilteringMode mode);
 
+      ///
+      /// \brief Gets the edge sampling mode on a specified axis on this texture
+      /// \param axis The axis to get the sampling mode from, can not be All
+      /// \returns The edge sampling mode for a specified axis on this texture
+      ///
       kit::Texture::EdgeSamplingMode getEdgeSamplingMode(EdgeSamplingAxis axis);
+
+      ///
+      /// \brief Sets the edge sampling mode for a specified axis on this texture
+      /// \param mode The new edge sampling mode for the specified axis on this texture
+      /// \param axis The axis to set on. Use All to set it on all axes
+      ///
       void setEdgeSamplingMode(kit::Texture::EdgeSamplingMode mode, kit::Texture::EdgeSamplingAxis axis = kit::Texture::All);
-      
+
+      ///
+      /// \brief Set the anisotropic level for this texture
+      /// \param The level to set it to. Has to be at least 1.
+      ///
       void setAnisotropicLevel(float l);
+
+      ///
+      /// \brief Get the anisotropic level for this texture
+      /// \returns the anisotropic level for this texture
+      ///
       float getAnisotropicLevel();
-      
+
       // Immutable
+      ///
+      /// \brief Get the resolution for this texture
+      /// \returns the resolution for this texture
+      ///
       glm::uvec3 getResolution();
+
+      ///
+      /// \brief Get the array size for this texture
+      /// \returns the array size for this texture
+      ///
       uint32_t getArraySize();
+
+      ///
+      /// \brief Get the internal format for this texture
+      /// \returns the internal format for this texture
+      ///
       InternalFormat getInternalFormat();
+
+      ///
+      /// \brief Get the internal handle for this texture
+      /// \returns the internal handle for this texture
+      ///
       GLuint getHandle();
-      
+
+      ///
+      /// \brief Gets the filename of this texture, if applicable
+      /// \returns the filename for this texture
+      ///
       std::string getFilename();
-      
+
     private:
       kit::GL             m_glSingleton;
-      
+
       std::string         m_filename;
-      
+
       GLuint              m_glHandle;
-      bool                m_isReference;
       Type                m_type;
 
-      bool                m_isMultisampled;
-      uint32_t         m_numSamples;
       InternalFormat      m_internalFormat;
       FilteringMode       m_minFilteringMode;
       FilteringMode       m_magFilteringMode;
@@ -258,11 +438,10 @@ namespace kit{
       EdgeSamplingMode    m_edgeSamplingModeT;
       EdgeSamplingMode    m_edgeSamplingModeR;
       glm::uvec3          m_resolution;
-      uint32_t         m_arraySize;
+      uint32_t            m_arraySize;
       float               m_anisotropicLevel;
-      
+
       static std::map<std::string, kit::Texture::Ptr> m_cachedTextures;
-      static std::map<std::string, kit::Texture::Ptr> m_cachedCubemaps;
   };
 
 }
