@@ -25,16 +25,15 @@ kit::Program::~Program()
 
 kit::Program::Ptr kit::Program::create()
 {
-  //return kit::Program::Ptr(new kit::Program());
   return std::make_shared<kit::Program>();
 }
 
 kit::Program::Ptr kit::Program::load(std::vector< std::string > vertexSources, std::vector< std::string > pixelSources)
 {
   kit::Program::Ptr returner = kit::Program::create();
-  
+
   std::string dataDir("./data/shaders/");
-  
+
   std::vector<kit::VertexShader::Ptr> vertexShaders;
   std::vector<kit::PixelShader::Ptr> pixelShaders;
 
@@ -50,7 +49,7 @@ kit::Program::Ptr kit::Program::load(std::vector< std::string > vertexSources, s
     vertexShaders.push_back(currVertShader);
     returner->attachShader(currVertShader);
   }
-  
+
   // Compile pixel shaders
   for(auto & currPixelSource : pixelSources)
   {
@@ -61,28 +60,30 @@ kit::Program::Ptr kit::Program::load(std::vector< std::string > vertexSources, s
     pixelShaders.push_back(currPixelShader);
     returner->attachShader(currPixelShader);
   }
-  
+
   // Link program
   returner->link();
-  
+
   // Detach shaders 
   for(auto & currPixelShader : pixelShaders)
   {
     returner->detachShader(currPixelShader);
   }
-  
+
   for(auto & currVertShader : vertexShaders)
   {
     returner->detachShader(currVertShader);
   }
-  
+
   return returner;
 }
 
 bool kit::Program::link()
 {
-  
-  KIT_GL(glLinkProgram(this->m_glHandle));
+  // Attempt to link the program
+  KIT_GL(glLinkProgram(this->m_glHandle));  
+
+  // Retrieve the link status
   GLint status;
   KIT_GL(glGetProgramiv(this->m_glHandle, GL_LINK_STATUS, &status));
 
@@ -102,7 +103,6 @@ bool kit::Program::link()
       KIT_ERR(ss.str());
       delete[] compiler_log;
     }
-
 
     return false;
   }
@@ -188,7 +188,6 @@ void kit::Program::setUniformCubemap(const std::string & name, kit::Cubemap::WPt
 
 void kit::Program::setUniformMat3(const std::string & name, const glm::mat3 & matrix)
 {
-
   kit::GL::useProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
 
@@ -200,7 +199,6 @@ void kit::Program::setUniformMat3(const std::string & name, const glm::mat3 & ma
 
 void kit::Program::setUniformMat4(const std::string & name, const glm::mat4 & matrix)
 {
-  
   kit::GL::useProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
 
@@ -212,7 +210,6 @@ void kit::Program::setUniformMat4(const std::string & name, const glm::mat4 & ma
 
 void kit::Program::setUniformMat4v(const std::string & name, const std::vector<glm::mat4> & matrices)
 {
-  
   kit::GL::useProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
 
@@ -224,7 +221,6 @@ void kit::Program::setUniformMat4v(const std::string & name, const std::vector<g
 
 void kit::Program::setUniform3f(const std::string & name, const glm::vec3 & vec)
 {
-  
   kit::GL::useProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
 
@@ -236,7 +232,6 @@ void kit::Program::setUniform3f(const std::string & name, const glm::vec3 & vec)
 
 void kit::Program::setUniform3fv(const std::string & name, const std::vector<glm::vec3> & v)
 {
-  
   kit::GL::useProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
 
@@ -248,7 +243,6 @@ void kit::Program::setUniform3fv(const std::string & name, const std::vector<glm
 
 void kit::Program::setUniform1f(const std::string & name, float val)
 {
-  
   kit::GL::useProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
 
@@ -260,7 +254,6 @@ void kit::Program::setUniform1f(const std::string & name, float val)
 
 void kit::Program::setUniform1d(const std::string & name, double val)
 {
-  
   kit::GL::useProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
 
@@ -272,7 +265,6 @@ void kit::Program::setUniform1d(const std::string & name, double val)
 
 void kit::Program::setUniform1i(const std::string & name, int i)
 {
-  
   kit::GL::useProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
 
@@ -295,7 +287,6 @@ void kit::Program::setUniform1ui(const std::string & name, uint32_t i)
 
 void kit::Program::setUniform4f(const std::string & name, const glm::vec4 & vec)
 {
-  
   kit::GL::useProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
 
@@ -307,7 +298,6 @@ void kit::Program::setUniform4f(const std::string & name, const glm::vec4 & vec)
 
 void kit::Program::setUniform2f(const std::string & name, const glm::vec2 & vec)
 {
-  
   kit::GL::useProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
 
@@ -320,7 +310,6 @@ void kit::Program::setUniform2f(const std::string & name, const glm::vec2 & vec)
 
 uint32_t kit::Program::getUniformLocation(const std::string & name)
 {
-  
   auto it = this->m_locationCache.find(name.c_str());
 
   if(it != this->m_locationCache.end())
@@ -347,7 +336,6 @@ uint32_t kit::Program::getUniformLocation(const std::string & name)
 
  void kit::Program::prepareTextures()
 {
-  
   uint32_t i = 1;
 
   for(auto & it : this->m_textures)
@@ -373,39 +361,9 @@ uint32_t kit::Program::getUniformLocation(const std::string & name)
   }
 }
 
-/*void kit::Program::prepareTextures()
-{
-  uint32_t i = 1;
-
-  for(auto it = this->m_textures.begin(); it != this->m_textures.end(); ++it)
-  {
-    KIT_GL(glUniform1i(it->first, i));
-    //KIT_GL(glBindTextureUnit(GL_TEXTURE0 + i, it->second.m_glName));
-    
-    KIT_GL(glActiveTexture(GL_TEXTURE0 + i));
-    
-    switch(it->second.m_type)
-    {
-      case Texture2D:
-        KIT_GL(glBindTexture(GL_TEXTURE_2D, it->second.m_glName));
-        break;
-      case Cubemap:
-        KIT_GL(glBindTexture(GL_TEXTURE_CUBE_MAP, it->second.m_glName));
-        break;
-    }
-    i++;
-  }
-
-  /*KIT_GL(glActiveTexture(GL_TEXTURE0));
-  kit::GL::bindTexture(GL_TEXTURE_2D, 0);
-  kit::GL::bindTexture(GL_TEXTURE_CUBE_MAP, 0);
-}*/
-
 int32_t kit::Program::getMaxTextureUnits()
 {
-  
   int32_t returner;
   KIT_GL(glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &returner));
-  //returner = 1;
   return returner;
 }
