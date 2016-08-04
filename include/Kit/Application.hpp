@@ -24,51 +24,27 @@ namespace kit
   class KITAPI Application : public kit::Scriptable
   {
   public:
-     
-      struct Action
-      {
-        enum Type
-        {
-          Keyboard,
-          Mouse,
-          Controller
-        };
-
-        Type          primaryType, secondaryType;
-        uint32_t   primaryCode, secondaryCode;
-
-        bool primarySet();
-        bool secondarySet();
-
-        void setPrimary(kit::Key);
-        void setPrimary(kit::MouseButton);
-
-        void setSecondary(kit::Key);
-        void setSecondary(kit::MouseButton);
-
-      };
-
       Application();
       ~Application();
-      
+
       void run(ApplicationStatePtr state);
-      
+
       void pushState(ApplicationStatePtr state);
       void popState();
-      
+
       kit::WindowPtr getWindow();
       kit::ConsolePtr getConsole();
-      
+
       void evaluate(std::string code);
       void quit();
       void print(std::string);
-      
+
       virtual void onResize(glm::uvec2);
-      
+ 
       virtual void onInitialize();
-      
+
       virtual void onRender();
-      
+
       void setUpdateRate(double ms);
       void setUnfocusedUpdateRate(double ms);
 
@@ -81,13 +57,12 @@ namespace kit
       void render();
 
   private:
-    
+
       void initialize();
       void fillKeyIndex();
 
       std::map<kit::Key, std::string> m_keyIndex;
       std::map<kit::MouseButton, std::string> m_mouseIndex;
-      
 
       bool m_needResize;
       glm::uvec2 m_resizeSize;
@@ -104,10 +79,10 @@ namespace kit
       double            m_renderRate;       //< Time delay between frame renders in milliseconds. Default 1000 / 30
       double            m_unfocusedRenderRate;    //< Render rate when unfocused
       double            m_lastRenderTime;   //< How many milliseconds the last frame render took.
-      
+
       // State machine
       std::stack<kit::ApplicationStatePtr>        m_states;           //< List of game states
-      
+
       // Console 
       kit::ConsolePtr m_console;
   };
