@@ -402,14 +402,6 @@ void kit::Window::__winfunc_close(GLFWwindow* window)
   w->addEvent(e);
 }
 
-void kit::Window::__winfunc_refresh(GLFWwindow* window)
-{
-  kit::Window* w = kit::Window::kitWFromGLFW(window);
-  kit::WindowEvent e;
-  e.type = kit::WindowEvent::Type::Invalidated;
-  w->addEvent(e);
-}
-
 void kit::Window::__winfunc_focus(GLFWwindow* window, int glbool)
 {
   kit::Window* w = kit::Window::kitWFromGLFW(window);
@@ -425,7 +417,6 @@ void kit::Window::__winfunc_minimize(GLFWwindow* window, int glbool)
   kit::Window* w = kit::Window::kitWFromGLFW(window);
   kit::WindowEvent e;
   e.type = (glbool == GL_TRUE) ? kit::WindowEvent::Type::Minimized : kit::WindowEvent::Type::Restored;
-  w->m_isMinimized = (glbool == GL_TRUE);
   w->addEvent(e);
 }
 

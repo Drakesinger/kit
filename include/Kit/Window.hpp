@@ -20,7 +20,7 @@ namespace kit
   class Monitor;
 
   ///
-  /// \brief Provides window functionality
+  /// \brief An OpenGL-enabled window class
   ///
   class KITAPI Window
   {
@@ -310,7 +310,6 @@ namespace kit
       static void                          __winfunc_position(GLFWwindow*, int newx, int newy);
       static void                          __winfunc_size(GLFWwindow*, int newwidth, int newheight);
       static void                          __winfunc_close(GLFWwindow*);
-      static void                          __winfunc_refresh(GLFWwindow*);
       static void                          __winfunc_focus(GLFWwindow*, int glbool);
       static void                          __winfunc_minimize(GLFWwindow*, int glbool);
       static void                          __winfunc_framebuffersize(GLFWwindow*, int newwidth, int newheight);
