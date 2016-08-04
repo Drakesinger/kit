@@ -2,9 +2,12 @@
 
 # Notice
 
-This project is not by any means ready for an official release. Features may not work as advertised, or even exist at all. Documentation is practially non-existent. Feel free to contribute!
+While I'm working very hard on this project, *Kit* is not by any means ready for an official release. Features may not work as advertised, or even exist at all. Documentation and example code is practically non-existent, although it's being highly prioritized at the moment.
 
-Sharing this mainly for educational reasons. Enjoy!
+Feel free to contribute by reporting issues, opening pull requests or by financially funding the development on [Patreon](https://www.patreon.com/kitframework)!
+
+[![Kit on Patreon](https://cloud.githubusercontent.com/assets/8225057/5990484/70413560-a9ab-11e4-8942-1a63607c0b00.png)](https://www.patreon.com/kitframework)
+
 
 # Dependencies
 
@@ -46,4 +49,8 @@ Open issues, create pull requests. But please get to know the codebase a bit fir
 
 # Funding
 
-Since I'm doing this with my severely limited sparetime (3 kids, day job), any sort of funding or donations will greatly help this project forward. I'm currently looking into crowdfunding solutions etc.
+This project takes up all of my spare time at the moment, and while I love doing it, it does not pay my bills or feed my kids. If you want me to be able to give more of my time to this project, you can help by funding the development on  [Patreon](https://www.patreon.com/kitframework).
+
+Remember, every little bit helps!
+
+[![Kit on Patreon](https://cloud.githubusercontent.com/assets/8225057/5990484/70413560-a9ab-11e4-8942-1a63607c0b00.png)](https://www.patreon.com/kitframework)
