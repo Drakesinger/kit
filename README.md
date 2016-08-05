@@ -8,6 +8,8 @@ Feel free to contribute by reporting issues, opening pull requests or by financi
 
 [![Kit on Patreon](https://cloud.githubusercontent.com/assets/8225057/5990484/70413560-a9ab-11e4-8942-1a63607c0b00.png)](https://www.patreon.com/kitframework)
 
+![Lighting model preview](https://raw.githubusercontent.com/haikarainen/kit/master/docs/metalball-crop.png)
+<p align="center">Showcasing the lighting model, highly inspired from UE4.</p>
 
 # Dependencies
 
