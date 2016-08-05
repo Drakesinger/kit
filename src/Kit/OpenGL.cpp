@@ -66,8 +66,8 @@ void kit::initializeGL3W()
     return;
   }
 
-  if (!gl3wIsSupported(4, 1)) {
-    KIT_ERR("OpenGL version 4.1 is not supported");
+  if (!gl3wIsSupported(4, 3)) {
+    KIT_ERR("OpenGL version 4.3 core is not supported");
     return;
   }
 
