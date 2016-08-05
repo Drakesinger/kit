@@ -1,0 +1,30 @@
+# Albedo color properties
+albedomap "fern-color.png"
+albedo 1 1 1
+
+# Occlusion properties
+
+# Normal map properties
+normalstrength 1
+
+# Emissive properties
+emissivestrength 1
+emissivecolor 0 0 0
+
+# Roughness properties
+roughness 0.253
+roughnessinput 0 1
+roughnessoutput 0 1
+
+# Metalness properties
+metalness 0
+metalnessinput 0 1
+metalnessoutput 0 1
+
+# Other properties
+doublesided false
+depthwrite true
+depthread true
+castshadows true
+opacity 1
+blendmode none

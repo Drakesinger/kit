@@ -1,2 +1,0 @@
-submesh "IconBase" "IconBase.geometry" "UpgradeSpeed.material"
-submesh "Icon" "UpgradeIcon.geometry" "UpgradeIcon.material"

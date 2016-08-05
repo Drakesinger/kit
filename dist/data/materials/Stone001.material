@@ -1,11 +1,11 @@
 # Albedo color properties
-albedomap "Stone001_albedo.tga"
+albedomap "stone_albedo.tga"
 albedo 1 1 1
 
 # Occlusion properties
 
 # Normal map properties
-normalmap "Stone001_normal.tga"
+normalmap "stone_normal.tga"
 normalstrength 0.587
 
 # Emissive properties
@@ -13,7 +13,7 @@ emissivestrength 1
 emissivecolor 0 0 0
 
 # Roughness properties
-roughness 1
+roughness 0.813
 roughnessinput 0 1
 roughnessoutput 0 1
 

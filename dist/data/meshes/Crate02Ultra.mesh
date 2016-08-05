@@ -1,0 +1,2 @@
+submesh "submesh-0" "Crate02Ultra.Crate02.geometry" "Crate02.material"
+submesh "submesh-1" "Crate02Ultra.Rope.geometry" "Rope.material"
