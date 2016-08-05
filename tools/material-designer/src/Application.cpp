@@ -26,9 +26,10 @@ void kmd::Application::onInitialize()
   kit::Application::onInitialize();
   this->getWindow()->maximize();
   this->getWindow()->setVSync(false);
-  this->setRenderRate(1000.0 / 240.0);
-  this->setUpdateRate(1000.0 / 240.0);
+  this->setRenderRate(1000.0 / 45.0);
+  this->setUpdateRate(1000.0 / 60.0);
   this->m_renderer = kit::Renderer::create( glm::uvec2( this->getWindow()->getFramebufferSize().x, this->getWindow()->getFramebufferSize().y)); 
+  this->m_renderer->setGPUMetrics(false);
   this->m_fullscreenQuad = kit::Quad::create();
   this->m_scriptEngine.add_global(chaiscript::var(this->m_renderer), "renderer");
 }
@@ -51,7 +52,6 @@ void kmd::Application::onResize(glm::uvec2 newsize)
   kit::Application::onResize(newsize);
   if(newsize.x > 0 && newsize.y > 0)
   {
-    std::cout << "App onresize " << newsize.x << "x" << newsize.y << std::endl;
     this->m_renderer->setResolution(newsize);
   }
 }

@@ -37,8 +37,6 @@ void kmd::MaterialDesignerState::allocate()
   auto fbSize = this->m_application->getWindow()->getFramebufferSize();
   glm::uvec2 ufbSize(fbSize.x, fbSize.y);
   
-  std::cout << "Framebuffer size is " << fbSize.x << "x" << fbSize.y << "(ratio is " << ((float)fbSize.x / (float)fbSize.y) << ")" << std::endl; 
-  
   this->m_camera = kit::Camera::create(45.0f, (float)fbSize.x / (float)fbSize.y, glm::vec2(0.01f, 100.0f));
   this->m_camera->setWhitepoint(1.0f);
   this->m_horizontalAngle = 180.0f;
@@ -55,7 +53,7 @@ void kmd::MaterialDesignerState::allocate()
   this->m_envLight->setColor(glm::vec3(1.0, 1.0, 1.0)*1.0f);
   this->m_renderPayload->addLight(this->m_envLight);
 
-  this->m_sun = kit::Light::create(kit::Light::Directional, glm::uvec2(4096, 4096));
+  this->m_sun = kit::Light::create(kit::Light::Directional, glm::uvec2(512, 512));
   this->m_sun->setMaxShadowDistance(40.0f);
   this->m_sun->setEuler(glm::vec3(-22.0f, -40.0f, 0.0f));
   this->m_sun->setColor(glm::vec3(1.0, 1.0, 1.0f)*1.0f);
