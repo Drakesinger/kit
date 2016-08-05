@@ -6,7 +6,8 @@ While I'm working very hard on this project, *Kit* is not by any means ready for
 
 Feel free to contribute by reporting issues, opening pull requests or by financially funding the development on [Patreon](https://www.patreon.com/kitframework)!
 
-[![Kit on Patreon](https://cloud.githubusercontent.com/assets/8225057/5990484/70413560-a9ab-11e4-8942-1a63607c0b00.png)](https://www.patreon.com/kitframework)
+<p align="right"><a href="https://www.patreon.com/kitframework"><img src="https://cloud.githubusercontent.com/assets/8225057/5990484/70413560-a9ab-11e4-8942-1a63607c0b00.png"></a></p>
+
 
 ![Lighting model preview](https://raw.githubusercontent.com/haikarainen/kit/master/docs/metalball-crop.png)
 <p align="center">Showcasing the lighting model, highly inspired from UE4.</p>
