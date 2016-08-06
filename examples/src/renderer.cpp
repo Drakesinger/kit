@@ -40,9 +40,9 @@ int main(int argc, char *argv[])
   auto screenQuad = kit::Quad::create();
 
   // Create a camera. fov of 72 degrees, aspect ratio according to resolution, and a short cliprange
-  // Position the camera 4 meters backwards (Z- is forward)
+  // Position the camera 2 meters backwards (Z- is forward)
   auto camera = kit::Camera::create(72.0f, 1280.0f / 720.0f, glm::vec2(0.1f, 100.0f));
-  camera->setPosition(glm::vec3(0.0f, 0.0f, 4.0f));
+  camera->setPosition(glm::vec3(0.0f, 0.0f, 3.0f));
 
   // Create an environment light so that we can see what we render (IBL = Imagebased light)
   auto light = kit::Light::create(kit::Light::IBL);
@@ -96,7 +96,8 @@ int main(int argc, char *argv[])
         }
       }
     }
-    
+
+    // Get the current frametime and rotate our sphere based on it
     double frametime = timer.restart().asMilliseconds();
     sphere->rotateZ(frametime * rotationSpeed);
 
