@@ -16,7 +16,7 @@ Feel free to contribute by reporting issues, opening pull requests or by financi
 
 Kit depends on the following libraries:
 
-* GLFW3 (Window and input management)
+* GLFW3 (Window and input management, >= 3.2)
 * GLM (Math)
 * Freetype 2 (Text rendering)
 * Chaiscript (Scripting)
