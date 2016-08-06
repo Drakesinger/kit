@@ -61,6 +61,10 @@ kit::Window::Window(kit::Window::Args const & windowArgs)
   GLFWmonitor* glfwFullscreenMonitor = windowArgs.fullscreenMonitor->getGLFWHandle();
 
   // Set OpenGL context hints.
+  kit::Window::prepareGLFWHints(GLFW_CLIENT_API, GLFW_OPENGL_API);
+#ifndef KIT_ALLOW_EGL
+  kit::Window::prepareGLFWHints(GLFW_CONTEXT_CREATION_API, GLFW_NATIVE_CONTEXT_API);
+#endif
   kit::Window::prepareGLFWHints(GLFW_CONTEXT_VERSION_MAJOR, 4);
   kit::Window::prepareGLFWHints(GLFW_CONTEXT_VERSION_MINOR, 3);
   kit::Window::prepareGLFWHints(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
