@@ -423,3 +423,8 @@ void kit::Application::setUnfocusedUpdateRate(double ms)
 {
   this->m_unfocusedUpdateRate = ms;
 }
+
+void kit::Application::setVSync(bool enabled)
+{
+  this->getWindow()->setVSync(enabled);
+}

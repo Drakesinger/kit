@@ -464,7 +464,8 @@ chaiscript::ModulePtr kit::getScriptLibrary()
         {chaiscript::fun(&kit::Application::getConsole), "getConsole"},
         {chaiscript::fun(&kit::Application::popState), "popState"},
         {chaiscript::fun(&kit::Application::quit), "quit"},
-        {chaiscript::fun<void(kit::Application&,bool)>([](kit::Application& a, bool b) { a.getWindow()->setVSync(b); }), "setVSync"}
+        // {chaiscript::fun<void(kit::Application&, bool)>([=](kit::Application& a, bool b){ a.getWindow()->setVSync(b); }), "setVSync"} // Lambdas broken in chaiscript 5.8, see issue #280
+        {chaiscript::fun(&kit::Application::setVSync), "setVSync"}
       }
     );
     

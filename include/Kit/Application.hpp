@@ -50,6 +50,8 @@ namespace kit
 
       void setRenderRate(double ms);
       void setUnfocusedRenderRate(double ms);
+      
+      void setVSync(bool enabled);
 
   protected:
       void update(double const & mstime);
