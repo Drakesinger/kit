@@ -42,6 +42,8 @@ Tip: Use -j 10 to parallelize the object compilation, which makes it compile muc
 
 The tools reside inside `./tools/<toolname>/`. Build it by calling `make` as usual. Installing it will put the binaries in the `dist` folder.
 
+**Notice:** You HAVE to run the tools in the dist directory (or copy the data subdirectory in to another working directory).
+
 ## Windows
 
 Check the `vs2015` folder for a solution. It is known to be buildable, every dependency except `chaiscript` and `assimp` exist in NuGet. Please report any issues you might have using this solution.
