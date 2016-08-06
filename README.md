@@ -40,9 +40,15 @@ Tip: Use -j 10 to parallelize the object compilation, which makes it compile muc
 
 ### The tools
 
-The tools reside inside `./tools/<toolname>/`. Build it by calling `make` as usual. Installing it will put the binaries in the `dist` folder.
+The tools reside inside `./tools/<toolname>/`. Build it by calling `make` as usual. Installing it will put the binaries in the `dist` directory.
 
-**Notice:** You HAVE to run the tools in the dist directory (or copy the data subdirectory in to another working directory).
+**Notice:** You HAVE to run the tools from inside the `dist` directory.
+
+### The examples
+
+The examples reside inside `./examples`. Build it by calling `make` as usual. The compiled binaries will automatically be copied to the `dist` directory.
+
+**Notice:** You HAVE to run the examples from inside the `dist` directory.
 
 ## Windows
 

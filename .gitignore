@@ -8,6 +8,8 @@ dist/import/
 dist/kit-importer
 dist/kit-world-editor
 dist/kit-material-designer
+dist/renderer-example
+dist/window-example
 
 # Automatic entries below
 # Created by https://www.gitignore.io/api/c++,kdevelop4,visualstudio

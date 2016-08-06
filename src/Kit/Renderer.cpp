@@ -1036,6 +1036,11 @@ void kit::Renderer::setCCLookupTable(kit::Texture::Ptr tex)
   this->m_ccLookupTable = tex;
 }
 
+void kit::Renderer::loadCCLookupTable(std::string name)
+{
+  this->m_ccLookupTable = kit::Texture::create3DFromFile("./data/luts/" + name, Texture::RGB8);
+}
+
 kit::Texture::Ptr kit::Renderer::getCCLookupTable()
 {
   return this->m_ccLookupTable;
