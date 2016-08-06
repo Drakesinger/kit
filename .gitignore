@@ -11,6 +11,8 @@ dist/kit-material-designer
 dist/renderer-example
 dist/window-example
 
+.directory
+
 # Automatic entries below
 # Created by https://www.gitignore.io/api/c++,kdevelop4,visualstudio
 
