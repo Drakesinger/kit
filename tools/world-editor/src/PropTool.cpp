@@ -12,7 +12,7 @@ void kwe::PropTool::allocate(kwe::WorldEditorState* ref)
 {
   kwe::EditorComponent::allocate(ref);
   
-  this->m_selectedMesh = "Sphere.mesh";
+  this->m_selectedMesh = "Fern001.mesh";
   this->m_displayModel = kit::Model::create(this->m_selectedMesh);
   
   this->m_propAlignment = true;

@@ -1,5 +1,5 @@
 # Albedo color properties
-albedomap "fern-color.png"
+albedomap "Fern_albedo.tga"
 albedo 1 1 1
 
 # Occlusion properties
@@ -22,9 +22,10 @@ metalnessinput 0 1
 metalnessoutput 0 1
 
 # Other properties
-doublesided false
+doublesided true
 depthwrite true
 depthread true
 castshadows true
 opacity 1
+opacitymask "Fern_alpha.tga"
 blendmode none

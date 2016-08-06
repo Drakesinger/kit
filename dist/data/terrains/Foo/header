@@ -1,0 +1,8 @@
+xzscale 0.25
+yscale 32
+numlayers 4
+size 128 128
+layer 0 "Dirt01.material"
+layer 1 "Dirt02.material"
+layer 2 "Grass01.material"
+layer 3 "Grass02.material"

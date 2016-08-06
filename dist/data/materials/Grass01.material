@@ -1,0 +1,35 @@
+# Albedo color properties
+albedomap "Grass_basecolor.tga"
+albedo 1 1 1
+
+# Occlusion properties
+
+# Normal map properties
+normalmap "Grass_normal.tga"
+normalstrength 1
+
+# Emissive properties
+emissivestrength 1
+emissivecolor 0 0 0
+
+# Roughness properties
+roughnessmap "Grass_roughness.tga"
+roughness 1
+roughnessinput 0 1
+roughnessoutput 0 1
+
+# Metalness properties
+metalness 0
+metalnessinput 0 1
+metalnessoutput 0 1
+
+# Other properties
+doublesided false
+depthwrite true
+depthread true
+castshadows true
+opacity 1
+blendmode none
+
+spec_uvscale 0.25
+spec_depthmask "GrassDark_height.tga"

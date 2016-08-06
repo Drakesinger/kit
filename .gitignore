@@ -2,7 +2,7 @@
 pkgconfig/
 lib/
 build/
-dist/data/materials/thumbs
+dist/data/materials/thumbs/
 dist/imgui.ini
 dist/import/
 dist/kit-importer
