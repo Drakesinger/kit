@@ -15,7 +15,7 @@ OBJECTS      := $(addprefix $(BUILDDIR)/,$(SOURCES:%.cpp=%.o))
 
 $(OUT_BINARY): $(OBJECTS)
 	$(shell mkdir bin)
-	$(CXX) $(CXXFLAGS) $(DEPFLAGS) $(LDFLAGS) $(LIBS) $(OBJECTS) -o bin/$(OUT_BINARY)
+	$(CXX) $(CXXFLAGS) $(DEPFLAGS) $(LDFLAGS) $(OBJECTS) -o bin/$(OUT_BINARY) $(LIBS)
 
 $(BUILDDIR)/%.o: %.cpp
 	@echo 'Building ${notdir $@} ...'

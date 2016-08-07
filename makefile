@@ -29,7 +29,7 @@ $(PCFILE):
 	$(shell mkdir pkgconfig)
 	echo 'prefix=$(PREFIX)' > $(PCFILE)
 	echo 'exec_prefix=$${prefix}' >> $(PCFILE)
-	echo 'libdir=$${exec_prefix}/lib64' >> $(PCFILE)
+	echo 'libdir=$${exec_prefix}/lib' >> $(PCFILE)
 	echo 'includedir=$${prefix}/include' >> $(PCFILE)
 	echo '' >> $(PCFILE)
 	echo 'Name: kit' >> $(PCFILE)
@@ -41,8 +41,8 @@ $(PCFILE):
 	
 install: $(OUT_LIBRARY) $(PCFILE)
 	cp -r $(INCLUDEDIR)/* $(PREFIX)/include
-	cp lib/$(OUT_LIBRARY) $(PREFIX)/lib64/
-	cp $(PCFILE) $(PREFIX)/lib64/pkgconfig/kit.pc
+	cp lib/$(OUT_LIBRARY) $(PREFIX)/lib/
+	cp $(PCFILE) $(PREFIX)/lib/pkgconfig/kit.pc
 	
 clean:
 	$(shell rm -rf ./build)

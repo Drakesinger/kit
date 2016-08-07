@@ -9,13 +9,13 @@ all: window renderer
 window: 
 	@echo 'Building Window example ...'
 	$(shell mkdir bin)
-	$(CXX) $(CXXFLAGS) $(DEPFLAGS) $(LDFLAGS) $(LIBS) src/window.cpp -o bin/window-example
+	$(CXX) $(CXXFLAGS) $(DEPFLAGS) $(LDFLAGS)  src/window.cpp -o bin/window-example $(LIBS)
 	cp bin/window-example ../dist/
 
 renderer:
 	@echo 'Building Renderer example ...'
 	$(shell mkdir bin)
-	$(CXX) $(CXXFLAGS) $(DEPFLAGS) $(LDFLAGS) $(LIBS) src/renderer.cpp -o bin/renderer-example
+	$(CXX) $(CXXFLAGS) $(DEPFLAGS) $(LDFLAGS)  src/renderer.cpp -o bin/renderer-example $(LIBS)
 	cp bin/renderer-example ../dist/
 
 clean:
