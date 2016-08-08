@@ -458,7 +458,7 @@ std::vector<std::string> kit::splitString(const std::string& source, std::vector
 std::string kit::toLower(const std::string& in)
 {
   std::string out = in;
-  std::transform(in.begin(), in.end(), out.begin(), ::tolower);
+  std::transform(out.begin(), out.end(), out.begin(), ::tolower);
   return out;
 }
 
