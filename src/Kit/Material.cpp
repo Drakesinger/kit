@@ -16,7 +16,7 @@ kit::Program::Ptr kit::Material::m_cacheProgram = nullptr;
 std::map<std::string, kit::Material::Ptr> kit::Material::m_cache = std::map<std::string, kit::Material::Ptr>();
 std::map<kit::Material::ProgramFlags, kit::Program::Ptr> kit::Material::m_programCache = std::map<kit::Material::ProgramFlags, kit::Program::Ptr>();
 
-static const char * glslVersion = "#version 410 core\n";
+static const char * glslVersion = "#version 430 core\n";
 
 static const char * glslCacheVertex
 ="const vec2 quadVertices[4] = vec2[4]( vec2( -1.0, -1.0), vec2( 1.0, -1.0), vec2( -1.0, 1.0), vec2( 1.0, 1.0));\n\
@@ -262,7 +262,9 @@ kit::Material::Ptr kit::Material::load(std::string filename, bool reload)
       currMaterial->m_blendMode = None;
 
       currMaterial->m_program = nullptr;
-      currMaterial->m_skinnedProgram = nullptr;
+      currMaterial->m_sProgram = nullptr;
+      currMaterial->m_iProgram = nullptr;
+      currMaterial->m_siProgram = nullptr;
 
       currMaterial->m_arDirty = true;
       currMaterial->m_nmDirty = true;
@@ -509,7 +511,9 @@ kit::Material::Material()
   this->m_blendMode = None;
 
   this->m_program = nullptr;
-  this->m_skinnedProgram = nullptr;
+  this->m_sProgram = nullptr;
+  this->m_iProgram = nullptr;
+  this->m_siProgram = nullptr;
   
   this->m_arCache = kit::PixelBuffer::create(glm::uvec2(128, 128), {kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA8, Texture::Repeat, Texture::LinearMipmapLinear, Texture::Linear)});
   this->m_nmCache = kit::PixelBuffer::create(glm::uvec2(128, 128), {kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA8, Texture::Repeat, Texture::LinearMipmapLinear, Texture::Linear)});
@@ -731,10 +735,11 @@ void kit::Material::renderEOCache()
   this->m_eoDirty = false;
 }
 
-kit::Material::ProgramFlags kit::Material::getFlags(bool skinned)
+kit::Material::ProgramFlags kit::Material::getFlags(bool skinned, bool instanced)
 {
   kit::Material::ProgramFlags flags;
   flags.m_skinned = skinned;
+  flags.m_instanced = instanced;
   flags.m_albedoMap = (this->m_albedoMap != nullptr);
   flags.m_roughnessMap = (this->m_roughnessMap != nullptr);
   flags.m_dynamicAR = this->m_dynamicAR;
@@ -760,6 +765,7 @@ kit::Program::Ptr kit::Material::getProgram(kit::Material::ProgramFlags flags)
   std::cout
     << "Compiling a new material-program with flags "
     << (flags.m_skinned ? "S" : "-")
+    << (flags.m_instanced ? "I" : "-")
     << (flags.m_forward ? "F" : "-")
     << (flags.m_opacityMask ? "P" : "-")
     << (flags.m_dynamicAR ? "D" : "-")
@@ -823,7 +829,12 @@ kit::Program::Ptr kit::Material::getProgram(kit::Material::ProgramFlags flags)
     {
       vertexsource << "uniform mat4 uniform_bones[128];" << std::endl;
     }
-
+    
+    if(flags.m_instanced)
+    {
+      vertexsource << "uniform mat4 uniform_instanceTransform[128];" << std::endl;
+    }
+    
     vertexsource << std::endl;
     
     // Main code
@@ -845,9 +856,17 @@ kit::Program::Ptr kit::Material::getProgram(kit::Material::ProgramFlags flags)
       vertexsource << "  vec3 normal = normalize(in_normal);" << std::endl;
     }
     vertexsource << std::endl;
-    vertexsource << "  gl_Position = uniform_mvpMatrix * position;" << std::endl;
-
-    vertexsource << "  out_normal = uniform_normalMatrix * normal;" << std::endl;
+    
+    if(flags.m_instanced)
+    {
+      vertexsource << "  gl_Position = uniform_mvpMatrix * uniform_instanceTransform[gl_InstanceID] * position;" << std::endl;
+      vertexsource << "  out_normal = uniform_normalMatrix * mat3(uniform_instanceTransform[gl_InstanceID]) * normal;" << std::endl;
+    }
+    else
+    {
+      vertexsource << "  gl_Position = uniform_mvpMatrix * position;" << std::endl;
+      vertexsource << "  out_normal = uniform_normalMatrix * normal;" << std::endl;
+    }
     
     if(needUvs)
     {
@@ -1235,9 +1254,6 @@ void kit::Material::setDynamicEO(bool eo)
 
 void kit::Material::assertCache()
 {
-  kit::Material::ProgramFlags flags = this->getFlags(false);
-  kit::Material::ProgramFlags sflags = this->getFlags(true);
-
   if(this->m_arDirty && !this->m_dynamicAR)
   {
     this->renderARCache();
@@ -1260,28 +1276,32 @@ void kit::Material::assertCache()
 
   if(this->m_dirty)
   {
+    kit::Material::ProgramFlags flags = this->getFlags(false, false);
+    kit::Material::ProgramFlags sflags = this->getFlags(true, false);
+    kit::Material::ProgramFlags iflags = this->getFlags(false, true);
+    kit::Material::ProgramFlags siflags = this->getFlags(true, true);
+  
     this->m_program = kit::Material::getProgram(flags);
-    this->m_skinnedProgram = kit::Material::getProgram(sflags);
+    this->m_sProgram = kit::Material::getProgram(sflags);
+    this->m_iProgram = kit::Material::getProgram(iflags);
+    this->m_siProgram = kit::Material::getProgram(siflags);
+    
     this->m_dirty = false;
   }
 }
 
-void kit::Material::use(kit::Camera::Ptr cam, const glm::mat4 & modelMatrix, const std::vector<glm::mat4> & skintransform)
+void kit::Material::use(kit::Camera::Ptr cam, const glm::mat4 & modelMatrix, const std::vector<glm::mat4> & skinTransform, const std::vector<glm::mat4> & instanceTransform)
 {
   this->assertCache();
-  kit::Material::ProgramFlags flags = this->getFlags(skintransform.size() > 0);
+  kit::Material::ProgramFlags flags = this->getFlags(skinTransform.size() > 0, instanceTransform.size() > 0);
 
   kit::Program::Ptr currProgram;
   
-  if(flags.m_skinned)
-  {
-    currProgram = this->m_skinnedProgram;
-  }
-  else
-  {
-    currProgram = this->m_program;
-  }
-  
+  if(flags.m_skinned && flags.m_instanced) currProgram = this->m_siProgram;
+  if(flags.m_skinned && !flags.m_instanced) currProgram = this->m_sProgram;
+  if(!flags.m_skinned && flags.m_instanced) currProgram = this->m_iProgram;
+  if(!flags.m_skinned && !flags.m_instanced) currProgram = this->m_program;
+
   currProgram->use();
   currProgram->setUniform3f("uniform_albedo", this->m_albedo);
   
@@ -1355,7 +1375,12 @@ void kit::Material::use(kit::Camera::Ptr cam, const glm::mat4 & modelMatrix, con
 
   if(flags.m_skinned)
   {
-    currProgram->setUniformMat4v("uniform_bones", skintransform);
+    currProgram->setUniformMat4v("uniform_bones", skinTransform);
+  }
+  
+  if(flags.m_instanced)
+  {
+    currProgram->setUniformMat4v("uniform_instanceTransform", instanceTransform);
   }
   
   glm::mat4 viewMatrix = cam->getViewMatrix();
@@ -1665,6 +1690,7 @@ kit::Texture::Ptr kit::Material::getNDCache()
 kit::Material::ProgramFlags::ProgramFlags()
 {
   this->m_skinned = false;
+  this->m_instanced = false;
   this->m_dynamicAR = false;
   this->m_albedoMap = false;
   this->m_roughnessMap = false;

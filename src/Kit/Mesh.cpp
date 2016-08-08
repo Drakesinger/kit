@@ -88,20 +88,26 @@ kit::Mesh::SubmeshEntry* kit::Mesh::getSubmeshEntry(std::string name)
   return &this->m_submeshEntries.at(name);
 }
 
-void kit::Mesh::render(kit::Camera::Ptr cam, const glm::mat4 & modelMatrix, bool forward, const std::vector<glm::mat4> & skintransform)
+void kit::Mesh::render(kit::Camera::Ptr camera, const glm::mat4 & modelMatrix, bool isForwardPass, const std::vector<glm::mat4> & skinTransform, const std::vector<glm::mat4> & instanceTransform)
 {
   for(auto & currSubmesh : this->m_submeshEntries)
   {
     if (this->m_submeshesEnabled.at(currSubmesh.first))
     {
-      if (currSubmesh.second.m_material->getFlags(skintransform.size() > 0).m_forward && forward)
+      bool materialForward = currSubmesh.second.m_material->getFlags(skinTransform.size() > 0, instanceTransform.size() > 0).m_forward;
+      if(isForwardPass != materialForward)
       {
-        currSubmesh.second.m_material->use(cam, modelMatrix, skintransform);
-        currSubmesh.second.m_submesh->renderGeometry();
+        continue;
       }
-      if (!currSubmesh.second.m_material->getFlags(skintransform.size() > 0).m_forward && !forward)
+
+      currSubmesh.second.m_material->use(camera, modelMatrix, skinTransform, instanceTransform);
+      
+      if(instanceTransform.size() > 0)
       {
-        currSubmesh.second.m_material->use(cam, modelMatrix, skintransform);
+        currSubmesh.second.m_submesh->renderGeometryInstanced(instanceTransform.size());
+      }
+      else
+      {
         currSubmesh.second.m_submesh->renderGeometry();
       }
     }

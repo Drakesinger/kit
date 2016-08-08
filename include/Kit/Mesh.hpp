@@ -38,7 +38,7 @@ namespace kit
       static kit::Mesh::Ptr create();
       static kit::Mesh::Ptr load(std::string filename);
       
-      void render(kit::CameraPtr cam, const glm::mat4 & modelMatrix, bool forward, const std::vector<glm::mat4> & skintransform = std::vector<glm::mat4>());
+      void render(kit::CameraPtr camera, const glm::mat4 & modelMatrix, bool isForwardPass, const std::vector<glm::mat4> & skinTransform = std::vector<glm::mat4>(), const std::vector<glm::mat4> & instanceTransform = std::vector<glm::mat4>());
       void renderGeometry();
 
       void addSubmeshEntry(std::string name, kit::SubmeshPtr geometry, kit::MaterialPtr material);

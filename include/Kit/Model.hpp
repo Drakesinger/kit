@@ -37,6 +37,8 @@ namespace kit
       kit::MeshPtr getMesh();
       kit::Skeleton::Ptr getSkeleton();
       
+      void setInstancing(bool enabled, std::vector<glm::mat4> transforms);
+      
       void update(double const & ms);
       void renderDeferred(kit::RendererPtr renderer) override;
       void renderForward(kit::RendererPtr renderer) override;
@@ -56,6 +58,9 @@ namespace kit
 
       kit::MeshPtr m_mesh;
       kit::Skeleton::Ptr m_skeleton;
+      bool m_instanced;
+      std::vector<glm::mat4> m_instanceTransform;
+      
 
       static uint32_t               m_instanceCount;
 

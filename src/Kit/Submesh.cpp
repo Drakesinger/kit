@@ -22,6 +22,12 @@ void kit::Submesh::renderGeometry()
   KIT_GL(glDrawElements( GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0));
 }
 
+void kit::Submesh::renderGeometryInstanced(uint32_t numInstances)
+{
+  kit::GL::bindVertexArray(this->m_glVertexArray);
+  KIT_GL(glDrawElementsInstanced( GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0, numInstances));
+}
+
 kit::Submesh::Ptr kit::Submesh::load(std::string name)
 {
   auto finder = kit::Submesh::m_cache.find(name);
