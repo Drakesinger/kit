@@ -168,27 +168,27 @@ namespace kit{
   KITAPI void        writeMat3(std::ostream & s, glm::mat3 v);
 
   KITAPI std::string readString(std::istream & s); // reads null-terminated string
-  KITAPI void        writeString(std::ostream & s, std::string v);
+  KITAPI void        writeString(std::ostream & s, const std::string& v);
 
   KITAPI std::vector<char> readBytes(std::istream & s, uint32_t c);
   KITAPI void        writeBytes(std::ostream & s, std::vector<char> v);
 
   
   // String manipulation functions
-  KITAPI std::string toLower(std::string);
-  KITAPI bool stringContains(std::string needle, std::string haystack);
+  KITAPI std::string toLower(const std::string&);
+  KITAPI bool stringContains(const std::string& needle, const std::string& haystack);
   KITAPI bool isWhitespace(char const & curr);
-  KITAPI std::vector<std::string>  splitString(std::string source);
-  KITAPI std::vector<std::string>  splitString(std::string source, std::vector<char> delimiters);
-  KITAPI std::string trimLeft(std::string source);
-  KITAPI std::string trimRight(std::string source);
-  KITAPI std::string trim(std::string source);
+  KITAPI std::vector<std::string>  splitString(const std::string& source);
+  KITAPI std::vector<std::string>  splitString(const std::string& source, std::vector<char> delimiters);
+  KITAPI std::string trimLeft(const std::string& source);
+  KITAPI std::string trimRight(const std::string& source);
+  KITAPI std::string trim(const std::string& source);
   KITAPI std::vector<const char*> toCharArray(std::vector<std::string> const & input);
 
   // Filesystem queries
-  KITAPI bool isDirectory(std::string directory);
-  KITAPI bool createDirectory(std::string directory);
-  KITAPI std::vector<FileInfo> listFilesystemEntries(std::string directory, bool include_files = true, bool include_directories = true);
+  KITAPI bool isDirectory(const std::string& directory);
+  KITAPI bool createDirectory(const std::string& directory);
+  KITAPI std::vector<FileInfo> listFilesystemEntries(const std::string& directory, bool include_files = true, bool include_directories = true);
 
   // Math functions
   glm::quat rotationTo(glm::vec3 from, glm::vec3 to, glm::vec3 fallback = glm::vec3(0.0, 0.0, 0.0));
@@ -198,7 +198,7 @@ namespace kit{
   KITAPI float randomFloat(float min, float max);
   
   // Ugliest shit you've ever seen
-  KITAPI std::wstring stringToWide(std::string s);
+  KITAPI std::wstring stringToWide(const std::string& s);
   KITAPI std::string wideToString(std::wstring ws);
 
   // Animators
@@ -303,8 +303,8 @@ namespace kit{
   
   struct KITAPI  Geometry
   {
-    bool load(std::string filename);
-    bool save(std::string filename);
+    bool load(const std::string& filename);
+    bool save(const std::string& filename);
     
     std::vector<kit::Vertex>            m_vertices;
     std::vector<uint32_t>            m_indices;

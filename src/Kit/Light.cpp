@@ -338,7 +338,7 @@ glm::vec4 kit::Light::getAttenuation()
 }
 
 
-void kit::Light::setEnvironment(std::string name)
+void kit::Light::setEnvironment(const std::string&name)
 {
   if (this->m_type != kit::Light::IBL)
   {

@@ -31,7 +31,7 @@ kit::Window::Args::Args()
   this->title = "New window";
 }
 
-kit::Window::Args::Args(std::string title, kit::Window::Mode mode, glm::uvec2 resolution, kit::Monitor::Ptr fullscreenMonitor, kit::Window::Ptr sharedWindow, bool resizable)
+kit::Window::Args::Args(const std::string&title, kit::Window::Mode mode, glm::uvec2 resolution, kit::Monitor::Ptr fullscreenMonitor, kit::Window::Ptr sharedWindow, bool resizable)
 {
   this->mode = mode;
   this->resolution = resolution;
@@ -162,7 +162,7 @@ void kit::Window::setVSync(bool enabled)
   glfwSwapInterval((enabled ? 1 : 0));
 }
 
-kit::Window::Ptr kit::Window::create(std::string title, kit::Window::Mode mode, glm::uvec2 resolution)
+kit::Window::Ptr kit::Window::create(const std::string&title, kit::Window::Mode mode, glm::uvec2 resolution)
 {
   kit::Window::Args args(title, mode, resolution);
   return kit::Window::create(args);
@@ -237,7 +237,7 @@ bool kit::Window::isOpen()
   return (glfwWindowShouldClose(this->m_glfwHandle) == 0);
 }
 
-void kit::Window::setTitle(std::string newTitle)
+void kit::Window::setTitle(const std::string&newTitle)
 {
   glfwSetWindowTitle(this->m_glfwHandle, newTitle.c_str());
 }

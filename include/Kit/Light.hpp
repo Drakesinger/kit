@@ -46,7 +46,7 @@ namespace kit
       void setConeAngle(float inner, float outer);
       glm::vec2 const  getConeAngle();
 
-      void setEnvironment(std::string name);
+      void setEnvironment(const std::string& name);
       
       void setIrradianceMap(kit::Cubemap::Ptr irradiance);
       kit::Cubemap::Ptr getIrradianceMap();

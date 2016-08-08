@@ -1,6 +1,6 @@
 #include "Kit/Exception.hpp"
 
-kit::Exception::Exception(std::string msg, std::string file, std::string method, int line){
+kit::Exception::Exception(const std::string& msg, const std::string& file, const std::string& method, int line){
 	this->m_what = msg;
 	this->m_file = file;
 	this->m_method = method;

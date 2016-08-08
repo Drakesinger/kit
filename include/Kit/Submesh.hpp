@@ -16,16 +16,15 @@ namespace kit
       
       ~Submesh();
       
-      static kit::Submesh::Ptr load(std::string geometry);
+      static kit::Submesh::Ptr load(const std::string& geometry);
       static void flushCache();
       
       void renderGeometry();
       void renderGeometryInstanced(uint32_t numInstances);
       
-      Submesh(std::string filename);
-
+      Submesh(const std::string& filename);
     private:
-      void loadGeometry(std::string filename);
+      void loadGeometry(const std::string& filename);
       
       kit::GL m_glSingleton;
       

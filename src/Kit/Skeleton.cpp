@@ -29,7 +29,7 @@ kit::Skeleton::~Skeleton()
 
 }
 
-kit::Skeleton::Ptr kit::Skeleton::load(std::string filename)
+kit::Skeleton::Ptr kit::Skeleton::load(const std::string&filename)
 {
   kit::Skeleton::Ptr returner = std::make_shared<kit::Skeleton>();
 
@@ -249,7 +249,7 @@ void kit::Skeleton::play(bool loop)
   this->m_isLooping = loop;
 }
 
-void kit::Skeleton::setAnimation(std::string name)
+void kit::Skeleton::setAnimation(const std::string&name)
 {
   auto newAnim = this->getAnimation(name);
   if (newAnim != this->m_currentAnimation)
@@ -270,7 +270,7 @@ std::vector< glm::mat4 > kit::Skeleton::getSkin()
   return this->m_skin;
 }
 
-kit::Skeleton::Bone::Ptr kit::Skeleton::getBone(std::string name)
+kit::Skeleton::Bone::Ptr kit::Skeleton::getBone(const std::string&name)
 {
   if (this->m_boneIndexName.find(name) != this->m_boneIndexName.end())
   {
@@ -288,7 +288,7 @@ kit::Skeleton::Bone::Ptr kit::Skeleton::getBone(uint32_t id)
   return this->m_boneIndexId[id];
 }
 
-kit::Skeleton::Animation::Ptr kit::Skeleton::getAnimation(std::string animationname)
+kit::Skeleton::Animation::Ptr kit::Skeleton::getAnimation(const std::string&animationname)
 {
   if (this->m_animations.find(animationname) != this->m_animations.end())
   {

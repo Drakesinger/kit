@@ -35,9 +35,9 @@ namespace kit
       static bool usesKeyboard();
       static bool usesTextInput();
 
-      static kit::TexturePtr selectTexture(std::string name, kit::TexturePtr currentTexture, bool srgb = true, bool reload = false, std::string prefix = "");
+      static kit::TexturePtr selectTexture(const std::string& name, kit::TexturePtr currentTexture, bool srgb = true, bool reload = false, const std::string& prefix = "");
       
-      static SelectionIterator select(std::string title, SelectionIterator currIndex, SelectionList & list);
+      static SelectionIterator select(const std::string& title, SelectionIterator currIndex, SelectionList & list);
       
     private:
       kit::GL m_glSingleton;

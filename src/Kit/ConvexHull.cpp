@@ -19,7 +19,7 @@ kit::ConvexHull::~ConvexHull()
 
 }
 
-kit::ConvexHull::Ptr kit::ConvexHull::load(std::string filename)
+kit::ConvexHull::Ptr kit::ConvexHull::load(const std::string&filename)
 {
   auto returner = std::make_shared<kit::ConvexHull>();
   std::fstream f(filename.c_str(), std::ios_base::binary | std::ios_base::in);

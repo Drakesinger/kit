@@ -49,7 +49,7 @@ namespace kit
       BakedTerrain();
       ~BakedTerrain();
 
-      static Ptr load(std::string name);
+      static Ptr load(const std::string& name);
 
       void renderDeferred(kit::RendererPtr camera) override;
       void renderGeometry() override;

@@ -63,13 +63,13 @@ namespace kit
       typedef std::shared_ptr<kit::Skeleton> Ptr;
       typedef std::pair<glm::mat4, Bone::Ptr> WorkPair;
 
-      static kit::Skeleton::Ptr load(std::string filename);
-      bool save(std::string filename);
+      static kit::Skeleton::Ptr load(const std::string& filename);
+      bool save(const std::string& filename);
       
       void update(const double & ms);
       void updateSkin();
 
-      void setAnimation(std::string name);
+      void setAnimation(const std::string& name);
 
       void play(bool loop = true);
       void pause();
@@ -79,10 +79,10 @@ namespace kit
   
       std::vector<glm::mat4> getSkin();
 
-      kit::Skeleton::Bone::Ptr getBone(std::string name);
+      kit::Skeleton::Bone::Ptr getBone(const std::string& name);
       kit::Skeleton::Bone::Ptr getBone(uint32_t id);
       
-      kit::Skeleton::Animation::Ptr getAnimation(std::string animationname);
+      kit::Skeleton::Animation::Ptr getAnimation(const std::string& animationname);
 
       Skeleton();
     private:

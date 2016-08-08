@@ -52,11 +52,11 @@ namespace kit{
       
 			~Cubemap();
       
-      static kit::Cubemap::Ptr load(std::string zpos, std::string zneg, std::string xpos, std::string xneg, std::string ypos, std::string yneg);
+      static kit::Cubemap::Ptr load(const std::string& zpos, const std::string& zneg, const std::string& xpos, const std::string& xneg, const std::string& ypos, const std::string& yneg);
 			
-      static kit::Cubemap::Ptr loadIrradianceMap(std::string name);
-      static kit::Cubemap::Ptr loadRadianceMap(std::string name);
-      static kit::Cubemap::Ptr loadSkybox(std::string name);
+      static kit::Cubemap::Ptr loadIrradianceMap(const std::string& name);
+      static kit::Cubemap::Ptr loadRadianceMap(const std::string& name);
+      static kit::Cubemap::Ptr loadSkybox(const std::string& name);
       
       static kit::Cubemap::Ptr createDepthmap(glm::uvec2 resolution);
       

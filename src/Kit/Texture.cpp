@@ -57,7 +57,7 @@ kit::Texture::Ptr kit::Texture::create2D(glm::uvec2 resolution, kit::Texture::In
   return returner;
 }
 
-kit::Texture::Ptr kit::Texture::create2DFromFile(std::string filename, kit::Texture::InternalFormat format, kit::Texture::EdgeSamplingMode edgemode, kit::Texture::FilteringMode minfilter, kit::Texture::FilteringMode magfilter)
+kit::Texture::Ptr kit::Texture::create2DFromFile(const std::string&filename, kit::Texture::InternalFormat format, kit::Texture::EdgeSamplingMode edgemode, kit::Texture::FilteringMode minfilter, kit::Texture::FilteringMode magfilter)
 {
   std::cout << "Loading texture from file " << filename.c_str() << std::endl;
   kit::Texture::Ptr returner = std::make_shared<kit::Texture>(Texture2D);
@@ -105,7 +105,7 @@ kit::Texture::Ptr kit::Texture::create2DFromFile(std::string filename, kit::Text
   return returner;
 }
 
-kit::Texture::Ptr kit::Texture::create3DFromFile(std::string filename, kit::Texture::InternalFormat format, kit::Texture::EdgeSamplingMode edgemode, kit::Texture::FilteringMode minfilter, kit::Texture::FilteringMode magfilter)
+kit::Texture::Ptr kit::Texture::create3DFromFile(const std::string&filename, kit::Texture::InternalFormat format, kit::Texture::EdgeSamplingMode edgemode, kit::Texture::FilteringMode minfilter, kit::Texture::FilteringMode magfilter)
 {
   kit::Texture::Ptr returner = std::make_shared<kit::Texture>(Texture3D);
   returner->m_internalFormat = format;
@@ -154,7 +154,7 @@ kit::Texture::Ptr kit::Texture::createShadowmap(glm::uvec2 resolution)
   return returner;
 }
 
-kit::Texture::Ptr kit::Texture::load(std::string name, bool srgb)
+kit::Texture::Ptr kit::Texture::load(const std::string&name, bool srgb)
 {
   if(kit::Texture::m_cachedTextures.find(name) != kit::Texture::m_cachedTextures.end())
   {
@@ -392,7 +392,7 @@ kit::Texture::InternalFormat kit::Texture::getInternalFormat()
   return this->m_internalFormat;
 }
 
-std::vector<std::string> kit::Texture::getAvailableTextures(std::string prefix, bool reload)
+std::vector<std::string> kit::Texture::getAvailableTextures(const std::string&prefix, bool reload)
 {
   std::vector<std::string> result;
 
@@ -404,7 +404,7 @@ std::vector<std::string> kit::Texture::getAvailableTextures(std::string prefix, 
   return result;
 }
 
-bool kit::Texture::saveToFile(std::string filename)
+bool kit::Texture::saveToFile(const std::string&filename)
 {
   // Fetch data from GPU
   unsigned char * data = new unsigned char[(this->m_resolution.x * this->m_resolution.y) * 4];

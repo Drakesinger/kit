@@ -24,7 +24,7 @@ kit::Mesh::Ptr kit::Mesh::create()
   return std::make_shared<kit::Mesh>();
 }
 
-kit::Mesh::Ptr kit::Mesh::load(std::string filename)
+kit::Mesh::Ptr kit::Mesh::load(const std::string&filename)
 {
   kit::Mesh::Ptr returner = kit::Mesh::create();
   
@@ -67,19 +67,19 @@ kit::Mesh::Ptr kit::Mesh::load(std::string filename)
   
 }
 
-void kit::Mesh::setSubmeshEnabled(std::string name, bool b)
+void kit::Mesh::setSubmeshEnabled(const std::string&name, bool b)
 {
   this->m_submeshesEnabled.at(name) = b;
 }
 
-void kit::Mesh::addSubmeshEntry(std::string name, kit::Submesh::Ptr geometry, kit::Material::Ptr material)
+void kit::Mesh::addSubmeshEntry(const std::string&name, kit::Submesh::Ptr geometry, kit::Material::Ptr material)
 {
   this->m_submeshEntries[name].m_material = material;
   this->m_submeshEntries[name].m_submesh = geometry;
   this->m_submeshesEnabled[name] = true;
 }
 
-kit::Mesh::SubmeshEntry* kit::Mesh::getSubmeshEntry(std::string name)
+kit::Mesh::SubmeshEntry* kit::Mesh::getSubmeshEntry(const std::string&name)
 {
   if (this->m_submeshEntries.find(name) == this->m_submeshEntries.end())
   {

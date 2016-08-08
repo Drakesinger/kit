@@ -23,7 +23,7 @@ kit::Cubemap::~Cubemap()
 	KIT_GL(glDeleteTextures(1, &this->m_glHandle));
 }
 
-kit::Cubemap::Ptr kit::Cubemap::loadRadianceMap(std::string name)
+kit::Cubemap::Ptr kit::Cubemap::loadRadianceMap(const std::string& name)
 {
   kit::Cubemap::Ptr returner = std::make_shared<kit::Cubemap>();
   std::stringstream namer;
@@ -99,7 +99,7 @@ kit::Cubemap::Ptr kit::Cubemap::loadRadianceMap(std::string name)
   return returner;
 }
 
-kit::Cubemap::Ptr kit::Cubemap::loadIrradianceMap(std::string name)
+kit::Cubemap::Ptr kit::Cubemap::loadIrradianceMap(const std::string& name)
 {
   
   kit::Cubemap::Ptr returner = std::make_shared<kit::Cubemap>();
@@ -156,7 +156,7 @@ kit::Cubemap::Ptr kit::Cubemap::loadIrradianceMap(std::string name)
   return returner;
 }
 
-kit::Cubemap::Ptr kit::Cubemap::loadSkybox(std::string name)
+kit::Cubemap::Ptr kit::Cubemap::loadSkybox(const std::string& name)
 {
   
   kit::Cubemap::Ptr returner = std::make_shared<kit::Cubemap>();
@@ -216,7 +216,7 @@ kit::Cubemap::Ptr kit::Cubemap::loadSkybox(std::string name)
   return returner;
 }
 
-kit::Cubemap::Ptr kit::Cubemap::load(std::string zpos, std::string zneg, std::string xpos, std::string xneg, std::string ypos, std::string yneg)
+kit::Cubemap::Ptr kit::Cubemap::load(const std::string& zpos, const std::string& zneg, const std::string& xpos, const std::string& xneg, const std::string& ypos, const std::string& yneg)
 {
   
   kit::Cubemap::Ptr returner = std::make_shared<kit::Cubemap>();

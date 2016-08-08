@@ -499,7 +499,7 @@ bool kit::UISystem::usesTextInput()
   return kit::UISystem::m_usesTextInput;
 }
 
-kit::UISystem::SelectionIterator kit::UISystem::select(std::string title, kit::UISystem::SelectionIterator currIndex, kit::UISystem::SelectionList& list)
+kit::UISystem::SelectionIterator kit::UISystem::select(const std::string& title, kit::UISystem::SelectionIterator currIndex, kit::UISystem::SelectionList& list)
 {
   kit::UISystem::SelectionIterator returner = currIndex;
   
@@ -580,7 +580,7 @@ kit::UISystem::SelectionIterator kit::UISystem::select(std::string title, kit::U
 }
 
 
-kit::Texture::Ptr kit::UISystem::selectTexture(std::string name, kit::Texture::Ptr currentTexture, bool srgb, bool reload, std::string prefix)
+kit::Texture::Ptr kit::UISystem::selectTexture(const std::string& name, kit::Texture::Ptr currentTexture, bool srgb, bool reload, const std::string& prefix)
 {
   kit::Texture::Ptr newTexture = currentTexture;
   static std::vector<std::string> textures; 
