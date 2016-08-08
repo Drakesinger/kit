@@ -245,7 +245,8 @@ glm::mat4 kit::Light::getPointViewMatrix(kit::Cubemap::Side s)
 {  
   switch(s)
   {
-
+    default:
+    case Cubemap::Count:
     case Cubemap::PositiveX:
       return glm::lookAt(this->getPosition(), this->getPosition() + glm::vec3(1.0,0.0,0.0), glm::vec3(0.0,-1.0,0.0));
       break;

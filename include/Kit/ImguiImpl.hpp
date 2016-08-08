@@ -72,6 +72,6 @@ namespace kit
       static unsigned int imgui_vaoHandle;
       static unsigned int imgui_elementsHandle;
   };
-};
+}
 
 #endif

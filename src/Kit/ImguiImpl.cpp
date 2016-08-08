@@ -628,7 +628,7 @@ kit::Texture::Ptr kit::UISystem::selectTexture(std::string name, kit::Texture::P
         newTexture = nullptr;
       }
       ImGui::Separator();
-      for (int i = 0; i < textures.size(); i++)
+      for (uint32_t i = 0; i < textures.size(); i++)
       {
         if(ImGui::ImageButton((ImTextureID)textureObjs[i]->getHandle(), ImVec2(32, 32), ImVec2(0.0, 1.0), ImVec2(1.0, 0.0)))
         {

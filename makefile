@@ -1,6 +1,6 @@
 PREFIX       := /usr
 CXX          := g++
-CXXFLAGS     := -std=c++14 -Wall -Wextra -Wpedantic -Wno-unused-parameter -fPIC
+CXXFLAGS     := -std=c++14 -Wall -Wextra -Wpedantic -Wno-unused-parameter -fPIC -g -DKIT_DEBUG
 LDFLAGS      := -ldl -pthread -shared 
 REQLIBS      := glfw3 freetype2 chaiscript gl
 LIBS         := $(shell pkg-config --libs $(REQLIBS))

@@ -232,7 +232,7 @@ void kit::PixelBuffer::clear(std::vector<glm::vec4> colours, float depth)
     KIT_THROW("Wrong number of colors passed, one color per attachment is required.");
   }
   
-  for(int32_t i = 0; i < this->m_colorAttachments.size(); i++)
+  for(uint32_t i = 0; i < this->m_colorAttachments.size(); i++)
   {
     float currColor[4] = {colours[i].x, colours[i].y, colours[i].z, colours[i].w};
     KIT_GL(glClearBufferfv(GL_COLOR, i, &currColor[0]));
@@ -290,7 +290,7 @@ void kit::PixelBuffer::clear(std::vector< glm::vec4 > colours)
     KIT_THROW("Wrong number of colors passed, one color per attachment is required.");
   }
   
-  for(int32_t i = 0; i < this->m_colorAttachments.size(); i++)
+  for(uint32_t i = 0; i < this->m_colorAttachments.size(); i++)
   {
     float currColor[4] = {colours[i].x, colours[i].y, colours[i].z, colours[i].w};
     KIT_GL(glClearBufferfv(GL_COLOR, i, &currColor[i]));
@@ -417,7 +417,7 @@ void kit::PixelBuffer::blitFrom(kit::PixelBuffer::Ptr source, bool colorMask, st
       return;
     }
 
-    for (int i = 0; i < this->m_colorAttachments.size(); i++)
+    for (uint32_t i = 0; i < this->m_colorAttachments.size(); i++)
     {
       KIT_GL(glColorMaski(i, componentMask[i][0], componentMask[i][1], componentMask[i][2], componentMask[i][3]));
     }
@@ -429,7 +429,7 @@ void kit::PixelBuffer::blitFrom(kit::PixelBuffer::Ptr source, bool colorMask, st
 
   if (clearColorMask)
   {
-    for (int i = 0; i < this->m_colorAttachments.size(); i++)
+    for (uint32_t i = 0; i < this->m_colorAttachments.size(); i++)
     {
       KIT_GL(glColorMaski(i, true, true, true, true));
     }
