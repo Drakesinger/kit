@@ -54,6 +54,8 @@ The examples reside inside `./examples`. Build it by calling `make` as usual. Th
 
 Check the `vs2015` folder for a solution. It is known to be buildable, every dependency except `chaiscript` and `assimp` exist in NuGet. Please report any issues you might have using this solution.
 
+**Notice:** You HAVE to run the examples and the tools from inside the `dist` directory.
+
 # How to contribute
 
 Open issues, create pull requests. But please get to know the codebase a bit first, learn the programming idioms. Even if a lot of code in this project currently is pretty ugly, I still require a very high standard of code-quality.
