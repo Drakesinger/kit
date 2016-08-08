@@ -20,8 +20,9 @@ namespace kit
       static void flushCache();
       
       void renderGeometry();
+      void renderGeometryInstanced(uint32_t numInstances);
+      
       Submesh(const std::string& filename);
-
     private:
       void loadGeometry(const std::string& filename);
       

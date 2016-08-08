@@ -83,6 +83,13 @@ kit::Skeleton::Ptr kit::Model::getSkeleton()
   return this->m_skeleton;
 }
 
+void kit::Model::setInstancing(bool enabled, std::vector< glm::mat4 > transforms)
+{
+  this->m_instanced = enabled;
+  this->m_instanceTransform = transforms;
+}
+
+
 void kit::Model::update(const double & ms)
 {
   if(this->m_skeleton != nullptr)
@@ -93,26 +100,38 @@ void kit::Model::update(const double & ms)
 
 void kit::Model::renderDeferred(kit::Renderer::Ptr renderer)
 {
-  if(this->m_skeleton  != nullptr)
+  std::vector<glm::mat4> skinTransform;
+  std::vector<glm::mat4> instanceTransform;
+  
+  if(this->m_skeleton)
   {
-    this->m_mesh->render(renderer->getActiveCamera(), this->getTransformMatrix(), false, this->m_skeleton->getSkin());
+    skinTransform = this->m_skeleton->getSkin();
   }
-  else
+  
+  if(this->m_instanced)
   {
-    this->m_mesh->render(renderer->getActiveCamera(), this->getTransformMatrix(), false);
+    instanceTransform = this->m_instanceTransform;
   }
+
+  this->m_mesh->render(renderer->getActiveCamera(), this->getTransformMatrix(), false, skinTransform, instanceTransform);
 }
 
 void kit::Model::renderForward(kit::Renderer::Ptr renderer)
 {
-  if (this->m_skeleton != nullptr)
+  std::vector<glm::mat4> skinTransform;
+  std::vector<glm::mat4> instanceTransform;
+  
+  if(this->m_skeleton)
   {
-    this->m_mesh->render(renderer->getActiveCamera(), this->getTransformMatrix(), true, this->m_skeleton->getSkin());
+    skinTransform = this->m_skeleton->getSkin();
   }
-  else
+  
+  if(this->m_instanced)
   {
-    this->m_mesh->render(renderer->getActiveCamera(), this->getTransformMatrix(), true);
+    instanceTransform = this->m_instanceTransform;
   }
+
+  this->m_mesh->render(renderer->getActiveCamera(), this->getTransformMatrix(), true, skinTransform, instanceTransform);
 }
 
 void kit::Model::renderShadows(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
@@ -137,45 +156,37 @@ void kit::Model::renderShadows(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
       kit::GL::cullFace(GL_BACK);
     }
 
-    bool opacityMask = (currMaterial->getOpacityMask() != nullptr);
-    bool skinned = (this->m_skeleton != nullptr);
+    bool O = (currMaterial->getOpacityMask() != nullptr);
+    bool S = (this->m_skeleton != nullptr);
 
-    if (opacityMask)
+    kit::Program::Ptr currProgram;
+
+    if(S && O) currProgram = this->m_programShadowSO;
+    if(S && !O) currProgram = this->m_programShadowS;
+    if(!S && O) currProgram = this->m_programShadowO;
+    if(!S && !O) currProgram = this->m_programShadow;
+
+    currProgram->setUniformMat4("uniform_mvpMatrix", projectionMatrix * viewMatrix * this->getTransformMatrix());
+
+    if(O)
     {
-      if (skinned)
-      {
-        // SO
-        this->m_programShadowSO->use();
-        this->m_programShadowSO->setUniformTexture("uniform_opacityMask", currMaterial->getOpacityMask());
-        this->m_programShadowSO->setUniformMat4v("uniform_bones", this->m_skeleton->getSkin());
-        this->m_programShadowSO->setUniformMat4("uniform_mvpMatrix", projectionMatrix * viewMatrix * this->getTransformMatrix());
-      }
-      else
-      {
-        //O
-        this->m_programShadowO->use();
-        this->m_programShadowO->setUniformTexture("uniform_opacityMask", currMaterial->getOpacityMask());
-        this->m_programShadowO->setUniformMat4("uniform_mvpMatrix", projectionMatrix * viewMatrix * this->getTransformMatrix());
-      }
+      currProgram->setUniformTexture("uniform_opacityMask", currMaterial->getOpacityMask());
+    }
+
+    if(S)
+    {
+      currProgram->setUniformMat4v("uniform_bones", this->m_skeleton->getSkin());
+    }
+    
+    if(this->m_instanced)
+    {
+      currProgram->setUniformMat4v("uniform_instanceTransform", this->m_instanceTransform);
+      currSubmesh->renderGeometryInstanced(this->m_instanceTransform.size());
     }
     else
     {
-      if (skinned)
-      {
-        //S
-        this->m_programShadowS->use();
-        this->m_programShadowS->setUniformMat4v("uniform_bones", this->m_skeleton->getSkin());
-        this->m_programShadowS->setUniformMat4("uniform_mvpMatrix", projectionMatrix * viewMatrix * this->getTransformMatrix());
-      }
-      else
-      {
-        //None
-        this->m_programShadow->use();
-        this->m_programShadow->setUniformMat4("uniform_mvpMatrix", projectionMatrix * viewMatrix * this->getTransformMatrix());
-      }
+      currSubmesh->renderGeometry();
     }
-
-    currSubmesh->renderGeometry();
   }
 }
 

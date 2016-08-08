@@ -140,7 +140,7 @@ void kit::Water::renderForward(kit::Renderer::Ptr renderer)
   glm::mat4 invViewMatrix = glm::inverse(viewMatrix);
   glm::mat4 projectionMatrix = renderer->getActiveCamera()->getProjectionMatrix();
   glm::mat4 mvMatrix = viewMatrix * modelMatrix;
-  glm::mat4 normalMatrix = glm::transpose(glm::inverse(mvMatrix));
+  //glm::mat4 normalMatrix = glm::transpose(glm::inverse(mvMatrix));
   glm::mat4 mvpMatrix = projectionMatrix * viewMatrix * modelMatrix;
   
   // Calculate px and py to linearize depth in shader

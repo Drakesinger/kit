@@ -1,5 +1,5 @@
 CXX          := g++
-CXXFLAGS     := -std=c++14 -Wall -Wextra -Wpedantic -Wno-unused-parameter -DKIT_DEBUG
+CXXFLAGS     := -std=c++14 -Wall -Wextra -Wpedantic -Wno-unused-parameter -g -DKIT_DEBUG
 #LDFLAGS      := -ldl -pthread
 REQLIBS      := kit glfw3 freetype2 chaiscript gl
 LIBS         := $(shell pkg-config --libs $(REQLIBS))

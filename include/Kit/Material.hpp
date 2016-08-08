@@ -41,6 +41,7 @@ namespace kit
           return
             std::tie(
               this->m_skinned,
+              this->m_instanced,
               this->m_forward,
               this->m_opacityMask,
               this->m_dynamicAR,
@@ -55,6 +56,7 @@ namespace kit
               )
             < std::tie(
               b.m_skinned,
+              b.m_instanced,
               b.m_forward,
               b.m_opacityMask,
               b.m_dynamicAR,
@@ -70,6 +72,7 @@ namespace kit
         }
         
         bool m_skinned;
+        bool m_instanced;
 
         bool m_forward;
         bool m_opacityMask;
@@ -99,7 +102,7 @@ namespace kit
 
       std::string getName();
       
-      void use(kit::CameraPtr camera, const glm::mat4 & modelMatrix, const std::vector<glm::mat4> & skintransform);
+      void use(kit::CameraPtr camera, const glm::mat4 & modelMatrix, const std::vector<glm::mat4> & skinTransform, const std::vector<glm::mat4> & instanceTransform);
       
       const glm::vec3 & getAlbedo();
       void setAlbedo(glm::vec3 albedo);
@@ -194,7 +197,7 @@ namespace kit
       float getUvScale();
 
       void assertCache();
-      ProgramFlags      getFlags(bool skinned);
+      ProgramFlags      getFlags(bool skinned, bool instanced);
       Material();
     private:
 
@@ -270,7 +273,9 @@ namespace kit
       glm::vec2        m_metalnessOutput;
       
       kit::ProgramPtr   m_program;
-      kit::ProgramPtr   m_skinnedProgram;
+      kit::ProgramPtr   m_sProgram;
+      kit::ProgramPtr   m_iProgram;
+      kit::ProgramPtr   m_siProgram;
       bool              m_dirty;
 
 

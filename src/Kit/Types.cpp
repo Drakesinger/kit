@@ -196,7 +196,7 @@ std::vector<kit::FileInfo> kit::listFilesystemEntries(const std::string& path, b
     
     creator.filename = dirp->d_name;
     
-    if ((creator.type == kit::FileInfo::Directory && include_dirs) || creator.type == kit::FileInfo::File && include_files)
+    if ((creator.type == kit::FileInfo::Directory && include_dirs) || (creator.type == kit::FileInfo::File && include_files))
     {
       returner.push_back(creator);
     }
@@ -234,7 +234,7 @@ glm::quat kit::rotationTo(glm::vec3 from, glm::vec3 to, glm::vec3 fallback)
       glm::vec3 axis = glm::cross(from, glm::vec3(1.0, 0.0, 0.0));
       if(glm::length(axis) == 0.0f)
       {
-        glm::vec3 axis = glm::cross(from, glm::vec3(0.0, 1.0, 0.0));
+        axis = glm::cross(from, glm::vec3(0.0, 1.0, 0.0));
       }
       axis = glm::normalize(axis);
       q = glm::angleAxis(glm::radians(glm::pi<float>()), axis);
