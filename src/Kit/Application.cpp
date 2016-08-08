@@ -382,7 +382,7 @@ void kit::Application::quit()
   this->m_window->close();
 }
 
-void kit::Application::evaluate(std::string code)
+void kit::Application::evaluate(const std::string&code)
 {
   try
   {
@@ -394,7 +394,7 @@ void kit::Application::evaluate(std::string code)
   }
 }
 
-void kit::Application::print(std::string s)
+void kit::Application::print(const std::string&s)
 {
   std::vector<std::string> ss = splitString(s, std::vector<char>{'\n'});
   for(auto  & cs : ss)

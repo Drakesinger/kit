@@ -49,7 +49,7 @@ void kit::Model::releaseShared()
   kit::Model::m_programShadowSO.reset();
 }
 
-kit::Model::Ptr kit::Model::create(std::string mesh)
+kit::Model::Ptr kit::Model::create(const std::string&mesh)
 {
   kit::Model::Ptr returner = std::make_shared<kit::Model>();
   returner->m_mesh = kit::Mesh::load(mesh);
@@ -65,7 +65,7 @@ kit::Model::Ptr kit::Model::create(kit::Mesh::Ptr mesh)
   return returner;
 }
 
-kit::Model::Ptr kit::Model::create(std::string mesh, std::string skeleton)
+kit::Model::Ptr kit::Model::create(const std::string&mesh, const std::string& skeleton)
 {
   kit::Model::Ptr returner = std::make_shared<kit::Model>();
   returner->m_mesh = kit::Mesh::load(mesh);
@@ -200,7 +200,7 @@ std::vector<glm::mat4> kit::Model::getSkin()
   return this->m_skeleton->getSkin();
 }
 
-glm::vec3 kit::Model::getBoneWorldPosition(std::string bone)
+glm::vec3 kit::Model::getBoneWorldPosition(const std::string&bone)
 {
   if (!this->m_skeleton)
   {
@@ -218,7 +218,7 @@ glm::vec3 kit::Model::getBoneWorldPosition(std::string bone)
   return glm::vec3( this->getTransformMatrix() * currBone->m_globalTransform * glm::vec4(0.0, 0.0, 0.0, 1.0));
 }
 
-glm::quat kit::Model::getBoneWorldRotation(std::string bone)
+glm::quat kit::Model::getBoneWorldRotation(const std::string&bone)
 {
   if (!this->m_skeleton)
   {

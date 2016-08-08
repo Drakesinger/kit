@@ -246,7 +246,7 @@ namespace kit{
       ///
       /// \returns A shared pointer pointing to the newly created texture
       ///
-      static kit::Texture::Ptr create2DFromFile(std::string filename, InternalFormat format = RGBA8, EdgeSamplingMode edgemode = ClampToEdge, FilteringMode minfilter = Linear, FilteringMode magfilter = Linear);
+      static kit::Texture::Ptr create2DFromFile(const std::string& filename, InternalFormat format = RGBA8, EdgeSamplingMode edgemode = ClampToEdge, FilteringMode minfilter = Linear, FilteringMode magfilter = Linear);
 
       /// 
       /// \brief Creates a 3D texture and loads its content from a 2D image file. It does this by evenly splicing it on the height. It has to perfectly cubical.
@@ -261,7 +261,7 @@ namespace kit{
       ///
       /// \returns A shared pointer pointing to the newly created texture
       ///
-      static kit::Texture::Ptr create3DFromFile(std::string filename, InternalFormat format = RGBA8, EdgeSamplingMode edgemode = ClampToEdge, FilteringMode minfilter = Linear, FilteringMode magfilter = Linear);
+      static kit::Texture::Ptr create3DFromFile(const std::string& filename, InternalFormat format = RGBA8, EdgeSamplingMode edgemode = ClampToEdge, FilteringMode minfilter = Linear, FilteringMode magfilter = Linear);
 
 
       // ---- Resource-managed constructors
@@ -276,7 +276,7 @@ namespace kit{
       ///
       /// \returns A shared pointer pointing to the newly created texture
       ///
-      static kit::Texture::Ptr load(std::string name, bool srgb = true);
+      static kit::Texture::Ptr load(const std::string& name, bool srgb = true);
 
 
       // ---- Operations
@@ -312,7 +312,7 @@ namespace kit{
       /// \param filename Path to output file, relative to working directory
       /// \returns true on success, false on failure
       ///
-      bool          saveToFile(std::string filename);
+      bool          saveToFile(const std::string& filename);
 
       ///
       /// \brief Bind this texture
@@ -336,7 +336,7 @@ namespace kit{
       /// \param reload set to true to force reloading the cache
       /// \returns A list of filenames
       ///
-      static std::vector<std::string> getAvailableTextures(std::string prefix = "", bool reload = false);
+      static std::vector<std::string> getAvailableTextures(const std::string& prefix = "", bool reload = false);
 
 
       // ---- Properties

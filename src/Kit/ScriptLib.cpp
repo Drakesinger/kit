@@ -431,7 +431,7 @@ chaiscript::ModulePtr kit::getScriptLibrary()
     );
     
     moduleKit->add(chaiscript::fun([](kit::Window::Args a){return kit::Window::create(a); }), "createWindow");
-    moduleKit->add(chaiscript::fun([](std::string title, const kit::Window::Mode mode, glm::uvec2 resolution){return kit::Window::create(title, mode, resolution); }), "createWindow");
+    moduleKit->add(chaiscript::fun([](const std::string&title, const kit::Window::Mode mode, glm::uvec2 resolution){return kit::Window::create(title, mode, resolution); }), "createWindow");
     */
     
     // --- Console --- //

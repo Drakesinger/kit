@@ -22,7 +22,7 @@ kit::PixelShader::Ptr kit::PixelShader::create()
   return std::make_shared<kit::PixelShader>();
 }
 
-bool kit::PixelShader::sourceFromFile(std::string filename)
+bool kit::PixelShader::sourceFromFile(const std::string&filename)
 {
   std::string line;
   std::string source = "";
@@ -49,7 +49,7 @@ bool kit::PixelShader::sourceFromFile(std::string filename)
   return true;
 }
 
-void kit::PixelShader::sourceFromString(std::string s)
+void kit::PixelShader::sourceFromString(const std::string&s)
 {
   this->m_source = s;
 

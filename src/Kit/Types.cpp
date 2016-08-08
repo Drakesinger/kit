@@ -28,7 +28,7 @@
 #include <random>
 #include <glm/gtc/quaternion.hpp>
 
-bool kit::isDirectory(std::string directory)
+bool kit::isDirectory(const std::string& directory)
 {
   std::cout << "Checking if directory " << directory << std::endl;
 #ifdef __unix
@@ -56,7 +56,7 @@ bool kit::isDirectory(std::string directory)
 #endif
 }
 
-bool kit::createDirectory(std::string directory)
+bool kit::createDirectory(const std::string& directory)
 {
   std::cout << "Creating directory" << directory << std::endl;
 #ifdef __unix
@@ -111,7 +111,7 @@ bool kit::FileInfo::operator<(const FileInfo& rhs) const
 }
 
 
-std::vector<kit::FileInfo> kit::listFilesystemEntries(std::string path, bool include_files, bool include_dirs)
+std::vector<kit::FileInfo> kit::listFilesystemEntries(const std::string& path, bool include_files, bool include_dirs)
 {
   std::cout << "Reading directory " << path << std::endl;
 #ifdef _WIN32
@@ -283,7 +283,7 @@ float kit::randomFloat(float min, float max)
 
 // String manipulators
 
-std::string kit::trimLeft(std::string source)
+std::string kit::trimLeft(const std::string& source)
 {
   std::string str = source;
   size_t startpos = str.find_first_not_of(" \f\n\r\t\v");
@@ -294,7 +294,7 @@ std::string kit::trimLeft(std::string source)
   return str;
 }
 
-std::string kit::trimRight(std::string source)
+std::string kit::trimRight(const std::string& source)
 {
   std::string str = source;
   size_t endpos = str.find_last_not_of(" \f\n\r\t\v");
@@ -305,12 +305,12 @@ std::string kit::trimRight(std::string source)
   return str;
 }
 
-std::string kit::trim(std::string source)
+std::string kit::trim(const std::string& source)
 {
   return kit::trimLeft(kit::trimRight(source));
 }
 
-std::wstring kit::stringToWide(std::string s)
+std::wstring kit::stringToWide(const std::string& s)
 {
   std::wstring ws;
   ws.assign(s.begin(), s.end());
@@ -329,7 +329,7 @@ bool kit::isWhitespace(char const & curr)
   return (curr == ' ' || curr == '\f' || curr == '\n' || curr == '\r' || curr == '\t' || curr == '\v');
 }
 
-std::vector<std::string> kit::splitString(std::string source)
+std::vector<std::string> kit::splitString(const std::string& source)
 {
   // Create a vector (list) with words to return
   std::vector<std::string> returner;
@@ -418,7 +418,7 @@ std::vector<std::string> kit::splitString(std::string source)
   return returner;
 }
 
-std::vector<std::string> kit::splitString(std::string source, std::vector<char> delimiters)
+std::vector<std::string> kit::splitString(const std::string& source, std::vector<char> delimiters)
 {
   std::vector<std::string> returner;
   if (source.size() < 1)
@@ -455,13 +455,14 @@ std::vector<std::string> kit::splitString(std::string source, std::vector<char> 
   return returner;
 }
 
-std::string kit::toLower(std::string in)
+std::string kit::toLower(const std::string& in)
 {
-  std::transform(in.begin(), in.end(), in.begin(), ::tolower);
-  return in;
+  std::string out = in;
+  std::transform(in.begin(), in.end(), out.begin(), ::tolower);
+  return out;
 }
 
-bool kit::stringContains(std::string needle, std::string haystack)
+bool kit::stringContains(const std::string& needle, const std::string& haystack)
 {
   return (std::strstr((char*)haystack.c_str(), needle.c_str()) != nullptr);
 }
@@ -673,7 +674,7 @@ $vc*12 bytes  Vertices                  vertex[$vc]
 
 */
 
-bool kit::Geometry::load(std::string filename)
+bool kit::Geometry::load(const std::string& filename)
 {
   this->m_vertices.clear();
   this->m_indices.clear();
@@ -732,7 +733,7 @@ bool kit::Geometry::load(std::string filename)
   return true;
 }
 
-bool kit::Geometry::save(std::string filename)
+bool kit::Geometry::save(const std::string& filename)
 {
   // Open file
   std::ofstream s(filename.c_str(), std::ios::out | std::ios::binary);
@@ -1110,7 +1111,7 @@ std::string kit::readString(std::istream & s)
   return v;
 }
 
-void kit::writeString(std::ostream & s, std::string v)
+void kit::writeString(std::ostream & s, const std::string& v)
 {
   s.write(v.c_str(), v.size());
   s.put('\0');

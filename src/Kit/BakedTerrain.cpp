@@ -71,7 +71,7 @@ kit::BakedTerrain::~BakedTerrain()
   KIT_GL(glDeleteVertexArrays(1, &this->m_glVertexArray));
 }
 
-kit::BakedTerrain::Ptr kit::BakedTerrain::load(std::string name)
+kit::BakedTerrain::Ptr kit::BakedTerrain::load(const std::string&name)
 {
   std::cout << "Loading baked terrain \"" << name.c_str() << "\"" << std::endl;
   auto returner = std::make_shared<kit::BakedTerrain>();

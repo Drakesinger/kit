@@ -52,7 +52,7 @@ namespace kit
           float m_height;
       };
 
-      static kit::Font::Ptr load(std::string filename);
+      static kit::Font::Ptr load(const std::string& filename);
 
       void precacheSize(float size);
       

@@ -31,8 +31,8 @@ namespace kit
       ~Model();
       
       static kit::Model::Ptr create(kit::MeshPtr mesh);
-      static kit::Model::Ptr create(std::string mesh);
-      static kit::Model::Ptr create(std::string mesh, std::string skeleton);
+      static kit::Model::Ptr create(const std::string& mesh);
+      static kit::Model::Ptr create(const std::string& mesh, const std::string& skeleton);
       
       kit::MeshPtr getMesh();
       kit::Skeleton::Ptr getSkeleton();
@@ -46,8 +46,8 @@ namespace kit
       virtual std::vector<glm::mat4> getSkin() override;
       virtual bool isSkinned() override;
 
-      glm::vec3 getBoneWorldPosition(std::string bone);
-      glm::quat getBoneWorldRotation(std::string bone);
+      glm::vec3 getBoneWorldPosition(const std::string& bone);
+      glm::quat getBoneWorldRotation(const std::string& bone);
       
       static kit::ProgramPtr getShadowProgram(bool skinned = false, bool opacitymapped = false);
 

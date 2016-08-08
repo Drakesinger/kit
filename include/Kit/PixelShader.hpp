@@ -43,13 +43,13 @@ namespace kit{
       /// \returns true on success, false on failure
       /// \param filename Path to source file, relative to working directory
       ///
-      bool sourceFromFile(std::string filename);
+      bool sourceFromFile(const std::string& filename);
 
       ///
       /// \brief Source directly from string
       /// \param s The sourcecode
       ///
-      void sourceFromString(std::string s);
+      void sourceFromString(const std::string& s);
 
       ///
       /// \brief Clears the sourcecode

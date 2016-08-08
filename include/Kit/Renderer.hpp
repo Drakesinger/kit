@@ -130,7 +130,7 @@ namespace kit
 
     /// Sets the lookup table for color correction
     void setCCLookupTable(kit::TexturePtr lut);
-    void loadCCLookupTable(std::string name);
+    void loadCCLookupTable(const std::string& name);
     kit::TexturePtr getCCLookupTable();
 
     /// Sets bloom quality 

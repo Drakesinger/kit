@@ -58,7 +58,7 @@ void kit::Controller::refreshControllers()
         currController.m_buttonStates.resize(buttonCount, false);
         for (int b = 0; b < buttonCount; b++)
         {
-          currController.m_buttonStates[b] = buttons[b]; // TODO: Figure this out
+          currController.m_buttonStates[b] = (buttons[b] !=0); // TODO: Figure this out
         }
       }
 
@@ -93,7 +93,7 @@ void kit::Controller::refreshStates()
       this->m_buttonStates.resize(buttonCount, false);
       for (int b = 0; b < buttonCount; b++)
       {
-        this->m_buttonStates[b] = buttons[b]; // TODO
+        this->m_buttonStates[b] = (buttons[b] != 0); // TODO
       }
     }
   }

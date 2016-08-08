@@ -83,12 +83,12 @@ namespace kit
       void bake();
 
       void save();
-      void saveAs(std::string name);
+      void saveAs(const std::string& name);
 
-      static Ptr create(std::string name, glm::uvec2 resolution, float xzScale = 0.25, float yScale = 5.0f);
-      static Ptr load(std::string name);
+      static Ptr create(const std::string& name, glm::uvec2 resolution, float xzScale = 0.25, float yScale = 5.0f);
+      static Ptr load(const std::string& name);
 
-      void reset(std::string, glm::uvec2 resolution, float xzScale, float yScale);
+      void reset(const std::string&, glm::uvec2 resolution, float xzScale, float yScale);
       
       void renderDeferred(kit::RendererPtr renderer) override;
       void renderForward(kit::RendererPtr renderer) override;
@@ -120,7 +120,7 @@ namespace kit
       glm::vec2 getWorldSize();
       float getXZScale();
       
-      void setName(std::string);
+      void setName(const std::string&);
       
       void                            bakeCPUHeight();      //< Bakes CPU height-data from GPU heightmap
       void                            bakeCPUNormals();     //< Bakes CPU normals and tangents from CPU vertex data

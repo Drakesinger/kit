@@ -2,7 +2,7 @@
 
 std::map<std::string, kit::Submesh::Ptr> kit::Submesh::m_cache = std::map<std::string, kit::Submesh::Ptr>();
 
-kit::Submesh::Submesh(std::string filename)
+kit::Submesh::Submesh(const std::string&filename)
 {
   this->allocateBuffers();
   this->m_indexCount = 0;
@@ -22,7 +22,7 @@ void kit::Submesh::renderGeometry()
   KIT_GL(glDrawElements( GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0));
 }
 
-kit::Submesh::Ptr kit::Submesh::load(std::string name)
+kit::Submesh::Ptr kit::Submesh::load(const std::string&name)
 {
   auto finder = kit::Submesh::m_cache.find(name);
   if(finder != kit::Submesh::m_cache.end())
@@ -56,7 +56,7 @@ void kit::Submesh::releaseBuffers()
   KIT_GL(glDeleteVertexArrays(1, &this->m_glVertexArray));
 }
 
-void kit::Submesh::loadGeometry(std::string filename)
+void kit::Submesh::loadGeometry(const std::string&filename)
 {
   
   kit::Geometry data;

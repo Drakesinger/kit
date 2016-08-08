@@ -10,7 +10,7 @@ namespace kit{
 
 	class KITAPI Exception{
 		public:
-			Exception(std::string msg, std::string file, std::string method, int line);
+			Exception(const std::string& msg, const std::string& file, const std::string& method, int line);
 			~Exception();
 
 			std::string what();

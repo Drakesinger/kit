@@ -22,7 +22,7 @@ kit::VertexShader::Ptr kit::VertexShader::create()
   return std::make_shared<kit::VertexShader>();
 }
 
-bool kit::VertexShader::sourceFromFile(std::string filename)
+bool kit::VertexShader::sourceFromFile(const std::string&filename)
 {
   std::string line;
   std::string source = "";
@@ -49,7 +49,7 @@ bool kit::VertexShader::sourceFromFile(std::string filename)
   return true;
 }
 
-void kit::VertexShader::sourceFromString(std::string s)
+void kit::VertexShader::sourceFromString(const std::string&s)
 {
   this->m_source = s;
 

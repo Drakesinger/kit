@@ -36,18 +36,18 @@ namespace kit
       ~Mesh();
 
       static kit::Mesh::Ptr create();
-      static kit::Mesh::Ptr load(std::string filename);
+      static kit::Mesh::Ptr load(const std::string& filename);
       
       void render(kit::CameraPtr cam, const glm::mat4 & modelMatrix, bool forward, const std::vector<glm::mat4> & skintransform = std::vector<glm::mat4>());
       void renderGeometry();
 
-      void addSubmeshEntry(std::string name, kit::SubmeshPtr geometry, kit::MaterialPtr material);
+      void addSubmeshEntry(const std::string& name, kit::SubmeshPtr geometry, kit::MaterialPtr material);
       
-      void setSubmeshEnabled(std::string name, bool s);
+      void setSubmeshEnabled(const std::string& name, bool s);
 
       std::vector<kit::ConvexHullPtr> & getHull();
       
-      kit::Mesh::SubmeshEntry * getSubmeshEntry(std::string name);
+      kit::Mesh::SubmeshEntry * getSubmeshEntry(const std::string& name);
       std::map<std::string, kit::Mesh::SubmeshEntry> & getSubmeshEntries();
       Mesh();
 

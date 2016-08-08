@@ -128,7 +128,7 @@ std::map<std::string, kit::Material::Ptr> kit::Material::getCacheList()
   return kit::Material::m_cache;
 }
 
-bool kit::Material::save(std::string outfilename)
+bool kit::Material::save(const std::string&outfilename)
 {
   std::ofstream fhandle(std::string("./data/materials/") + outfilename);
   if (!fhandle)
@@ -210,7 +210,7 @@ bool kit::Material::save(std::string outfilename)
   return true;
 }
 
-kit::Material::Ptr kit::Material::load(std::string filename, bool reload)
+kit::Material::Ptr kit::Material::load(const std::string&filename, bool reload)
 {
   auto finder = kit::Material::m_cache.find(filename);
   bool existsInCache = (finder != kit::Material::m_cache.end());

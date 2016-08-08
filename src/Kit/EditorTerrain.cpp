@@ -282,7 +282,7 @@ void kit::EditorTerrain::generateCache()
   this->m_heightmap->getBackBuffer()->clearAttachment(0, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
 }
 
-kit::EditorTerrain::Ptr kit::EditorTerrain::create(std::string name, glm::uvec2 resolution, float xzScale, float yScale)
+kit::EditorTerrain::Ptr kit::EditorTerrain::create(const std::string&name, glm::uvec2 resolution, float xzScale, float yScale)
 {
   std::cout << "Creating editor terrain \"" << name.c_str() << "\" with resolution " << resolution.x << "x" << resolution.y << std::endl;
   auto returner = std::make_shared<kit::EditorTerrain>();
@@ -313,7 +313,7 @@ kit::EditorTerrain::Ptr kit::EditorTerrain::create(std::string name, glm::uvec2 
   return returner;
 }
 
-void kit::EditorTerrain::reset(std::string name, glm::uvec2 resolution, float xzScale, float yScale)
+void kit::EditorTerrain::reset(const std::string&name, glm::uvec2 resolution, float xzScale, float yScale)
 {
   this->m_name = name;
   this->m_resolution = resolution;
@@ -338,7 +338,7 @@ void kit::EditorTerrain::reset(std::string name, glm::uvec2 resolution, float xz
   }
 }
 
-kit::EditorTerrain::Ptr kit::EditorTerrain::load(std::string name)
+kit::EditorTerrain::Ptr kit::EditorTerrain::load(const std::string&name)
 {
   std::cout << "Loading editor terrain \"" << name.c_str() << "\"" << std::endl;
   auto returner = std::make_shared<kit::EditorTerrain>();
@@ -1555,7 +1555,7 @@ void kit::EditorTerrain::save()
   header.close();
 }
 
-void kit::EditorTerrain::setName(std::string name)
+void kit::EditorTerrain::setName(const std::string&name)
 {
   this->m_name = name;
 }
@@ -1585,7 +1585,7 @@ uint8_t kit::EditorTerrain::getNumLayers()
   return this->m_numLayers;
 }
 
-void kit::EditorTerrain::saveAs(std::string name)
+void kit::EditorTerrain::saveAs(const std::string&name)
 {
   this->m_name = name;
   this->save();

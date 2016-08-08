@@ -176,7 +176,7 @@ kit::Texture::WPtr kit::Font::GlyphMap::getTexture()
   return this->m_texture;
 }
 
-kit::Font::Ptr kit::Font::load(std::string filename)
+kit::Font::Ptr kit::Font::load(const std::string& filename)
 {
   kit::Font::Ptr returner = std::make_shared<kit::Font>();
 

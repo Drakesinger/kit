@@ -87,7 +87,7 @@ namespace kit
 
 
     typedef std::shared_ptr<ConvexHull> Ptr;
-    static Ptr load(std::string filename);
+    static Ptr load(const std::string& filename);
 
     bool overlaps(Ptr hull);
     bool overlaps(glm::vec3 point);

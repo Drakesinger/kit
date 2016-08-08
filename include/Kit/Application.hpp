@@ -35,9 +35,9 @@ namespace kit
       kit::WindowPtr getWindow();
       kit::ConsolePtr getConsole();
 
-      void evaluate(std::string code);
+      void evaluate(const std::string& code);
       void quit();
-      void print(std::string);
+      void print(const std::string&);
 
       virtual void onResize(glm::uvec2);
  

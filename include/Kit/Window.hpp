@@ -60,7 +60,7 @@ namespace kit
           /// \param sharedWindow Specifies a window to share resources with
           /// \param resizable Specifies whether the window should be resizable
           ///
-	  Args(std::string title, kit::Window::Mode mode, glm::uvec2 resolution, kit::Monitor::Ptr fullscreenMonitor = kit::Monitor::getPrimaryMonitor() , kit::Window::Ptr sharedWindow = nullptr, bool resizable = false);
+	  Args(const std::string& title, kit::Window::Mode mode, glm::uvec2 resolution, kit::Monitor::Ptr fullscreenMonitor = kit::Monitor::getPrimaryMonitor() , kit::Window::Ptr sharedWindow = nullptr, bool resizable = false);
 
 	  std::string        title; ///< The window title to set upon creation
 	  kit::Monitor::Ptr  fullscreenMonitor; ///< The monitor to use (for fullscreen windows, specify with mode)
@@ -84,7 +84,7 @@ namespace kit
       ///
       /// \returns A shared pointer pointing to the newly created window
       ///
-      static kit::Window::Ptr create(std::string title, kit::Window::Mode mode, glm::uvec2 resolution);
+      static kit::Window::Ptr create(const std::string& title, kit::Window::Mode mode, glm::uvec2 resolution);
 
       /// 
       /// \brief Creates a window given window arguments
@@ -168,7 +168,7 @@ namespace kit
       ///
       /// \param newTitle The new windowtitle
       ///
-      void setTitle(std::string newTitle);
+      void setTitle(const std::string& newTitle);
 
       ///
       /// \brief Retrieve the windows current position
