@@ -212,7 +212,6 @@ kit::PixelBuffer::Ptr kit::PixelBuffer::createShadowBuffer(glm::uvec2 resolution
 
 void kit::PixelBuffer::setDrawBuffers(std::vector< uint32_t > drawBuffers)
 {
-  
   KIT_GL(glNamedFramebufferDrawBuffers(this->m_glHandle, (GLsizei)drawBuffers.size(), &drawBuffers[0]));
 }
 
@@ -237,10 +236,8 @@ void kit::PixelBuffer::clear(std::vector<glm::vec4> colours, float depth)
     float currColor[4] = {colours[i].x, colours[i].y, colours[i].z, colours[i].w};
     KIT_GL(glClearBufferfv(GL_COLOR, i, &currColor[0]));
   }
-  
-  KIT_GL(glClearBufferfv(GL_DEPTH, 0, &depth));
-  
 
+  KIT_GL(glClearBufferfv(GL_DEPTH, 0, &depth));
 }
 
 void kit::PixelBuffer::clearAttachment(uint32_t attachment, glm::vec4 clearcolor)
@@ -253,12 +250,11 @@ void kit::PixelBuffer::clearAttachment(uint32_t attachment, glm::vec4 clearcolor
 
   GLfloat color[4] = { clearcolor.x, clearcolor.y, clearcolor.z, clearcolor.w };
   KIT_GL(glClearBufferfv(GL_COLOR, attachment, &color[0]));
-
 }
 
 void kit::PixelBuffer::clearAttachment(uint32_t attachment, glm::uvec4 clearcolor)
 {
-    this->bind();
+  this->bind();
   if (attachment >= this->m_colorAttachments.size())
   {
     KIT_THROW("Cant clear attachment, index out of range.");
@@ -266,7 +262,6 @@ void kit::PixelBuffer::clearAttachment(uint32_t attachment, glm::uvec4 clearcolo
 
   GLuint color[4] = { clearcolor.x, clearcolor.y, clearcolor.z, clearcolor.w };
   KIT_GL(glClearBufferuiv(GL_COLOR, attachment, &color[0]));
-
 }
 
 void kit::PixelBuffer::clearAttachment(uint32_t attachment, glm::ivec4 clearcolor)
@@ -279,7 +274,6 @@ void kit::PixelBuffer::clearAttachment(uint32_t attachment, glm::ivec4 clearcolo
 
   GLint color[4] = { clearcolor.x, clearcolor.y, clearcolor.z, clearcolor.w };
   KIT_GL(glClearBufferiv(GL_COLOR, attachment, &color[0]));
-  
 }
 
 void kit::PixelBuffer::clear(std::vector< glm::vec4 > colours)
@@ -289,26 +283,24 @@ void kit::PixelBuffer::clear(std::vector< glm::vec4 > colours)
   {
     KIT_THROW("Wrong number of colors passed, one color per attachment is required.");
   }
-  
+
   for(uint32_t i = 0; i < this->m_colorAttachments.size(); i++)
   {
     float currColor[4] = {colours[i].x, colours[i].y, colours[i].z, colours[i].w};
     KIT_GL(glClearBufferfv(GL_COLOR, i, &currColor[i]));
   }
-
 }
 
 void kit::PixelBuffer::clearDepth(float d)
 {
-    kit::GL::depthMask(GL_TRUE);
+  kit::GL::depthMask(GL_TRUE);
   this->bind();
   if(this->m_depthAttachment == nullptr)
   {
     KIT_THROW("Cant clear depth attachment as it does not exist, use the other clear method");
   }
-  
+
   KIT_GL(glClearBufferfv(GL_DEPTH, 0, &d));
-  
 }
 
 uint32_t kit::PixelBuffer::getNumColorAttachments()
@@ -322,9 +314,8 @@ kit::Texture::Ptr kit::PixelBuffer::getColorAttachment(uint32_t index)
   {
     KIT_THROW("Index out of range");
   }
-  
+
   return this->m_colorAttachments[index];
-  
 }
 
 kit::Texture::Ptr kit::PixelBuffer::getDepthAttachment()
