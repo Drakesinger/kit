@@ -187,6 +187,7 @@ kit::Renderer::Renderer(glm::uvec2 resolution)
 
   // --- Setup sRGB correction
   this->m_srgbProgram = kit::Program::load({ "screenquad.vert" }, { "srgb.frag" });
+  this->m_srgbEnabled = true;
 
   // --- Setup shadows
   this->m_shadowsEnabled = true;
@@ -990,11 +991,14 @@ void kit::Renderer::postFXPass()
   }
 
   // sRGB conversion
-  this->m_compositionBuffer->getBackBuffer()->bind();
-  this->m_srgbProgram->setUniformTexture("uniform_sourceTexture", this->m_compositionBuffer->getFrontBuffer()->getColorAttachment(0));
-  this->m_screenQuad->render(this->m_srgbProgram);
-  this->m_compositionBuffer->flip();
-
+  if(this->m_srgbEnabled)
+  {
+    this->m_compositionBuffer->getBackBuffer()->bind();
+    this->m_srgbProgram->setUniformTexture("uniform_sourceTexture", this->m_compositionBuffer->getFrontBuffer()->getColorAttachment(0));
+    this->m_screenQuad->render(this->m_srgbProgram);
+    this->m_compositionBuffer->flip();
+  }
+  
   if (this->m_ccEnabled && this->m_ccLookupTable != nullptr)
   {
     this->m_compositionBuffer->getBackBuffer()->bind();
@@ -1348,4 +1352,14 @@ kit::PixelBuffer::Ptr kit::Renderer::getAccumulationCopy()
 kit::PixelBufferPtr kit::Renderer::getGeometryBuffer()
 {
   return this->m_geometryBuffer;
+}
+
+bool kit::Renderer::getSRGBEnabled()
+{
+  return this->m_srgbEnabled;
+}
+
+void kit::Renderer::setSRGBEnabled(const bool& v)
+{
+  this->m_srgbEnabled = v;
 }

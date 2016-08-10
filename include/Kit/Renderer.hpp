@@ -187,6 +187,9 @@ namespace kit
     
     kit::PixelBufferPtr getGeometryBuffer();
     
+    void setSRGBEnabled(bool const & v);
+    bool getSRGBEnabled();
+    
   private:
     /// Called on every resize
     void onResize();
@@ -326,6 +329,7 @@ namespace kit
 
     // sRGB conversion ???
     kit::ProgramPtr               m_srgbProgram;
+    bool                          m_srgbEnabled;
 
     // Debug information (GPU metrics, fps etc)
     bool                        m_metricsEnabled;
