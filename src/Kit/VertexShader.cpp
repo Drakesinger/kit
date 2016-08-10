@@ -87,7 +87,7 @@ bool kit::VertexShader::compile()
       KIT_GL(glGetShaderInfoLog(this->m_glHandle, blen, &slen, compiler_log));
 
       std::stringstream ss;
-      ss << "Pixelshader compilation failed: " << compiler_log;
+      ss << "Vertexshader compilation failed: " << compiler_log;
       KIT_ERR(ss.str());
       delete[] compiler_log;
       
