@@ -284,26 +284,26 @@ namespace kit{
       ///
       /// \brief Generates mipmaps for the current texture, based on its current contents
       ///
-      void          generateMipmap();
+      void generateMipmap();
 
       ///
       /// \brief Calculates the mip levels of this texture
       ///
-      uint32_t      calculateMipLevels();
+      uint32_t calculateMipLevels();
 
       ///
       /// \brief Get a single pixel from this texture, stored as a vec4 (slow)
       /// \param position The position of the pixel to get. position.z is ignored on 2D textures
       /// \returns A vec4 containing the pixel information
       ///
-      glm::vec4     getPixelFloat(glm::vec3 position);
+      glm::vec4 getPixelFloat(glm::vec3 position);
 
       ///
       /// \brief Get a single pixel from this texture, stored as a uvec4 (slow)
       /// \param position The position of the pixel to get. position.z is ignored on 2D textures
       /// \returns An uvec4 containing the pixel information
       ///
-      glm::uvec4    getPixelUint(glm::vec3 position);
+      glm::uvec4 getPixelUint(glm::vec3 position);
 
 
       // -- For saving images
@@ -312,23 +312,23 @@ namespace kit{
       /// \param filename Path to output file, relative to working directory
       /// \returns true on success, false on failure
       ///
-      bool          saveToFile(const std::string& filename);
+      bool saveToFile(const std::string& filename);
 
       ///
       /// \brief Bind this texture
       ///
-      void          bind();
+      void bind();
 
       ///
       /// \brief Unbind a certain texture type
       /// \param t The type of texture to unbind
       ///
-      static void   unbind(Type t);
+      static void unbind(Type t);
 
       ///
       /// \brief Flushes the resource managed cache. Cache will be empty but textures might still be used elsewhere.
       ///
-      static void   flushCache();
+      static void flushCache();
 
       ///
       /// \brief Returns a list of textures in ./data/textures/prefix. The list is cached and has to be updated using the reload parameter.
@@ -370,6 +370,7 @@ namespace kit{
       /// \brief Gets the edge sampling mode on a specified axis on this texture
       /// \param axis The axis to get the sampling mode from, can not be All
       /// \returns The edge sampling mode for a specified axis on this texture
+      /// \throws kit::Exception If axis is kit::Texture::EdgeSamplingAxis::All
       ///
       kit::Texture::EdgeSamplingMode getEdgeSamplingMode(EdgeSamplingAxis axis);
 
