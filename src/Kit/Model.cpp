@@ -247,7 +247,7 @@ glm::quat kit::Model::getBoneWorldRotation(const std::string&bone)
   // TODO: This (fodderFix) is needed for badly exported/imported models. Fix our importer/blenders exporter/whatever and then remove this.
   glm::quat fodderFix;
   fodderFix = glm::rotate(fodderFix, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-  fodderFix = glm::rotate(fodderFix, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+  //fodderFix = glm::rotate(fodderFix, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
   return glm::quat_cast(this->getTransformMatrix() * currBone->m_globalTransform) * fodderFix;
 }

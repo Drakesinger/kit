@@ -19,9 +19,6 @@
 
 kit::Skeleton::Skeleton()
 {
-  this->m_currentTime = 0.0;
-  this->m_isLooping = false;
-  this->m_isPlaying = false;
 }
 
 kit::Skeleton::~Skeleton()
@@ -165,6 +162,12 @@ void kit::Skeleton::update(const double & ms)
       else
       {
         this->stop();
+        if(this->m_callbackOnDone)
+        {
+          this->m_callback();
+          this->m_callback = nullptr;
+          this->m_callbackOnDone = false;
+        }
       }
     }
 
@@ -461,3 +464,17 @@ glm::vec3 kit::Skeleton::AnimationChannel::getTranslationAt(float mstime)
   return glm::mix(a, b, mstime -  ad);
   //return a;
 }
+
+bool kit::Skeleton::isPlaying()
+{
+  return this->m_isPlaying;
+}
+
+void kit::Skeleton::playAnimation(const std::string& name, kit::Skeleton::PlaybackDoneCallback callback)
+{
+  this->setAnimation(name);
+  this->play(false);
+  this->m_callbackOnDone = true;
+  this->m_callback = callback;
+}
+

@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include <map>
+#include <functional>
 
 namespace kit 
 {
@@ -15,6 +16,8 @@ namespace kit
   class KITAPI Skeleton 
   {
     public:
+   
+      typedef std::function<void()> PlaybackDoneCallback;
       
       struct AnimationChannel
       {
@@ -71,6 +74,10 @@ namespace kit
 
       void setAnimation(const std::string& name);
 
+      void playAnimation(const std::string & name, PlaybackDoneCallback callback);
+      
+      bool isPlaying();
+      
       void play(bool loop = true);
       void pause();
       void stop();
@@ -100,10 +107,12 @@ namespace kit
       std::map<std::string, kit::Skeleton::Animation::Ptr> m_animations;
 
       
-      double m_currentTime; //< Time in milliseconds
-      float m_currentFrame; //<  Current animation frame
-      bool m_isPlaying;
-      bool m_isLooping;
+      double m_currentTime = 0.0; //< Time in milliseconds
+      float m_currentFrame = 0.0f; //<  Current animation frame
+      bool m_isPlaying = false;
+      bool m_isLooping = false;
+      bool m_callbackOnDone = false;
+      PlaybackDoneCallback m_callback = nullptr;
   };
   
 }
