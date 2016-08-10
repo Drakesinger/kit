@@ -64,7 +64,10 @@ Open issues, create pull requests. But please get to know the codebase a bit fir
 
 This project takes up all of my spare time at the moment, and while I love doing it, it does not pay my bills or feed my kids. If you want me to be able to give more of my time to this project, you can help by funding the development on  [Patreon](https://www.patreon.com/kitframework).
 
-Please also consider pledging to [ImGui](https://www.patreon.com/imgui), which is a dependency of Kit (mainly for the tools). It has helped quite a lot in terms of debugging as well.
+Please also consider pledging to the following projects. Kit depends on these projects to function.
+
+* [Chaiscript](https://www.patreon.com/lefticus) - The embedded scripting engine
+* [ImGui](https://www.patreon.com/imgui) - For tools and debug UI
 
 Remember, every little bit helps!
 
