@@ -42,7 +42,7 @@ kit::Skeleton::Ptr kit::Skeleton::load(const std::string&filename)
     KIT_THROW("Couldn't open file for reading");
   }
   
-  if (memcpy(&kit::readBytes(s, 4)[0], "KSKE", 4) != 0)
+  if (memcmp(&kit::readBytes(s, 4)[0], "KSKE", 4) != 0)
   {
     KIT_THROW("Bad signature");
   }
@@ -115,7 +115,7 @@ kit::Skeleton::Ptr kit::Skeleton::load(const std::string&filename)
       uint32_t numtk = kit::readUint32(s);
       uint32_t numrk = kit::readUint32(s);
       uint32_t numsk = kit::readUint32(s);
-
+      
       for(uint32_t ctk = 0; ctk < numtk; ctk++)
       {
         float time = kit::readFloat(s);
@@ -303,6 +303,16 @@ kit::Skeleton::Animation::Ptr kit::Skeleton::getAnimation(const std::string&anim
 
 glm::quat kit::Skeleton::AnimationChannel::getRotationAt(float mstime)
 {
+  if(this->m_rotationKeys.size() == 0)
+  {
+    return glm::quat();
+  }
+  
+  if(this->m_rotationKeys.size() == 1)
+  {
+    return this->m_rotationKeys.begin()->second;
+  }
+  
   glm::quat a, b;
   float ad;//, bd;
   std::map<float, glm::quat>::iterator curr = this->m_rotationKeys.find(mstime);
@@ -341,6 +351,17 @@ glm::quat kit::Skeleton::AnimationChannel::getRotationAt(float mstime)
 
 glm::vec3 kit::Skeleton::AnimationChannel::getScaleAt(float mstime)
 {
+
+  if(this->m_scaleKeys.size() == 0)
+  {
+    return glm::vec3(1.0f, 1.0f, 1.0f);
+  }
+  
+  if(this->m_scaleKeys.size() == 1)
+  {
+    return this->m_scaleKeys.begin()->second;
+  }
+  
   glm::vec3 a, b;
   float ad;//, bd;
   std::map<float, glm::vec3>::iterator curr = this->m_scaleKeys.find(mstime);
@@ -379,14 +400,16 @@ glm::vec3 kit::Skeleton::AnimationChannel::getScaleAt(float mstime)
 
 glm::mat4 kit::Skeleton::Animation::getBoneTransform(uint32_t id, float mstime)
 {
-  return this->m_channels.at(id).getTransformMatrix(mstime);
+  auto channel = this->m_channels.at(id);
+  return channel.getTransformMatrix(mstime);
 }
 
 glm::mat4 kit::Skeleton::AnimationChannel::getTransformMatrix(float mstime)
 {
-  glm::mat4 S = glm::scale(glm::mat4(1), this->getScaleAt(mstime));
+  
+  glm::mat4 S = glm::scale(glm::mat4(1.0f), this->getScaleAt(mstime));
   glm::mat4 R = glm::mat4_cast(this->getRotationAt(mstime));
-  glm::mat4 T = glm::translate(glm::mat4(1), this->getTranslationAt(mstime));
+  glm::mat4 T = glm::translate(glm::mat4(1.0f), this->getTranslationAt(mstime));
 
   glm::mat4 M = T * R * S;
   return M;
@@ -394,6 +417,16 @@ glm::mat4 kit::Skeleton::AnimationChannel::getTransformMatrix(float mstime)
 
 glm::vec3 kit::Skeleton::AnimationChannel::getTranslationAt(float mstime)
 {
+  if(this->m_translationKeys.size() == 0)
+  {
+    return glm::vec3(0.0f, 0.0f, 0.0f);
+  }
+  
+  if(this->m_translationKeys.size() == 1)
+  {
+    return this->m_translationKeys.begin()->second;
+  }
+  
   glm::vec3 a, b;
   float ad;//, bd;
   std::map<float, glm::vec3>::iterator curr = this->m_translationKeys.find(mstime);

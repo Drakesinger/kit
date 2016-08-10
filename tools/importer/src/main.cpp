@@ -107,7 +107,7 @@ int main(int argc, char * argv[])
   if (shandle.is_open())
   {
     std::cout << "Writing skeleton " << name << std::endl;
-    kit::writeString(shandle, "KSKE");
+    kit::writeBytes(shandle, {'K', 'S', 'K', 'E'});
     kit::writeUint32(shandle, skeleton.m_BoneData.size());
     kit::writeUint32(shandle, skeleton.m_AnimationData.size());
     kit::writeMat4(shandle, skeleton.m_GlobalInverseTransform);
@@ -167,14 +167,18 @@ int main(int argc, char * argv[])
         }
       }
     }
+
+    shandle.close();
   }
   else
   {
     std::cout << "Error while writing skeleton!" << std::endl;
   }
 
+#ifdef _WIN32
   std::cout << "Press any key to quit..." << std::endl;
   std::cin.get();
+#endif
 
   return 0;
 }

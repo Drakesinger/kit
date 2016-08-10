@@ -354,12 +354,16 @@ ImportResult ImportMeshData(std::string filename)
     newAnimation.m_FPS = (float)currAnimPtr->mTicksPerSecond;
     newAnimation.m_Duration = (float)currAnimPtr->mDuration;
 
+    std::cout << "Importing animation " << newAnimation.m_Name.c_str() << ": " << newAnimation.m_FPS << " FPS, duration " <<  newAnimation.m_Duration << std::endl;
+    
     bool IgnoreAnimation = true; //< Set to false if we find channel matching a bone in the current mesh
     for (uint32_t currChannel = 0; currChannel < currAnimPtr->mNumChannels; currChannel++)
     {
       aiNodeAnim* currChannelPtr = currAnimPtr->mChannels[currChannel];
       std::string currChannelName = currChannelPtr->mNodeName.C_Str();
 
+      std::cout << "Importing from channel " << currChannel << ", named " << currChannelName.c_str() << std::endl;
+      
       // Only import data from this channel if it affects any of our bones
       if (boneIndex.find(currChannelName) != boneIndex.end())
       {
@@ -367,6 +371,10 @@ ImportResult ImportMeshData(std::string filename)
 
         ImportResult::ChannelData newChannel;
         newChannel.m_BoneID = boneIndex.at(currChannelName);
+        
+        std::cout << "Channel is active for bone #" << newChannel.m_BoneID << std::endl;
+        std::cout << "Importing " << currChannelPtr->mNumPositionKeys << " pos, " << currChannelPtr->mNumRotationKeys << " rot and " <<  currChannelPtr->mNumScalingKeys<< " sca keys " << std::endl;
+        
         // Translation keys
         for (uint32_t currTKey = 0; currTKey < currChannelPtr->mNumPositionKeys; currTKey++)
         {
