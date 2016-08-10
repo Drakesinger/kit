@@ -1,5 +1,6 @@
 #ifndef KIT_CAMERA_HPP
 #define KIT_CAMERA_HPP
+
 #include "Kit/Export.hpp"
 #include "Kit/Transformable.hpp"
 
@@ -7,44 +8,114 @@
 
 namespace kit 
 {
+  ///
+  /// \brief Camera class
+  ///
   class KITAPI Camera : public kit::Transformable
   {
     public: 
-      
+
       typedef std::shared_ptr<Camera> Ptr;
 
-      static kit::Camera::Ptr create(float fov, float aspect_ratio, glm::vec2 cliprange);
-  
-      glm::mat4 getViewMatrix();
-      const glm::mat4 & getProjectionMatrix();
-      
-      void setFov(float fov);
-      float getFov();
-      
-      void setAspectRatio(float aspect);
-      float getAspectRatio();
-      
-      void setClipRange(glm::vec2 cliprange);
-      glm::vec2 getClipRange();
-
-      void setExposure(float exposure);
-      void setWhitepoint(float whitepoint);
-
-      float getExposure();
-      float getWhitepoint();
-
+      ///
+      /// \brief Constructor
+      ///
+      /// \param fov Vertical field-of-view
+      /// \param aspect_ratio Aspect ratio
+      /// \param cliprange Cliprange. near in x, far in y.
+      ///
       Camera(float fov, float aspect_ratio, glm::vec2 cliprange);
+
+      ///
+      /// \brief Destructor
+      ///
       ~Camera();
 
+      /// 
+      /// \brief Creates a camera given a vertical fov, aspect ratio and clip range (near/far)
+      ///
+      /// \param fov Vertical field-of-view
+      /// \param aspect_ratio Aspect ratio
+      /// \param cliprange Cliprange. near in x, far in y.
+      ///
+      /// \returns A shared pointer pointing to the newly created camera
+      ///
+      static kit::Camera::Ptr create(float fov, float aspect_ratio, glm::vec2 cliprange);
+
+      ///
+      /// \returns The view matrix (inverse camera transform)
+      ///
+      glm::mat4 getViewMatrix();
+
+      ///
+      /// \returns The projection matrix
+      ///
+      const glm::mat4 & getProjectionMatrix();
+
+      ///
+      /// \brief Set the vertical field of view
+      /// \param fov The new vertical field of view
+      ///
+      void setFov(float fov);
+
+      ///
+      /// \returns The vertical field of view
+      ///
+      float getFov();
+
+      ///
+      /// \brief Set the aspect ratio
+      /// \param aspect The new aspect ratio
+      ///
+      void setAspectRatio(float aspect);
+
+      ///
+      /// \returns The aspect ratio
+      ///
+      float getAspectRatio();
+
+      ///
+      /// \brief Set the cliprange
+      /// \param cliprange The new cliprange. near in x, far in y.
+      ///
+      void setClipRange(glm::vec2 cliprange);
+
+      ///
+      /// \returns The cliprange. near in x, far in y.
+      ///
+      glm::vec2 getClipRange();
+
+      ///
+      /// \brief Set the exposure
+      /// \param exposure The new exposure value
+      ///
+      void setExposure(float exposure);
+
+      ///
+      /// \returns The exposure
+      ///
+      float getExposure();
+
+      ///
+      /// \brief Set the whitepoint
+      /// \param whitepoint The new whitepoint value
+      ///
+      void setWhitepoint(float whitepoint);
+
+      ///
+      /// \returns The whitepoint
+      ///
+      float getWhitepoint();
+
     protected:
-      void rebuildProjectionMatrix();
-      
-      glm::mat4 m_projectionMatrix;
-      float m_fov;
-      float m_aspect;
-      glm::vec2 m_clipRange;
-      float                       m_exposure;
-      float                       m_whitepoint;
+      void              rebuildProjectionMatrix();
+
+      glm::mat4         m_projectionMatrix;
+      float             m_fov;
+      float             m_aspect;
+      glm::vec2         m_clipRange;
+      float             m_exposure;
+      float             m_whitepoint;
   };
   
 }
