@@ -10,6 +10,7 @@ dist/kit-world-editor
 dist/kit-material-designer
 dist/renderer-example
 dist/window-example
+dist/dynamic-materials-example
 
 .directory
 
