@@ -8,6 +8,10 @@ Feel free to contribute by reporting issues, opening pull requests or by financi
 
 <p align="right"><a href="https://www.patreon.com/kitframework"><img src="https://cloud.githubusercontent.com/assets/8225057/5990484/70413560-a9ab-11e4-8942-1a63607c0b00.png"></a></p>
 
+# IRC
+
+Kit has an IRC channel called #kitframework on chat.freenode.net
+
 
 ![Lighting model preview](https://raw.githubusercontent.com/haikarainen/kit/master/docs/metalball-crop.png)
 <p align="center">Showcasing the lighting model, highly inspired from UE4.</p>
