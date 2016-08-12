@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
   
   // Create a smaller quad to debugrender our minicamera
   auto miniQuad = kit::Quad::create(glm::vec2(0.0f, 0.0f), glm::vec2(0.2f * 0.80822, 0.2f));
-  auto miniRenderer = kit::Renderer::create(glm::uvec2(uint32_t(256.0f * 0.80822), 256));
+  auto miniRenderer = kit::Renderer::create(glm::uvec2(uint32_t(128.0f * 0.80822), 128));
   miniRenderer->registerPayload(payload);
   auto miniCamera = kit::Camera::create(90.0f, 0.80822f, glm::vec2(0.1f, 100.0f));
   miniRenderer->setActiveCamera(miniCamera);
