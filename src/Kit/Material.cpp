@@ -6,6 +6,7 @@
 #include "Kit/Program.hpp"
 #include "Kit/PixelBuffer.hpp"
 #include "Kit/Camera.hpp"
+#include <Kit/Quad.hpp>
 
 #include <glm/gtx/transform.hpp>
 #include <sstream>
@@ -19,15 +20,22 @@ std::map<kit::Material::ProgramFlags, kit::Program::Ptr> kit::Material::m_progra
 static const char * glslVersion = "#version 430 core\n";
 
 static const char * glslCacheVertex
-="const vec2 quadVertices[4] = vec2[4]( vec2( -1.0, -1.0), vec2( 1.0, -1.0), vec2( -1.0, 1.0), vec2( 1.0, 1.0));\n\
-const vec2 quadCoords[4]   = vec2[4]( vec2( 0.0, 1.0),   vec2( 1.0, 1.0),   vec2( 0.0, 0.0), vec2( 1.0, 0.0));\n\
-layout(location = 0) out vec2 out_texCoords;\n\
-void main()\n\
-{\n\
-  gl_Position = vec4(quadVertices[gl_VertexID], 0.0, 1.0);\n\
-  out_texCoords = vec2(quadCoords[gl_VertexID]);\n\
-  out_texCoords.y = 1.0 - out_texCoords.y;\n\
-}\n";
+="layout (location = 0) in vec3 in_position;\n\
+  layout (location = 1) in vec2 in_uv;\n\
+  layout (location = 0) out vec2 out_uv;\n\
+  \n\
+  uniform vec2 uniform_position = vec2(0.0, 0.0);\n\
+  uniform vec2 uniform_size = vec2(1.0, 1.0);\n\
+  \n\
+  void main()\n\
+  {\n\
+    vec2 finalpos = uniform_position + (in_position.xy * uniform_size);\n\
+    gl_Position = vec4(finalpos, in_position.z, 1.0);\n\
+    gl_Position.xy *= 2.0;\n\
+    gl_Position.y = 1.0 - gl_Position.y;\n\
+    gl_Position.x -= 1.0;\n\
+    out_uv = in_uv;\n\
+  }\n";
 
 static const char * glslCacheUtils
 = "float applyGamma(float inval, float gamma)\n\
@@ -601,11 +609,12 @@ void kit::Material::renderARCache()
 
   kit::GL::disable(GL_BLEND);
   kit::GL::disable(GL_DEPTH_TEST);
-  KIT_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+  kit::GL::depthMask(GL_FALSE);
+  
+  kit::Quad::renderGeometry();
   
   kit::PixelBuffer::unbind();
   this->m_arCache->getColorAttachment(0)->generateMipmap();
-  kit::GL::enable(GL_DEPTH_TEST);
 
   this->m_arDirty = false;
 }
@@ -644,7 +653,9 @@ void kit::Material::renderNMCache()
 
   kit::GL::disable(GL_BLEND);
   kit::GL::disable(GL_DEPTH_TEST);
-  KIT_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+  kit::GL::depthMask(GL_FALSE);
+
+  kit::Quad::renderGeometry();
   
   kit::PixelBuffer::unbind();
   this->m_nmCache->getColorAttachment(0)->generateMipmap();
@@ -685,7 +696,9 @@ void kit::Material::renderNDCache()
 
   kit::GL::disable(GL_BLEND);
   kit::GL::disable(GL_DEPTH_TEST);
-  KIT_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+  kit::GL::depthMask(GL_FALSE);
+  
+  kit::Quad::renderGeometry();
 
   kit::PixelBuffer::unbind();
   this->m_ndCache->getColorAttachment(0)->generateMipmap();
@@ -727,7 +740,9 @@ void kit::Material::renderEOCache()
 
   kit::GL::disable(GL_BLEND);
   kit::GL::disable(GL_DEPTH_TEST);
-  KIT_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+  kit::GL::depthMask(GL_FALSE);
+
+  kit::Quad::renderGeometry();
   
   kit::PixelBuffer::unbind();
   this->m_eoCache->getColorAttachment(0)->generateMipmap();
