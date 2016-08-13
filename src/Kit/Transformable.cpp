@@ -71,14 +71,50 @@ glm::vec3 kit::Transformable::getEuler()
   return glm::degrees(e);
 }
 
-void kit::Transformable::setEuler(glm::vec3 r)
+void kit::Transformable::setEuler(glm::vec3 r, kit::Transformable::RotationOrder rotationOrder)
 {
-  //this->m_rotation = glm::quat(glm::radians(r));
   this->m_rotation = glm::quat();
 
-  this->m_rotation = glm::rotate(this->m_rotation, glm::radians(r.z), glm::vec3(0.0f, 0.0f, 1.0f));
-  this->m_rotation = glm::rotate(this->m_rotation, glm::radians(r.x), glm::vec3(1.0f, 0.0f, 0.0f));  
-  this->m_rotation = glm::rotate(this->m_rotation, glm::radians(r.y), glm::vec3(0.0f, 1.0f, 0.0f));  
+  switch(rotationOrder)
+  {
+    case kit::Transformable::RotationOrder::XYZ:
+      this->m_rotation = glm::rotate(this->m_rotation, glm::radians(r.x), glm::vec3(1.0f, 0.0f, 0.0f));
+      this->m_rotation = glm::rotate(this->m_rotation, glm::radians(r.y), glm::vec3(0.0f, 1.0f, 0.0f));
+      this->m_rotation = glm::rotate(this->m_rotation, glm::radians(r.z), glm::vec3(0.0f, 0.0f, 1.0f));
+      break;
+
+    case kit::Transformable::RotationOrder::XZY:
+      this->m_rotation = glm::rotate(this->m_rotation, glm::radians(r.x), glm::vec3(1.0f, 0.0f, 0.0f));
+      this->m_rotation = glm::rotate(this->m_rotation, glm::radians(r.z), glm::vec3(0.0f, 0.0f, 1.0f));
+      this->m_rotation = glm::rotate(this->m_rotation, glm::radians(r.y), glm::vec3(0.0f, 1.0f, 0.0f));
+      break;
+
+    case kit::Transformable::RotationOrder::YXZ:
+      this->m_rotation = glm::rotate(this->m_rotation, glm::radians(r.y), glm::vec3(0.0f, 1.0f, 0.0f));
+      this->m_rotation = glm::rotate(this->m_rotation, glm::radians(r.x), glm::vec3(1.0f, 0.0f, 0.0f));
+      this->m_rotation = glm::rotate(this->m_rotation, glm::radians(r.z), glm::vec3(0.0f, 0.0f, 1.0f));
+      break;
+
+    case kit::Transformable::RotationOrder::YZX:
+      this->m_rotation = glm::rotate(this->m_rotation, glm::radians(r.y), glm::vec3(0.0f, 1.0f, 0.0f));
+      this->m_rotation = glm::rotate(this->m_rotation, glm::radians(r.z), glm::vec3(0.0f, 0.0f, 1.0f));
+      this->m_rotation = glm::rotate(this->m_rotation, glm::radians(r.x), glm::vec3(1.0f, 0.0f, 0.0f));
+      break;
+
+    default:
+    case kit::Transformable::RotationOrder::ZXY:
+      this->m_rotation = glm::rotate(this->m_rotation, glm::radians(r.z), glm::vec3(0.0f, 0.0f, 1.0f));
+      this->m_rotation = glm::rotate(this->m_rotation, glm::radians(r.x), glm::vec3(1.0f, 0.0f, 0.0f));
+      this->m_rotation = glm::rotate(this->m_rotation, glm::radians(r.y), glm::vec3(0.0f, 1.0f, 0.0f));
+      break;
+
+    case kit::Transformable::RotationOrder::ZYX:
+      this->m_rotation = glm::rotate(this->m_rotation, glm::radians(r.z), glm::vec3(0.0f, 0.0f, 1.0f));
+      this->m_rotation = glm::rotate(this->m_rotation, glm::radians(r.y), glm::vec3(0.0f, 1.0f, 0.0f));
+      this->m_rotation = glm::rotate(this->m_rotation, glm::radians(r.x), glm::vec3(1.0f, 0.0f, 0.0f));
+      break;
+  }
+
   
   this->m_transformMatrixDirty = true;
 }

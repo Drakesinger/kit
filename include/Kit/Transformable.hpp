@@ -17,6 +17,16 @@ namespace kit
       typedef std::shared_ptr<Transformable> Ptr;
       typedef std::weak_ptr<Transformable> WPtr;
 
+      enum class RotationOrder : uint8_t
+      {
+        XYZ,
+        XZY,
+        YXZ,
+        YZX,
+        ZXY,
+        ZYX
+      };
+      
       Transformable();
     
       Transformable::Ptr getParent();
@@ -31,7 +41,7 @@ namespace kit
       void      translate(glm::vec3 offset);
       
       glm::vec3 getEuler(); // euler
-      void      setEuler(glm::vec3 euler_angles);
+      void      setEuler(glm::vec3 euler_angles, RotationOrder = RotationOrder::ZXY);
 
       glm::quat getRotation(); // quat
       void      setRotation(glm::quat quat);
