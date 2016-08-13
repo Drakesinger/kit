@@ -304,8 +304,8 @@ void kit::BakedTerrain::renderDeferred(kit::Renderer::Ptr renderer)
 void kit::BakedTerrain::renderShadows(glm::mat4 viewmatrix, glm::mat4 projectionmatrix)
 {
   kit::GL::disable(GL_CULL_FACE);
-  kit::Model::getShadowProgram()->use();
-  kit::Model::getShadowProgram()->setUniformMat4("uniform_mvpMatrix", projectionmatrix * viewmatrix * this->getTransformMatrix());
+  kit::Model::getShadowProgram(false, false, false)->use();
+  kit::Model::getShadowProgram(false, false, false)->setUniformMat4("uniform_mvpMatrix", projectionmatrix * viewmatrix * this->getTransformMatrix());
   this->renderGeometry();
 }
 

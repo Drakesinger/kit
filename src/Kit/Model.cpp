@@ -6,14 +6,14 @@
 #include "Kit/Program.hpp"
 #include "Kit/Texture.hpp"
 #include "Kit/Renderer.hpp"
+#include "Kit/VertexShader.hpp"
+#include "Kit/PixelShader.hpp"
 
+#include <sstream>
 #include <glm/gtx/transform.hpp>
 
 uint32_t kit::Model::m_instanceCount = 0;
-kit::Program::Ptr kit::Model::m_programShadow = nullptr;
-kit::Program::Ptr kit::Model::m_programShadowO = nullptr;
-kit::Program::Ptr kit::Model::m_programShadowS = nullptr;
-kit::Program::Ptr kit::Model::m_programShadowSO = nullptr;
+std::map<kit::Model::ShadowProgramFlags, kit::Program::Ptr> kit::Model::m_shadowPrograms;
 
 kit::Model::Model() : kit::Renderable::Renderable()
 {
@@ -35,19 +35,130 @@ kit::Model::~Model()
 
 void kit::Model::allocateShared()
 {
-  kit::Model::m_programShadow = kit::Program::load({ "lighting/shadow.vert" }, {"lighting/shadow.frag"});
-  kit::Model::m_programShadowO = kit::Program::load({ "lighting/shadow.vert" }, { "lighting/shadow-opacitymasked.frag" });
-  kit::Model::m_programShadowS = kit::Program::load({ "lighting/shadow-skinned.vert" }, { "lighting/shadow.frag" });
-  kit::Model::m_programShadowSO = kit::Program::load({ "lighting/shadow-skinned.vert" }, { "lighting/shadow-opacitymasked.frag" });
+
 }
 
 void kit::Model::releaseShared()
 {
-  kit::Model::m_programShadow.reset();
-  kit::Model::m_programShadowO.reset();
-  kit::Model::m_programShadowS.reset();
-  kit::Model::m_programShadowSO.reset();
+  kit::Model::m_shadowPrograms.clear();
 }
+
+kit::ProgramPtr kit::Model::getShadowProgram(bool skinned, bool opacityMapped, bool instanced)
+{
+  kit::Model::ShadowProgramFlags flags;
+  flags.skinned = skinned;
+  flags.opacityMapped = opacityMapped;
+  flags.instanced = instanced;
+  
+  if(kit::Model::m_shadowPrograms.find(flags) != kit::Model::m_shadowPrograms.end())
+  {
+    return kit::Model::m_shadowPrograms.at(flags);
+  }
+  
+  std::cout << "Generating shadow program for flags " << (skinned? "S":"-") << (opacityMapped? "O":"-") << (instanced? "I":"-") << std::endl;
+  
+  // Create a program and shaders
+  auto newProgram = kit::Program::create();
+  
+  // Vertex shader 
+  std::stringstream vertexSource;
+  auto vertexShader = kit::VertexShader::create();
+  {
+    vertexSource << "#version 430 core" << std::endl;
+
+    vertexSource << "layout(location = 0) in vec3 in_vertexPos;" << std::endl;
+    vertexSource << "layout(location = 1) in vec2 in_uv;" << std::endl;
+    vertexSource << "layout(location = 4) in ivec4 in_boneids;" << std::endl;
+    vertexSource << "layout(location = 5) in vec4  in_boneweights;" << std::endl;
+    vertexSource << "layout(location = 0) out vec2 out_uv;" << std::endl;
+
+    vertexSource << "uniform mat4 uniform_mvpMatrix;" << std::endl;
+
+    if(skinned)
+    {
+      vertexSource << "uniform mat4 uniform_bones[128];" << std::endl;
+    }
+    
+    if(instanced)
+    {
+      vertexSource << "uniform mat4 uniform_instanceTransform[128];" << std::endl;
+    }
+    
+    vertexSource << "void main()" << std::endl;
+    vertexSource << "{" << std::endl;
+    
+    if(skinned)
+    {
+      vertexSource << "  mat4 boneTransform = uniform_bones[in_boneids[0]] * in_boneweights[0];" << std::endl;
+      vertexSource << "  boneTransform += uniform_bones[in_boneids[1]] * in_boneweights[1];" << std::endl;
+      vertexSource << "  boneTransform += uniform_bones[in_boneids[2]] * in_boneweights[2];" << std::endl;
+      vertexSource << "  boneTransform += uniform_bones[in_boneids[3]] * in_boneweights[3];" << std::endl;
+      vertexSource << "  vec4 position = boneTransform * vec4(in_vertexPos, 1.0);" << std::endl;
+    }
+    else 
+    {
+      vertexSource << "  vec4 position = vec4(in_vertexPos, 1.0);" << std::endl;
+    }
+    
+    if(instanced)
+    {
+      vertexSource << "  gl_Position = uniform_mvpMatrix * uniform_instanceTransform[gl_InstanceID] * position;" << std::endl;
+    }
+    else
+    {
+      vertexSource << "  gl_Position = uniform_mvpMatrix * position;" << std::endl;
+    }
+    
+    vertexSource << "  out_uv = in_uv;" << std::endl;
+    vertexSource << "}" << std::endl;
+  }
+  
+  // Pixel shader
+  std::stringstream pixelSource;
+  auto pixelShader = kit::PixelShader::create();
+  {
+    pixelSource << "#version 430 core" << std::endl;
+
+    pixelSource << "layout(location = 0) in vec2 in_uv;" << std::endl;
+    
+    if(opacityMapped)
+    {
+      pixelSource << "uniform sampler2D uniform_opacityMask;" << std::endl;
+    }
+    
+    pixelSource << "void main()" << std::endl;
+    pixelSource << "{" << std::endl;
+    
+    if(opacityMapped)
+    {
+      pixelSource << "  if(texture(uniform_opacityMask, in_uv).r < 0.5)" << std::endl;
+      pixelSource << "  {" << std::endl;
+      pixelSource << "    discard;" << std::endl;
+      pixelSource << "  }" << std::endl;
+    }
+  
+    pixelSource << "  gl_FragDepth = gl_FragCoord.z;" << std::endl;
+    pixelSource << "}" << std::endl;
+
+  }
+  
+  // Compile and link
+  vertexShader->sourceFromString(vertexSource.str());
+  vertexShader->compile();
+  
+  pixelShader->sourceFromString(pixelSource.str());
+  pixelShader->compile();
+
+  newProgram->attachShader(vertexShader);
+  newProgram->attachShader(pixelShader);
+  newProgram->link();
+  newProgram->detachShader(pixelShader);
+  newProgram->detachShader(vertexShader);
+  
+  kit::Model::m_shadowPrograms[flags] = newProgram;
+  return kit::Model::m_shadowPrograms.at(flags);
+}
+
 
 kit::Model::Ptr kit::Model::create(const std::string&mesh)
 {
@@ -158,13 +269,9 @@ void kit::Model::renderShadows(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
 
     bool O = (currMaterial->getOpacityMask() != nullptr);
     bool S = (this->m_skeleton != nullptr);
+    bool I = this->m_instanced;
 
-    kit::Program::Ptr currProgram;
-
-    if(S && O) currProgram = this->m_programShadowSO;
-    if(S && !O) currProgram = this->m_programShadowS;
-    if(!S && O) currProgram = this->m_programShadowO;
-    if(!S && !O) currProgram = this->m_programShadow;
+    auto currProgram = kit::Model::getShadowProgram(S, O, I);
 
     currProgram->setUniformMat4("uniform_mvpMatrix", projectionMatrix * viewMatrix * this->getTransformMatrix());
 
@@ -178,7 +285,7 @@ void kit::Model::renderShadows(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
       currProgram->setUniformMat4v("uniform_bones", this->m_skeleton->getSkin());
     }
     
-    if(this->m_instanced)
+    if(I)
     {
       currProgram->setUniformMat4v("uniform_instanceTransform", this->m_instanceTransform);
       currSubmesh->renderGeometryInstanced(this->m_instanceTransform.size());
@@ -250,29 +357,4 @@ glm::quat kit::Model::getBoneWorldRotation(const std::string&bone)
   //fodderFix = glm::rotate(fodderFix, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
   return glm::quat_cast(this->getTransformMatrix() * currBone->m_globalTransform) * fodderFix;
-}
-
-kit::ProgramPtr kit::Model::getShadowProgram(bool s, bool o)
-{
-  if(s && o)
-  {
-    return kit::Model::m_programShadowSO;
-  }
-  
-  if(s && !o)
-  {
-    return kit::Model::m_programShadowS;
-  }
-  
-  if(!s && o)
-  {
-    return kit::Model::m_programShadowO;
-  }
-  
-  if(!s && !o)
-  {
-    return kit::Model::m_programShadow;
-  }
-  
-    return kit::Model::m_programShadow;
 }

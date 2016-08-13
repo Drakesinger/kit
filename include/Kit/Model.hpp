@@ -51,14 +51,25 @@ namespace kit
       glm::vec3 getBoneWorldPosition(const std::string& bone);
       glm::quat getBoneWorldRotation(const std::string& bone);
       
-      static kit::ProgramPtr getShadowProgram(bool skinned = false, bool opacitymapped = false);
+      static kit::ProgramPtr getShadowProgram(bool skinned, bool opacityMapped, bool instanced);
 
       Model();
     private:
-
-      kit::MeshPtr m_mesh;
-      kit::Skeleton::Ptr m_skeleton;
-      bool m_instanced;
+      
+      struct ShadowProgramFlags
+      {
+        bool skinned;
+        bool opacityMapped;
+        bool instanced;
+        
+        bool operator<(const ShadowProgramFlags& b) const {
+          return std::tie(this->skinned, this->opacityMapped, this->instanced)  < std::tie(b.skinned,b. opacityMapped, b.instanced);
+        }
+      };
+      
+      kit::MeshPtr m_mesh = nullptr;
+      kit::Skeleton::Ptr m_skeleton = nullptr;
+      bool m_instanced = false;
       std::vector<glm::mat4> m_instanceTransform;
       
 
@@ -67,10 +78,7 @@ namespace kit
       static void allocateShared();
       static void releaseShared();
 
-      static kit::ProgramPtr           m_programShadow;    // Shadow program for non-skinned, non-opacitymapped meshes
-      static kit::ProgramPtr           m_programShadowS;   // Shadow program for skinned, non-opacitymapped meshes
-      static kit::ProgramPtr           m_programShadowO;   // Shadow program for non-skinned, opacitymapped meshes
-      static kit::ProgramPtr           m_programShadowSO;  // Shadow program for skinned, opacitymapped meshes
+      static std::map<ShadowProgramFlags, kit::ProgramPtr> m_shadowPrograms;
   };
 
 }
