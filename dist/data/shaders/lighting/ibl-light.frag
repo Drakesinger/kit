@@ -14,9 +14,10 @@ uniform vec2 uniform_projConst; //D
 uniform vec3 uniform_lightColor;
 uniform samplerCube uniform_lightIrradiance;
 uniform samplerCube uniform_lightRadiance;
-//uniform samplerCube uniform_lightReflection;
+
 uniform sampler2D uniform_brdf;
 uniform mat4 uniform_invViewMatrix;
+uniform float uniform_quality = 1.0;
 
 vec3 decodeNormal (vec2 enc);
 
@@ -62,7 +63,7 @@ void main()
   vec3 diffuse = texture(uniform_lightIrradiance, refVec).xyz;
   vec3 lightDiffuse = (uniform_lightColor) * albedo  * diffuse * (1.0 - metalness) * occlusion;
 
-  vec3 radiance = textureLod(uniform_lightRadiance, refVec, roughness*8.0).xyz;
+  vec3 radiance = textureLod(uniform_lightRadiance, refVec, (9.0 - (9.0 / uniform_quality)) + ((roughness*9.0) / uniform_quality)).xyz;
   vec2 brdf = texture(uniform_brdf, vec2(roughness, ndotv)).xy;  
   vec3 lightSpecular = (radiance * brdf.x + brdf.y) * uniform_lightColor * F0 * occlusion;
 
