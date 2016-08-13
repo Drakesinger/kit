@@ -9,6 +9,7 @@ occlusioninput 0 1
 occlusionoutput 0 1
 
 # Normal map properties
+normalmap "Crate02Normal.tga"
 normalstrength 1
 
 # Emissive properties

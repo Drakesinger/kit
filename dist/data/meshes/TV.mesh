@@ -1,0 +1,2 @@
+submesh "submesh-0" "TV.TVScreen.geometry" "TVScreen.material"
+submesh "submesh-1" "TV.TV.geometry" "TV.material"
