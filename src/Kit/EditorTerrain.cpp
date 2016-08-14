@@ -5,8 +5,7 @@
 #include "Kit/Texture.hpp"
 #include "Kit/Camera.hpp"
 #include "Kit/Renderer.hpp"
-#include "Kit/VertexShader.hpp"
-#include "Kit/PixelShader.hpp"
+#include "Kit/Shader.hpp"
 #include "Kit/Types.hpp"
 
 #include <string>
@@ -101,8 +100,8 @@ kit::EditorTerrain::EditorTerrain() : kit::Renderable()
   
   // Compile static programs
   {
-    this->m_materialPaintProgram = kit::Program::load({"editor/terrain-material-paint.vert"}, {"editor/terrain-material-paint.frag"});
-    this->m_heightPaintProgram = kit::Program::load({"editor/terrain-height-paint.vert"}, {"editor/terrain-height-paint.frag"});
+    this->m_materialPaintProgram = kit::Program::load({"editor/terrain-material-paint.vert"}, {}, {"editor/terrain-material-paint.frag"});
+    this->m_heightPaintProgram = kit::Program::load({"editor/terrain-height-paint.vert"}, {}, {"editor/terrain-height-paint.frag"});
   }
 }
 
@@ -807,27 +806,27 @@ void kit::EditorTerrain::updateGpuProgram()
     }
     
     // Compile shader objects
-    kit::VertexShader::Ptr vertexShader = kit::VertexShader::create();
+    auto vertexShader = kit::Shader::create(Shader::Type::Vertex);
     vertexShader->sourceFromString(vertexSource.str());
     vertexShader->compile();
 
-    kit::PixelShader::Ptr pixelShader = kit::PixelShader::create();
+    auto pixelShader = kit::Shader::create(Shader::Type::Fragment);
     pixelShader->sourceFromString(pixelSource.str());
     pixelShader->compile();
     
-    kit::PixelShader::Ptr pickShader = kit::PixelShader::create();
+    auto pickShader = kit::Shader::create(Shader::Type::Fragment);
     pickShader->sourceFromString(pickSource.str());
     pickShader->compile();
 
-    kit::PixelShader::Ptr decalShader = kit::PixelShader::create();
+    auto decalShader = kit::Shader::create(Shader::Type::Fragment);
     decalShader->sourceFromString(decalSource.str());
     decalShader->compile();
 
-    kit::PixelShader::Ptr wireShader = kit::PixelShader::create();
+    auto wireShader = kit::Shader::create(Shader::Type::Fragment);
     wireShader->sourceFromString(wireSource.str());
     wireShader->compile();
     
-    kit::PixelShader::Ptr shadowShader = kit::PixelShader::create();
+    auto shadowShader = kit::Shader::create(Shader::Type::Fragment);
     shadowShader->sourceFromString(shadowSource.str());
     shadowShader->compile();
     
@@ -1037,11 +1036,11 @@ void kit::EditorTerrain::updateGpuProgram()
     }
 
     // Compile shader objects
-    kit::VertexShader::Ptr vertexShader = kit::VertexShader::create();
+    auto vertexShader = kit::Shader::create(Shader::Type::Vertex);
     vertexShader->sourceFromString(vertexSource.str());
     vertexShader->compile();
 
-    kit::PixelShader::Ptr pixelShader = kit::PixelShader::create();
+    auto pixelShader = kit::Shader::create(Shader::Type::Fragment);
     pixelShader->sourceFromString(pixelSource.str());
     pixelShader->compile();
 

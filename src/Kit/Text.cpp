@@ -2,8 +2,7 @@
 #include "Kit/Texture.hpp"
 #include "Kit/Font.hpp"
 #include "Kit/Program.hpp"
-#include "Kit/VertexShader.hpp"
-#include "Kit/PixelShader.hpp"
+#include "Kit/Shader.hpp"
 
 #include <sstream>
 
@@ -189,11 +188,11 @@ void kit::Text::allocateShared()
   pss << " out_color.rgb = uniform_color.rgb;" << std::endl;
   pss << "}" << std::endl;
   
-  kit::VertexShader::Ptr vs = kit::VertexShader::create();
+  auto vs = kit::Shader::create(Shader::Type::Vertex);
   vs->sourceFromString(vss.str());
   vs->compile();
   
-  kit::PixelShader::Ptr ps = kit::PixelShader::create();
+  auto ps = kit::Shader::create(Shader::Type::Fragment);
   ps->sourceFromString(pss.str());
   ps->compile();
   

@@ -1,6 +1,5 @@
 #include "Kit/Quad.hpp"
-#include "Kit/PixelShader.hpp"
-#include "Kit/VertexShader.hpp"
+#include "Kit/Shader.hpp"
 #include "Kit/Program.hpp"
 
 unsigned int kit::Quad::m_instanceCount = 0;
@@ -221,15 +220,15 @@ void kit::Quad::allocateShared()
   KIT_GL(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 5, (void*) (sizeof(GLfloat) * 3)));
   
   // allocate our programs!
-  kit::VertexShader::Ptr vertexShader = kit::VertexShader::create();
+  auto vertexShader = kit::Shader::create(Shader::Type::Vertex);
   vertexShader->sourceFromString(vertexSource);
   vertexShader->compile();
 
-  kit::PixelShader::Ptr pixelShader = kit::PixelShader::create();
+  auto pixelShader = kit::Shader::create(Shader::Type::Fragment);
   pixelShader->sourceFromString(pixelSource);
   pixelShader->compile();
   
-  kit::PixelShader::Ptr pixelShaderTextured = kit::PixelShader::create();
+  auto pixelShaderTextured = kit::Shader::create(Shader::Type::Fragment);
   pixelShaderTextured->sourceFromString(pixelSourceTextured);
   pixelShaderTextured->compile();
 

@@ -1,4 +1,4 @@
-#include "Kit/VertexShader.hpp"
+#include "Kit/Shader.hpp"
 #include "Kit/Exception.hpp"
 
 #include <fstream>
@@ -6,23 +6,43 @@
 #include <sstream>
 #include <iostream>
 
-kit::VertexShader::VertexShader()
+std::string typeToName(kit::Shader::Type type)
 {
-  this->m_glHandle = glCreateShader(GL_VERTEX_SHADER);
+  switch(type)
+  {
+    default:
+    case kit::Shader::Type::Vertex:
+      return "vertex";
+      break;
+    case kit::Shader::Type::Fragment:
+      return "fragment";
+      break;
+    case kit::Shader::Type::Geometry:
+      return "geometry";
+      break;
+    
+  }
+}
+
+kit::Shader::Shader(kit::Shader::Type type)
+{
+  this->m_glHandle = glCreateShader((uint32_t)type);
+  this->m_type = type;
+  this->m_source = "";
   KIT_ASSERT(this->m_glHandle);
 }
 
-kit::VertexShader::~VertexShader()
+kit::Shader::~Shader()
 {
   KIT_GL(glDeleteShader(this->m_glHandle));
 }
 
-kit::VertexShader::Ptr kit::VertexShader::create()
+kit::Shader::Ptr kit::Shader::create(kit::Shader::Type type)
 {
-  return std::make_shared<kit::VertexShader>();
+  return std::make_shared<kit::Shader>(type);
 }
 
-bool kit::VertexShader::sourceFromFile(const std::string&filename)
+bool kit::Shader::sourceFromFile(std::string const & filename)
 {
   std::string line;
   std::string source = "";
@@ -49,7 +69,7 @@ bool kit::VertexShader::sourceFromFile(const std::string&filename)
   return true;
 }
 
-void kit::VertexShader::sourceFromString(const std::string&s)
+void kit::Shader::sourceFromString(std::string const & s)
 {
   this->m_source = s;
 
@@ -57,7 +77,7 @@ void kit::VertexShader::sourceFromString(const std::string&s)
   KIT_GL(glShaderSource(this->m_glHandle, 1, &source, 0));
 }
 
-void kit::VertexShader::clearSource()
+void kit::Shader::clearSource()
 {
   this->m_source = "";
 
@@ -66,7 +86,7 @@ void kit::VertexShader::clearSource()
   KIT_GL(glShaderSource(this->m_glHandle, 1, &source, 0));
 }
 
-bool kit::VertexShader::compile()
+bool kit::Shader::compile()
 {
   // Attempt to compile the shader
   KIT_GL(glCompileShader(this->m_glHandle));
@@ -87,11 +107,11 @@ bool kit::VertexShader::compile()
       KIT_GL(glGetShaderInfoLog(this->m_glHandle, blen, &slen, compiler_log));
 
       std::stringstream ss;
-      ss << "Vertexshader compilation failed: " << compiler_log;
+      ss << typeToName(this->m_type) << "-shader compilation failed: " << compiler_log;
       KIT_ERR(ss.str());
       delete[] compiler_log;
       
-      std::cout << "Dumping vertexshader source..." << std::endl;
+      std::cout << "Dumping source..." << std::endl;
       std::cout << "------------------------" << std::endl;
       
       std::stringstream sourcestream(this->m_source);
@@ -112,7 +132,7 @@ bool kit::VertexShader::compile()
   return true;
 }
 
-GLuint kit::VertexShader::getHandle()
+GLuint kit::Shader::getHandle()
 {
   return this->m_glHandle;
 }

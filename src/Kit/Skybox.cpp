@@ -1,6 +1,5 @@
 #include "Kit/Skybox.hpp"
-#include "Kit/PixelShader.hpp"
-#include "Kit/VertexShader.hpp"
+#include "Kit/Shader.hpp"
 #include "Kit/Camera.hpp"
 #include "Kit/Program.hpp"
 #include "Kit/Cubemap.hpp"
@@ -172,15 +171,15 @@ void kit::Skybox::allocateShared()
   kit::Skybox::m_program = kit::Program::create();
   kit::Skybox::m_programNoTexture = kit::Program::create();
   
-  kit::PixelShader::Ptr pixelShader = kit::PixelShader::create();
+  auto pixelShader = kit::Shader::create(Shader::Type::Fragment);
   pixelShader->sourceFromString(pixelSource);
   pixelShader->compile();
   
-  kit::PixelShader::Ptr pixelShaderNoTexture = kit::PixelShader::create();
+  auto pixelShaderNoTexture = kit::Shader::create(Shader::Type::Fragment);
   pixelShaderNoTexture->sourceFromString(pixelSourceNoTex);
   pixelShaderNoTexture->compile();
 
-  kit::VertexShader::Ptr vertexShader = kit::VertexShader::create();
+  auto vertexShader = kit::Shader::create(Shader::Type::Vertex);
   vertexShader->sourceFromString(vertexSource);
   vertexShader->compile();
   

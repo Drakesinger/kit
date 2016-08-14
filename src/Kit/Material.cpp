@@ -1,7 +1,6 @@
 #include "Kit/Material.hpp"
 #include "Kit/Exception.hpp"
-#include "Kit/PixelShader.hpp"
-#include "Kit/VertexShader.hpp"
+#include "Kit/Shader.hpp"
 #include "Kit/Texture.hpp"
 #include "Kit/Program.hpp"
 #include "Kit/PixelBuffer.hpp"
@@ -551,13 +550,13 @@ void kit::Material::allocateShared()
 {
   kit::Material::m_cacheProgram = kit::Program::create();
 
-  kit::VertexShader::Ptr vertexShader = kit::VertexShader::create();
+  auto vertexShader = kit::Shader::create(Shader::Type::Vertex);
   std::stringstream vss;
   vss << glslVersion << glslCacheVertex;
   vertexShader->sourceFromString(vss.str());
   vertexShader->compile();
   
-  kit::PixelShader::Ptr pixelShader = kit::PixelShader::create();
+  auto pixelShader = kit::Shader::create(Shader::Type::Fragment);
   std::stringstream pss;
   pss << glslVersion << glslCacheUtils << glslCachePixel;
   pixelShader->sourceFromString(pss.str());
@@ -1237,11 +1236,11 @@ kit::Program::Ptr kit::Material::getProgram(kit::Material::ProgramFlags flags)
     pixelsource << "}" << std::endl;
   }
   
-  kit::VertexShader::Ptr vertexShader = kit::VertexShader::create();
+  auto vertexShader = kit::Shader::create(Shader::Type::Vertex);
   vertexShader->sourceFromString(vertexsource.str());
   vertexShader->compile();
   
-  kit::PixelShader::Ptr pixelShader = kit::PixelShader::create();
+  auto pixelShader = kit::Shader::create(Shader::Type::Fragment);
   pixelShader->sourceFromString(pixelsource.str());
   pixelShader->compile();
   

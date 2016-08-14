@@ -14,6 +14,9 @@ namespace kit {
   class Cubemap;
   typedef std::weak_ptr<Cubemap> CubemapWPtr;
 
+  class Shader;
+  typedef std::shared_ptr<Shader> ShaderPtr;
+  
   class Texture;
   typedef std::weak_ptr<Texture> TextureWPtr;
 
@@ -55,26 +58,19 @@ namespace kit {
       ///
       /// \returns A shared pointer pointing to the newly created program
       ///
-      static kit::Program::Ptr load(std::vector<std::string> vertexSources, std::vector<std::string> fragmentSources);
+      static kit::Program::Ptr load(std::vector<std::string> const & vertexSources, std::vector<std::string> const &  geometrySources, std::vector<std::string> const &  fragmentSources);
     
       ///
       /// \brief Attaches a compiled shader object to this program
       /// \param s The shader object to attach
       ///
-      template <typename T>
-      void attachShader(T & s) {
-        kit::GL::attachShader(this->m_glHandle, s->getHandle());
-        this->m_fileIdentifier += "dynamic;";
-      }
+      void attachShader(kit::ShaderPtr s);
     
       ///
       /// \brief Detaches a compiled shader object from this program
       /// \param s The shader object to detach
       ///
-      template <typename T>
-      void detachShader(T & s) {
-        kit::GL::detachShader(this->m_glHandle, s->getHandle());
-      }
+      void detachShader(kit::ShaderPtr s);
     
       ///
       /// \brief Attempts to link together the attached shaderobjects, making this program valid on success.

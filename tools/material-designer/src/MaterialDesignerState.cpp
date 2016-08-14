@@ -68,7 +68,7 @@ void kmd::MaterialDesignerState::allocate()
   this->m_UISystem.setWindow(this->m_application->getWindow());
 
   this->m_pickBuffer = kit::PixelBuffer::create(ufbSize, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA16UI), kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA32F) }, kit::PixelBuffer::AttachmentInfo(kit::Texture::DepthComponent24));
-  this->m_pickProgram = kit::Program::load({ "editor/pick.vert" }, { "editor/pick.frag" });
+  this->m_pickProgram = kit::Program::load({ "editor/pick.vert" }, {}, { "editor/pick.frag" });
   this->m_fullscreenQuad = kit::Quad::create();
 
   kit::Model::Ptr test = kit::Model::create("Sphere.mesh");
@@ -80,7 +80,7 @@ void kmd::MaterialDesignerState::allocate()
     this->m_renderPayload->addLight(currLight);
   }
 
-  this->m_gizmoProgram = kit::Program::load({ "editor/gizmo.vert" }, { "editor/gizmo.frag" });
+  this->m_gizmoProgram = kit::Program::load({ "editor/gizmo.vert" }, {}, { "editor/gizmo.frag" });
   this->m_gizmoTranslateX = kit::Submesh::load("TranslateX.X.geometry");
   this->m_gizmoTranslateY = kit::Submesh::load("TranslateY.Y.geometry");
   this->m_gizmoTranslateZ = kit::Submesh::load("TranslateZ.Z.geometry");

@@ -5,8 +5,7 @@
 #include "Kit/Texture.hpp"
 #include "Kit/Camera.hpp"
 #include "Kit/Renderer.hpp"
-#include "Kit/VertexShader.hpp"
-#include "Kit/PixelShader.hpp"
+#include "Kit/Shader.hpp"
 #include "Kit/Types.hpp"
 
 #include <string>
@@ -512,11 +511,11 @@ void kit::BakedTerrain::updateGpuProgram()
   }
 
   // Compile shader objects
-  kit::VertexShader::Ptr vertexShader = kit::VertexShader::create();
+  auto vertexShader = kit::Shader::create(Shader::Type::Vertex);
   vertexShader->sourceFromString(vertexSource.str());
   vertexShader->compile();
 
-  kit::PixelShader::Ptr pixelShader = kit::PixelShader::create();
+  auto pixelShader = kit::Shader::create(Shader::Type::Fragment);
   pixelShader->sourceFromString(pixelSource.str());
   pixelShader->compile();
 

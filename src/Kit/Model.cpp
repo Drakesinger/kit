@@ -6,8 +6,7 @@
 #include "Kit/Program.hpp"
 #include "Kit/Texture.hpp"
 #include "Kit/Renderer.hpp"
-#include "Kit/VertexShader.hpp"
-#include "Kit/PixelShader.hpp"
+#include "Kit/Shader.hpp"
 
 #include <sstream>
 #include <glm/gtx/transform.hpp>
@@ -62,7 +61,7 @@ kit::ProgramPtr kit::Model::getShadowProgram(bool skinned, bool opacityMapped, b
   
   // Vertex shader 
   std::stringstream vertexSource;
-  auto vertexShader = kit::VertexShader::create();
+  auto vertexShader = kit::Shader::create(Shader::Type::Vertex);
   {
     vertexSource << "#version 430 core" << std::endl;
 
@@ -115,7 +114,7 @@ kit::ProgramPtr kit::Model::getShadowProgram(bool skinned, bool opacityMapped, b
   
   // Pixel shader
   std::stringstream pixelSource;
-  auto pixelShader = kit::PixelShader::create();
+  auto pixelShader = kit::Shader::create(Shader::Type::Fragment);
   {
     pixelSource << "#version 430 core" << std::endl;
 

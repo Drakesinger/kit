@@ -2,8 +2,7 @@
 #include "Kit/Exception.hpp"
 #include "Kit/Texture.hpp"
 #include "Kit/Cubemap.hpp"
-#include "Kit/PixelShader.hpp"
-#include "Kit/VertexShader.hpp"
+#include "Kit/Shader.hpp"
 
 #include <sstream>
 #include <glm/gtc/type_ptr.hpp>
@@ -18,7 +17,6 @@ kit::Program::Program()
 
 kit::Program::~Program()
 {
-  
   glDeleteProgram(this->m_glHandle);
   glGetError();
 }
@@ -28,36 +26,45 @@ kit::Program::Ptr kit::Program::create()
   return std::make_shared<kit::Program>();
 }
 
-kit::Program::Ptr kit::Program::load(std::vector< std::string > vertexSources, std::vector< std::string > pixelSources)
+kit::Program::Ptr kit::Program::load(std::vector< std::string > const &  vertexSources, std::vector< std::string > const &  geometrySources, std::vector< std::string > const &  fragSources)
 {
   kit::Program::Ptr returner = kit::Program::create();
 
   std::string dataDir("./data/shaders/");
 
-  std::vector<kit::VertexShader::Ptr> vertexShaders;
-  std::vector<kit::PixelShader::Ptr> pixelShaders;
-
+  std::vector<kit::Shader::Ptr> shaders;
   returner->m_fileIdentifier = "";
 
   // Compile vertex shaders
   for(auto & currVertSource : vertexSources)
   {
     returner->m_fileIdentifier += std::string("v:") + currVertSource + std::string(";");
-    kit::VertexShader::Ptr currVertShader = kit::VertexShader::create();
-    currVertShader->sourceFromFile(dataDir +currVertSource);
+    kit::Shader::Ptr currVertShader = kit::Shader::create(Shader::Type::Vertex);
+    currVertShader->sourceFromFile(dataDir + currVertSource);
     currVertShader->compile();
-    vertexShaders.push_back(currVertShader);
+    shaders.push_back(currVertShader);
     returner->attachShader(currVertShader);
   }
 
-  // Compile pixel shaders
-  for(auto & currPixelSource : pixelSources)
+  // Compile geometry shaders
+  for(auto & currGeometrySource : geometrySources)
   {
-    returner->m_fileIdentifier += std::string("p:") + currPixelSource + std::string(";");
-    kit::PixelShader::Ptr currPixelShader = kit::PixelShader::create();
-    currPixelShader->sourceFromFile(dataDir +currPixelSource);
+    returner->m_fileIdentifier += std::string("g:") + currGeometrySource + std::string(";");
+    kit::Shader::Ptr currShader = kit::Shader::create(Shader::Type::Geometry);
+    currShader->sourceFromFile(dataDir + currGeometrySource);
+    currShader->compile();
+    shaders.push_back(currShader);
+    returner->attachShader(currShader);
+  }
+  
+  // Compile pixel shaders
+  for(auto & currPixelSource : fragSources)
+  {
+    returner->m_fileIdentifier += std::string("f:") + currPixelSource + std::string(";");
+    kit::Shader::Ptr currPixelShader = kit::Shader::create(Shader::Type::Fragment);
+    currPixelShader->sourceFromFile(dataDir + currPixelSource);
     currPixelShader->compile();
-    pixelShaders.push_back(currPixelShader);
+    shaders.push_back(currPixelShader);
     returner->attachShader(currPixelShader);
   }
 
@@ -65,14 +72,9 @@ kit::Program::Ptr kit::Program::load(std::vector< std::string > vertexSources, s
   returner->link();
 
   // Detach shaders 
-  for(auto & currPixelShader : pixelShaders)
+  for(auto & currShader : shaders)
   {
-    returner->detachShader(currPixelShader);
-  }
-
-  for(auto & currVertShader : vertexShaders)
-  {
-    returner->detachShader(currVertShader);
+    returner->detachShader(currShader);
   }
 
   return returner;
@@ -366,4 +368,15 @@ int32_t kit::Program::getMaxTextureUnits()
   int32_t returner;
   KIT_GL(glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &returner));
   return returner;
+}
+
+void kit::Program::attachShader(kit::ShaderPtr s)
+{
+  kit::GL::attachShader(this->m_glHandle, s->getHandle());
+  this->m_fileIdentifier += "dynamic;";
+}
+
+void kit::Program::detachShader(kit::ShaderPtr s)
+{
+  kit::GL::detachShader(this->m_glHandle, s->getHandle());
 }
