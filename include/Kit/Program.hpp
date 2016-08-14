@@ -4,6 +4,7 @@
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
 #include "Kit/GL.hpp"
+#include "Kit/Shader.hpp"
 
 #include <map>
 #include <memory>
@@ -14,12 +15,9 @@ namespace kit {
   class Cubemap;
   typedef std::weak_ptr<Cubemap> CubemapWPtr;
 
-  class Shader;
-  typedef std::shared_ptr<Shader> ShaderPtr;
-  
   class Texture;
   typedef std::weak_ptr<Texture> TextureWPtr;
-
+  
   ///
   /// \brief An OpenGL Program
   ///
@@ -27,6 +25,8 @@ namespace kit {
     public:
       typedef std::shared_ptr<kit::Program> Ptr;
 
+      typedef std::vector<std::string > const & SourceList;
+      
       ///
       /// \brief Constructor (FOR INTERNAL USE ONLY)
       /// 
@@ -53,24 +53,67 @@ namespace kit {
       ///
       /// You should only use the static `create` and `load` methods to create instances. Avoid instancing this class yourself!
       ///
-      /// \param vertexSources A list of filepaths to vertex sources, relative to ./data/shaders/
-      /// \param fragmentSources A list of filepaths to fragment sources, relative to ./data/shaders/
+      /// \param v A list of filepaths to vertex sources, relative to ./data/shaders/
+      /// \param f A list of filepaths to fragment sources, relative to ./data/shaders/
       ///
       /// \returns A shared pointer pointing to the newly created program
       ///
-      static kit::Program::Ptr load(std::vector<std::string> const & vertexSources, std::vector<std::string> const &  geometrySources, std::vector<std::string> const &  fragmentSources);
+      static kit::Program::Ptr load(SourceList v, SourceList f);
     
+      /// 
+      /// \brief Creates, loads, compiles and links a program directly from lists of sourcefiles.
+      ///
+      /// You should only use the static `create` and `load` methods to create instances. Avoid instancing this class yourself!
+      ///
+      /// \param v A list of filepaths to vertex sources, relative to ./data/shaders/
+      /// \param g A list of filepaths to the geometry sources, relative to ./data/shaders/
+      /// \param f A list of filepaths to fragment sources, relative to ./data/shaders/
+      ///
+      /// \returns A shared pointer pointing to the newly created program
+      ///
+      static kit::Program::Ptr load(SourceList v, SourceList g, SourceList f);
+      
+      /// 
+      /// \brief Creates, loads, compiles and links a program directly from lists of sourcefiles.
+      ///
+      /// You should only use the static `create` and `load` methods to create instances. Avoid instancing this class yourself!
+      ///
+      /// \param v A list of filepaths to vertex sources, relative to ./data/shaders/
+      /// \param tc A list of filepaths to the tessellation control sources, relative to ./data/shaders/
+      /// \param te A list of filepaths to the tesselation evaluation sources, relative to ./data/shaders/
+      /// \param f A list of filepaths to fragment sources, relative to ./data/shaders/
+      ///
+      /// \returns A shared pointer pointing to the newly created program
+      ///
+      static kit::Program::Ptr load(SourceList v, SourceList tc, SourceList te, SourceList f);
+      
+      
+      /// 
+      /// \brief Creates, loads, compiles and links a program directly from lists of sourcefiles.
+      ///
+      /// You should only use the static `create` and `load` methods to create instances. Avoid instancing this class yourself!
+      ///
+      /// \param v A list of filepaths to vertex sources, relative to ./data/shaders/
+      /// \param tc A list of filepaths to the tessellation control sources, relative to ./data/shaders/
+      /// \param te A list of filepaths to the tesselation evaluation sources, relative to ./data/shaders/
+      /// \param g A list of filepaths to the geometry sources, relative to ./data/shaders/
+      /// \param f A list of filepaths to fragment sources, relative to ./data/shaders/
+      ///
+      /// \returns A shared pointer pointing to the newly created program
+      ///
+      static kit::Program::Ptr load(SourceList v, SourceList tc, SourceList te, SourceList g, SourceList f);
+      
       ///
       /// \brief Attaches a compiled shader object to this program
       /// \param s The shader object to attach
       ///
-      void attachShader(kit::ShaderPtr s);
+      void attachShader(kit::Shader::Ptr s);
     
       ///
       /// \brief Detaches a compiled shader object from this program
       /// \param s The shader object to detach
       ///
-      void detachShader(kit::ShaderPtr s);
+      void detachShader(kit::Shader::Ptr s);
     
       ///
       /// \brief Attempts to link together the attached shaderobjects, making this program valid on success.
@@ -192,6 +235,8 @@ namespace kit {
       void prepareTextures();
 
     private:
+      static void addShaders(kit::Program::Ptr program, kit::Shader::Type type, std::vector<std::string> const & sources, std::vector<kit::Shader::Ptr> & outShaders);
+      
       std::string                               m_fileIdentifier;
       kit::GL                                   m_glSingleton;
       GLuint			                m_glHandle;
