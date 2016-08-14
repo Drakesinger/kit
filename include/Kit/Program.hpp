@@ -53,6 +53,17 @@ namespace kit {
       ///
       /// You should only use the static `create` and `load` methods to create instances. Avoid instancing this class yourself!
       ///
+      /// \param v A list of filepaths to compute sources, relative to ./data/shaders/
+      ///
+      /// \returns A shared pointer pointing to the newly created program
+      ///
+      static kit::Program::Ptr load(SourceList c);
+      
+      /// 
+      /// \brief Creates, loads, compiles and links a program directly from lists of sourcefiles.
+      ///
+      /// You should only use the static `create` and `load` methods to create instances. Avoid instancing this class yourself!
+      ///
       /// \param v A list of filepaths to vertex sources, relative to ./data/shaders/
       /// \param f A list of filepaths to fragment sources, relative to ./data/shaders/
       ///

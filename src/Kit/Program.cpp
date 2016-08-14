@@ -12,7 +12,8 @@ std::map <kit::Shader::Type, std::string> typeToShort {
   { kit::Shader::Type::Fragment, "f:" }, 
   { kit::Shader::Type::Geometry, "g:" }, 
   { kit::Shader::Type::TessControl, "c:" }, 
-  { kit::Shader::Type::TessEvaluation, "e:" }
+  { kit::Shader::Type::TessEvaluation, "e:" },
+  { kit::Shader::Type::Compute, "x:" }
 };
 
 
@@ -47,6 +48,25 @@ void kit::Program::addShaders(kit::Program::Ptr program, kit::Shader::Type type,
     outShaders.push_back(currShader);
     program->attachShader(currShader);
   }
+}
+
+kit::Program::Ptr kit::Program::load(SourceList c)
+{
+  kit::Program::Ptr returner = kit::Program::create();
+  std::vector<kit::Shader::Ptr> shaders;
+  returner->m_fileIdentifier = "";
+
+  kit::Program::addShaders(returner, kit::Shader::Type::Compute, c, shaders);
+
+  returner->link();
+
+  // Detach shaders 
+  for(auto & currShader : shaders)
+  {
+    returner->detachShader(currShader);
+  }
+
+  return returner;
 }
 
 kit::Program::Ptr kit::Program::load(SourceList v, SourceList f)

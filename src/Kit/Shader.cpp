@@ -6,23 +6,14 @@
 #include <sstream>
 #include <iostream>
 
-std::string typeToName(kit::Shader::Type type)
-{
-  switch(type)
-  {
-    default:
-    case kit::Shader::Type::Vertex:
-      return "vertex";
-      break;
-    case kit::Shader::Type::Fragment:
-      return "fragment";
-      break;
-    case kit::Shader::Type::Geometry:
-      return "geometry";
-      break;
-    
-  }
-}
+std::map <kit::Shader::Type, std::string> typeToName { 
+  { kit::Shader::Type::Vertex, "vertex" }, 
+  { kit::Shader::Type::Fragment, "fragment" }, 
+  { kit::Shader::Type::Geometry, "geometry" }, 
+  { kit::Shader::Type::TessControl, "tesscontrol" }, 
+  { kit::Shader::Type::TessEvaluation, "tessevaluation" },
+  { kit::Shader::Type::Compute, "compute" }
+};
 
 kit::Shader::Shader(kit::Shader::Type type)
 {
@@ -107,7 +98,7 @@ bool kit::Shader::compile()
       KIT_GL(glGetShaderInfoLog(this->m_glHandle, blen, &slen, compiler_log));
 
       std::stringstream ss;
-      ss << typeToName(this->m_type) << "-shader compilation failed: " << compiler_log;
+      ss << typeToName[this->m_type] << "-shader compilation failed: " << compiler_log;
       KIT_ERR(ss.str());
       delete[] compiler_log;
       
