@@ -70,6 +70,8 @@ namespace kit
       glm::vec3 sampleNormal(float x, float z);
 
       bool checkCollision(glm::vec3 point);
+      
+      virtual int32_t getRenderPriority() override;
 
     private:
       kit::GL m_glSingleton;

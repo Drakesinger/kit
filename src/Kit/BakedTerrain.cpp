@@ -675,3 +675,10 @@ bool kit::BakedTerrain::checkCollision(glm::vec3 point)
 {
   return this->sampleHeight(point.x, point.z) >= point.y;
 }
+
+int32_t kit::BakedTerrain::getRenderPriority()
+{
+  // Render priority at 990. We want to render it after anything else, except water which is at 1000)
+  // This is so that we only render visible fragments, since terrain gbuffer-shaders are pretty heavy
+  return 990;
+}
