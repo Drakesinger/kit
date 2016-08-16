@@ -682,3 +682,8 @@ int32_t kit::BakedTerrain::getRenderPriority()
   // This is so that we only render visible fragments, since terrain gbuffer-shaders are pretty heavy
   return 990;
 }
+
+void kit::BakedTerrain::setDetailDistance(const float& meters)
+{
+  this->m_program->setUniform1f("uniform_detailDistance", meters);
+}

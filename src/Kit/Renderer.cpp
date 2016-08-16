@@ -677,46 +677,6 @@ void kit::Renderer::lightPass()
   this->m_programSpot->setUniformMat4("uniform_invViewMatrix", invViewMatrix);
   this->m_programDirectional->setUniformMat4("uniform_invViewMatrix", invViewMatrix);
 
-  /*
-  // TODO fix this
-  kit::PixelBuffer::Ptr gbuffer = this->m_geometryBuffer;
-
-  if (this->m_shadowsEnabled)
-  {
-    this->m_programDirectional->setUniformTexture("uniform_textureA", gbuffer->getColorAttachment(0));
-    this->m_programDirectional->setUniformTexture("uniform_textureB", gbuffer->getColorAttachment(1));
-    this->m_programDirectional->setUniformTexture("uniform_textureC", gbuffer->getColorAttachment(2));
-    this->m_programDirectional->setUniformTexture("uniform_textureDepth", gbuffer->getDepthAttachment());
-
-    this->m_programSpot->setUniformTexture("uniform_textureA", gbuffer->getColorAttachment(0));
-    this->m_programSpot->setUniformTexture("uniform_textureB", gbuffer->getColorAttachment(1));
-    this->m_programSpot->setUniformTexture("uniform_textureC", gbuffer->getColorAttachment(2));
-    this->m_programSpot->setUniformTexture("uniform_textureDepth", gbuffer->getDepthAttachment());
-  }
-
-  this->m_programDirectionalNS->setUniformTexture("uniform_textureA", gbuffer->getColorAttachment(0));
-  this->m_programDirectionalNS->setUniformTexture("uniform_textureB", gbuffer->getColorAttachment(1));
-  this->m_programDirectionalNS->setUniformTexture("uniform_textureC", gbuffer->getColorAttachment(2));
-  this->m_programDirectionalNS->setUniformTexture("uniform_textureDepth", gbuffer->getDepthAttachment());
-  this->m_programSpotNS->setUniformTexture("uniform_textureA", gbuffer->getColorAttachment(0));
-  this->m_programSpotNS->setUniformTexture("uniform_textureB", gbuffer->getColorAttachment(1));
-  this->m_programSpotNS->setUniformTexture("uniform_textureC", gbuffer->getColorAttachment(2));
-  this->m_programSpotNS->setUniformTexture("uniform_textureDepth", gbuffer->getDepthAttachment());
-  this->m_programPoint->setUniformTexture("uniform_textureA", gbuffer->getColorAttachment(0));
-  this->m_programPoint->setUniformTexture("uniform_textureB", gbuffer->getColorAttachment(1));
-  this->m_programPoint->setUniformTexture("uniform_textureC", gbuffer->getColorAttachment(2));
-  this->m_programPoint->setUniformTexture("uniform_textureDepth", gbuffer->getDepthAttachment());
-  this->m_programPointNS->setUniformTexture("uniform_textureA", gbuffer->getColorAttachment(0));
-  this->m_programPointNS->setUniformTexture("uniform_textureB", gbuffer->getColorAttachment(1));
-  this->m_programPointNS->setUniformTexture("uniform_textureC", gbuffer->getColorAttachment(2));
-  this->m_programPointNS->setUniformTexture("uniform_textureDepth", gbuffer->getDepthAttachment());
-  this->m_programIBL->setUniformTexture("uniform_textureA", gbuffer->getColorAttachment(0));
-  this->m_programIBL->setUniformTexture("uniform_textureB", gbuffer->getColorAttachment(1));
-  this->m_programIBL->setUniformTexture("uniform_textureC", gbuffer->getColorAttachment(2));
-  this->m_programIBL->setUniformTexture("uniform_textureDepth", gbuffer->getDepthAttachment());
-  this->m_programEmissive->setUniformTexture("uniform_textureB", gbuffer->getColorAttachment(1));
-*/
-  
   // For each payload ...
   for (auto & currPayload : this->m_payload)
   {

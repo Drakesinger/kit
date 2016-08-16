@@ -71,6 +71,8 @@ namespace kit
 
       bool checkCollision(glm::vec3 point);
       
+      void setDetailDistance(float const & meters);
+      
       virtual int32_t getRenderPriority() override;
 
     private:
