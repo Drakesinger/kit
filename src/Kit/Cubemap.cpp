@@ -10,7 +10,7 @@
 
 kit::Cubemap::Cubemap()
 {
-	KIT_GL(glGenTextures(1, &this->m_glHandle));
+        KIT_GL(glGenTextures(1, &this->m_glHandle));
   this->m_resolution = glm::uvec2(0,0);
 }
 
@@ -20,7 +20,7 @@ kit::Cubemap::Cubemap(GLuint handle){
 
 kit::Cubemap::~Cubemap()
 {
-	KIT_GL(glDeleteTextures(1, &this->m_glHandle));
+        KIT_GL(glDeleteTextures(1, &this->m_glHandle));
 }
 
 kit::Cubemap::Ptr kit::Cubemap::loadRadianceMap(const std::string& name)
@@ -35,9 +35,9 @@ kit::Cubemap::Ptr kit::Cubemap::loadRadianceMap(const std::string& name)
   std::string datadir = "./data/env/";
   
   returner->bind();
-  KIT_GL(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_LEVEL, 9));
+  KIT_GL(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_LEVEL, 5));
 
-  for(unsigned int i = 0; i < 9; i++)
+  for(unsigned int i = 0; i < 6; i++)
   {
     
     stbi_set_flip_vertically_on_load(0);
@@ -115,6 +115,7 @@ kit::Cubemap::Ptr kit::Cubemap::loadIrradianceMap(const std::string& name)
   std::string f_yneg = std::string("./data/env/") + name + std::string("/irr_negy.tga");
 
   returner->bind();
+
   stbi_set_flip_vertically_on_load(0);
   // Load files
   bufferdata = stbi_load(f_zpos.c_str(),&x, &y, &n, 4);
@@ -148,6 +149,7 @@ kit::Cubemap::Ptr kit::Cubemap::loadIrradianceMap(const std::string& name)
   KIT_GL(glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_SRGB8_ALPHA8, x, y, 0, GL_RGBA, GL_UNSIGNED_BYTE, bufferdata));
   stbi_image_free(bufferdata);
   
+  KIT_GL(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_LEVEL, 5));
   KIT_GL(glGenerateMipmap(GL_TEXTURE_CUBE_MAP));
   returner->setFilteringMode(kit::Cubemap::Trilinear);
   returner->setEdgeSamplingMode(kit::Cubemap::Clamp);
@@ -295,13 +297,13 @@ kit::Cubemap::Ptr kit::Cubemap::createDepthmap(glm::uvec2 resolution)
 
 void kit::Cubemap::bind(){
   
-	kit::GL::bindTexture(GL_TEXTURE_CUBE_MAP, this->m_glHandle);
+        kit::GL::bindTexture(GL_TEXTURE_CUBE_MAP, this->m_glHandle);
 }
 
 void kit::Cubemap::unbind()
 {
   
-	kit::GL::bindTexture(GL_TEXTURE_CUBE_MAP, 0);
+        kit::GL::bindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
 
 GLuint kit::Cubemap::getHandle(){
@@ -382,9 +384,9 @@ void kit::Cubemap::setEdgeSamplingMode(kit::Cubemap::EdgeSamplingMode mode)
         KIT_GL(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_MIRROR_CLAMP_TO_EDGE));
         break;
 #elif _WIN32
-	  case ClampMirrored:
-		  KIT_THROW("ClampMirrored not supported on windows platforms.");
-		  break;
+          case ClampMirrored:
+                  KIT_THROW("ClampMirrored not supported on windows platforms.");
+                  break;
 #endif
     }
     

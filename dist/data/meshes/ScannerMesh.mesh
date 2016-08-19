@@ -1,2 +1,0 @@
-submesh "submesh-0" "ScannerMesh.ShellCasing.geometry" "ShellCasing.material"
-submesh "submesh-1" "ScannerMesh.DynamicScreen.geometry" "DynamicScreen.material"

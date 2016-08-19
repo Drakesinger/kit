@@ -63,7 +63,6 @@ namespace kit {
       bool m_isActive;                      //< Set to true/false to show/hide the console
       float m_heightCoeff;                  //< Height coefficient for animating console. 1.0 = visible, 0.0 = hidden.
       
-      kit::FontPtr m_font;                //< Font for text
       kit::QuadPtr m_quad;                //< Background quad
       
       std::list<ConsoleLine> m_lines;       //< Console output

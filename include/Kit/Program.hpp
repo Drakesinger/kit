@@ -57,7 +57,7 @@ namespace kit {
       ///
       /// \returns A shared pointer pointing to the newly created program
       ///
-      static kit::Program::Ptr load(SourceList c);
+      static kit::Program::Ptr load(SourceList c, char const * dataDirectory = "./data/");
       
       /// 
       /// \brief Creates, loads, compiles and links a program directly from lists of sourcefiles.
@@ -69,7 +69,7 @@ namespace kit {
       ///
       /// \returns A shared pointer pointing to the newly created program
       ///
-      static kit::Program::Ptr load(SourceList v, SourceList f);
+      static kit::Program::Ptr load(SourceList v, SourceList f, char const * dataDirectory = "./data/");
     
       /// 
       /// \brief Creates, loads, compiles and links a program directly from lists of sourcefiles.
@@ -82,7 +82,7 @@ namespace kit {
       ///
       /// \returns A shared pointer pointing to the newly created program
       ///
-      static kit::Program::Ptr load(SourceList v, SourceList g, SourceList f);
+      static kit::Program::Ptr load(SourceList v, SourceList g, SourceList f, char const * dataDirectory = "./data/");
       
       /// 
       /// \brief Creates, loads, compiles and links a program directly from lists of sourcefiles.
@@ -96,7 +96,7 @@ namespace kit {
       ///
       /// \returns A shared pointer pointing to the newly created program
       ///
-      static kit::Program::Ptr load(SourceList v, SourceList tc, SourceList te, SourceList f);
+      static kit::Program::Ptr load(SourceList v, SourceList tc, SourceList te, SourceList f, char const * dataDirectory = "./data/");
       
       
       /// 
@@ -112,7 +112,7 @@ namespace kit {
       ///
       /// \returns A shared pointer pointing to the newly created program
       ///
-      static kit::Program::Ptr load(SourceList v, SourceList tc, SourceList te, SourceList g, SourceList f);
+      static kit::Program::Ptr load(SourceList v, SourceList tc, SourceList te, SourceList g, SourceList f, char const * dataDirectory = "./data/");
       
       ///
       /// \brief Attaches a compiled shader object to this program
@@ -246,7 +246,7 @@ namespace kit {
       void prepareTextures();
 
     private:
-      static void addShaders(kit::Program::Ptr program, kit::Shader::Type type, std::vector<std::string> const & sources, std::vector<kit::Shader::Ptr> & outShaders);
+      static void addShaders(kit::Program::Ptr program, kit::Shader::Type type, std::vector<std::string> const & sources, std::vector<kit::Shader::Ptr> & outShaders, char const * dataDirectory = "./data/");
       
       std::string                               m_fileIdentifier;
       kit::GL                                   m_glSingleton;

@@ -21,6 +21,17 @@
 #define htonll(x) (KIT_BIG_ENDIAN ? (x) : ( (uint64_t) htonl ((x) & 0xFFFFFFFF) << 32) | htonl((x) >> 32))
 #define ntohll(x) (KIT_BIG_ENDIAN ? (x) : ( (uint64_t) ntohl ((x) & 0xFFFFFFFF) << 32) | ntohl((x) >> 32))
 
+#ifndef KIT_STATIC_DATA
+  #ifdef _WIN32
+    #define KIT_STATIC_DATA "./static/"
+  #elif __unix
+    #define KIT_STATIC_DATA "/usr/share/kit/static/"
+  #else
+    #error Unsupported OS.
+  #endif
+#endif
+
+
 #include <string>
 #include <cstring>
 #include <cstdint>

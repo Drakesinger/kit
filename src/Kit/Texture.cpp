@@ -100,8 +100,11 @@ kit::Texture::Ptr kit::Texture::create2DFromFile(const std::string&filename, kit
   returner->setAnisotropicLevel(8.0f);
 
   // Generate mipmap
-  returner->generateMipmap();
-
+  if(minfilter != kit::Texture::Linear  &&  minfilter != kit::Texture::Nearest)
+  {
+    returner->generateMipmap();
+  }
+  
   return returner;
 }
 

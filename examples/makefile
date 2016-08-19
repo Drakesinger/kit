@@ -1,28 +1,30 @@
+DEBUG        ?= 0
 CXX          := g++
-CXXFLAGS     := -std=c++14 -Wall -Wextra -Wpedantic -Wno-unused-parameter -DKIT_DEBUG -g
-#LDFLAGS      := -ldl -pthread
+CXXFLAGS     := -std=c++14 -Wall -Wextra -Wpedantic -Wno-unused-parameter
 LIBS         := $(shell pkg-config --libs kit)
 DEPFLAGS     := $(shell pkg-config --cflags kit)
+
+
+ifeq ($(DEBUG), 1)
+	CXXFLAGS += -DKIT_DEBUG -g
+else
+	CXXFLAGS += -O2
+endif
+
 
 all: window renderer dynamic-materials
 
 window: 
 	@echo 'Building Window example ...'
-	$(shell mkdir bin)
-	$(CXX) $(CXXFLAGS) $(DEPFLAGS) $(LDFLAGS)  src/window.cpp -o bin/window-example $(LIBS)
-	cp bin/window-example ../dist/
+	$(CXX) $(CXXFLAGS) $(DEPFLAGS) $(LDFLAGS)  src/window.cpp -o window-example $(LIBS)
 
 renderer:
 	@echo 'Building Renderer example ...'
-	$(shell mkdir bin)
-	$(CXX) $(CXXFLAGS) $(DEPFLAGS) $(LDFLAGS)  src/renderer.cpp -o bin/renderer-example $(LIBS)
-	cp bin/renderer-example ../dist/
+	$(CXX) $(CXXFLAGS) $(DEPFLAGS) $(LDFLAGS)  src/renderer.cpp -o renderer-example $(LIBS)
 	
 dynamic-materials:
 	@echo 'Building Dynamic Materials example ...'
-	$(shell mkdir bin)
-	$(CXX) $(CXXFLAGS) $(DEPFLAGS) $(LDFLAGS)  src/dynamic-materials.cpp -o bin/dynamic-materials-example $(LIBS)
-	cp bin/dynamic-materials-example ../dist/
+	$(CXX) $(CXXFLAGS) $(DEPFLAGS) $(LDFLAGS)  src/dynamic-materials.cpp -o dynamic-materials-example $(LIBS)
 
 clean:
-	$(shell rm -rf ./bin)
+	$(shell rm window-example renderer-example dynamic-materials-example)

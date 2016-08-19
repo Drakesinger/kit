@@ -348,6 +348,6 @@ void kit::Light::setEnvironment(const std::string&name)
   
   this->m_radianceMap = kit::Cubemap::loadRadianceMap(name);
   this->m_irradianceMap = kit::Cubemap::loadIrradianceMap(name);
-  this->m_reflectionMap = kit::Cubemap::loadSkybox(name);
+  //this->m_reflectionMap = kit::Cubemap::loadSkybox(name);
   
 }

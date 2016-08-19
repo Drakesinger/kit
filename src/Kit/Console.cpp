@@ -18,8 +18,7 @@ kit::Console::Console(kit::Application* app)
   
   this->m_quad = kit::Quad::create();
   this->m_quad->setColor(glm::vec4(0.005f, 0.02f, 0.05f, 0.9f));
-  this->m_font = kit::Font::load("Inconsolata.otf");
-  this->m_bufferText = kit::Text::create(this->m_font, 18.0f, L"");
+  this->m_bufferText = kit::Text::create(kit::Font::getSystemFont(), 18.0f, L"");
   this->updateBufferText();
 }
 
@@ -37,7 +36,7 @@ void kit::Console::addLine(std::wstring s)
 {
   kit::ConsoleLine newLine;
   newLine.string = s;
-  newLine.text = kit::Text::create(this->m_font, 18.0f, s);
+  newLine.text = kit::Text::create(kit::Font::getSystemFont(), 18.0f, s);
   this->m_lines.push_front(newLine);
   
   while(this->m_lines.size() > 127)

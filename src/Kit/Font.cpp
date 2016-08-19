@@ -176,11 +176,14 @@ kit::Texture::WPtr kit::Font::GlyphMap::getTexture()
   return this->m_texture;
 }
 
-kit::Font::Ptr kit::Font::load(const std::string& filename)
+kit::Font::Ptr kit::Font::load(const std::string& filename, char const * dataDirectory)
 {
   kit::Font::Ptr returner = std::make_shared<kit::Font>();
 
-  if(FT_New_Face(kit::Font::m_ftLibrary, std::string(std::string("./data/fonts/") + filename).c_str(), 0, &returner->m_ftFace) != 0)
+  std::string path = std::string(dataDirectory + std::string("/fonts/") + filename);
+  std::cout << "Loading font from file " << path << std::endl;
+  
+  if(FT_New_Face(kit::Font::m_ftLibrary, path.c_str(), 0, &returner->m_ftFace) != 0)
   {
     KIT_THROW("Failed to load font from file");
   }
@@ -257,7 +260,7 @@ kit::Font::Ptr kit::Font::getSystemFont()
 {
   if(kit::Font::m_systemFont == nullptr)
   {
-    kit::Font::m_systemFont = kit::Font::load("Inconsolata.otf");
+    kit::Font::m_systemFont = kit::Font::load("Inconsolata.otf", KIT_STATIC_DATA);
   }
   return kit::Font::m_systemFont;
 }

@@ -1,13 +1,13 @@
+DEBUG        ?= 0
 PREFIX       := /usr
 CXX          := g++
-CXXFLAGS     := -std=c++14 -Wall -Wextra -Wpedantic -Wno-unused-parameter -fPIC -g -DKIT_DEBUG
+CXXFLAGS     := -std=c++14 -Wall -Wextra -Wpedantic -Wno-unused-parameter -fPIC 
 LDFLAGS      := -ldl -pthread -shared 
 REQLIBS      := glfw3 freetype2 chaiscript gl
 LIBS         := $(shell pkg-config --libs $(REQLIBS))
 DEPFLAGS     := $(shell pkg-config --cflags $(REQLIBS))
-OUT_LIBRARY  := libkit.so
 BUILDDIR     := build
-
+OUT_LIBRARY  := libkit.so
 SOURCEDIR    := src
 INCLUDEDIR   := include
 
@@ -15,6 +15,14 @@ SOURCES      := $(shell find $(SOURCEDIR) -name '*.cpp')
 OBJECTS      := $(addprefix $(BUILDDIR)/,$(SOURCES:%.cpp=%.o))
 
 PCFILE       := pkgconfig/kit.pc
+
+ifeq ($(DEBUG), 1)
+	CXXFLAGS += -DKIT_DEBUG -g
+else
+	CXXFLAGS += -O3
+endif
+
+all: $(OUT_LIBRARY)
 
 $(OUT_LIBRARY): $(OBJECTS) $(PCFILE)
 	$(shell mkdir lib)
@@ -39,10 +47,18 @@ $(PCFILE):
 	echo 'Libs: -L$${libdir} -lkit' >> $(PCFILE)
 	echo 'Cflags: -I$${includedir}' >> $(PCFILE)
 	
-install: $(OUT_LIBRARY) $(PCFILE)
+install: all
 	cp -r $(INCLUDEDIR)/* $(PREFIX)/include
 	cp lib/$(OUT_LIBRARY) $(PREFIX)/lib/
 	cp $(PCFILE) $(PREFIX)/lib/pkgconfig/kit.pc
+	mkdir -p /usr/share/kit
+	cp -r ./dist/static /usr/share/kit/
+	
+uninstall:
+	rm -r $(PREFIX)/include/Kit
+	rm $(PREFIX)/lib/$(OUT_LIBRARY)
+	rm $(PREFIX)/lib/pkgconfig/kit.pc
+	rm -r /opt/kit/
 	
 clean:
 	$(shell rm -rf ./build)
