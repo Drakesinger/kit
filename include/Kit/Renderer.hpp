@@ -212,10 +212,10 @@ namespace kit
     
     // General
     kit::GL                     m_glSingleton;
-    static uint32_t          m_instanceCount;
-    float                       m_internalResolution;
-    glm::uvec2                m_resolution;
-    kit::QuadPtr                m_screenQuad;
+    static uint32_t             m_instanceCount;
+    float                       m_internalResolution = 1.0;
+    glm::uvec2                  m_resolution = glm::uvec2(0, 0);
+    kit::QuadPtr                m_screenQuad = nullptr;
     
     // Renderbuffers
     /*
@@ -259,86 +259,86 @@ namespace kit
      *  2   RGBA16F   N.x   N.y   N.z   O
      *  D   Depth24   D
      */
-    kit::PixelBufferPtr       m_geometryBuffer;       // Geometry-pass goes here                        Linear
-    kit::PixelBufferPtr       m_accumulationBuffer;   // Light passes, forward pass goes here           Linear
-    kit::DoubleBufferPtr      m_compositionBuffer;    // HDR->LDR pass, post effects goes here          Linear
+    kit::PixelBufferPtr       m_geometryBuffer = nullptr;       // Geometry-pass goes here                        Linear
+    kit::PixelBufferPtr       m_accumulationBuffer = nullptr;   // Light passes, forward pass goes here           Linear
+    kit::DoubleBufferPtr      m_compositionBuffer = nullptr;    // HDR->LDR pass, post effects goes here          Linear
     
-    kit::PixelBufferPtr       m_accumulationCopy; // Holds a copy of the depth buffer for forward renderables who need it
+    kit::PixelBufferPtr       m_accumulationCopy = nullptr; // Holds a copy of the depth buffer for forward renderables who need it
 
     // Light rendering
-    kit::TexturePtr           m_integratedBRDF;
-    kit::ProgramPtr           m_programEmissive;
-    kit::ProgramPtr           m_programIBL;
-    kit::ProgramPtr           m_programDirectional;
-    kit::ProgramPtr           m_programDirectionalNS;
-    kit::ProgramPtr           m_programSpot;
-    kit::ProgramPtr           m_programSpotNS;
-    kit::ProgramPtr           m_programPoint;
-    kit::ProgramPtr           m_programPointNS;
-    kit::SpherePtr            m_pointGeometry;
+    kit::TexturePtr           m_integratedBRDF = nullptr;
+    kit::ProgramPtr           m_programEmissive = nullptr;
+    kit::ProgramPtr           m_programIBL = nullptr;
+    kit::ProgramPtr           m_programDirectional = nullptr;
+    kit::ProgramPtr           m_programDirectionalNS = nullptr;
+    kit::ProgramPtr           m_programSpot = nullptr;
+    kit::ProgramPtr           m_programSpotNS = nullptr;
+    kit::ProgramPtr           m_programPoint = nullptr;
+    kit::ProgramPtr           m_programPointNS = nullptr;
+    kit::SpherePtr            m_pointGeometry = nullptr;
 
     // Render payload (renderables, lights, camera)
-    kit::CameraPtr            m_activeCamera;
-    std::vector<Payload::Ptr>   m_payload;
-    kit::SkyboxPtr            m_skybox;
+    kit::CameraPtr            m_activeCamera = nullptr;
+    std::vector<Payload::Ptr> m_payload;
+    kit::SkyboxPtr            m_skybox = nullptr;
 
     // Shadow stuff
-    bool                        m_shadowsEnabled;
+    bool                        m_shadowsEnabled = true;
     
     // Bloom stuff
-    bool                        m_bloomEnabled;
-    BloomQuality                m_bloomQuality;
-    float                       m_bloomDirtMultiplier;
-    float                       m_bloomTresholdBias;
-    kit::ProgramPtr           m_bloomBrightProgram;
-    kit::ProgramPtr           m_bloomBlurProgram;
-    kit::TexturePtr           m_bloomDirtTexture;
-    kit::DoubleBufferPtr      m_bloomBrightBuffer;
-    kit::DoubleBufferPtr      m_bloomBlurBuffer2;
-    kit::DoubleBufferPtr      m_bloomBlurBuffer4;
-    kit::DoubleBufferPtr      m_bloomBlurBuffer8;
-    kit::DoubleBufferPtr      m_bloomBlurBuffer16;
-    kit::DoubleBufferPtr      m_bloomBlurBuffer32;
-    uint32_t                 m_bloomBlurLevel2;
-    uint32_t                 m_bloomBlurLevel4;
-    uint32_t                 m_bloomBlurLevel8;
-    uint32_t                 m_bloomBlurLevel16;
-    uint32_t                 m_bloomBlurLevel32;
+    bool                        m_bloomEnabled = true;
+    BloomQuality                m_bloomQuality = BloomQuality::High;
+    float                       m_bloomDirtMultiplier = 3.0f;
+    float                       m_bloomTresholdBias = 0.0f;
+    kit::ProgramPtr             m_bloomBrightProgram = nullptr;
+    kit::ProgramPtr             m_bloomBlurProgram = nullptr;
+    kit::TexturePtr             m_bloomDirtTexture = nullptr;
+    kit::DoubleBufferPtr        m_bloomBrightBuffer = nullptr;
+    kit::DoubleBufferPtr        m_bloomBlurBuffer2 = nullptr;
+    kit::DoubleBufferPtr        m_bloomBlurBuffer4 = nullptr;
+    kit::DoubleBufferPtr        m_bloomBlurBuffer8 = nullptr;
+    kit::DoubleBufferPtr        m_bloomBlurBuffer16 = nullptr;
+    kit::DoubleBufferPtr        m_bloomBlurBuffer32 = nullptr;
+    uint32_t                    m_bloomBlurLevel2 = 1;
+    uint32_t                    m_bloomBlurLevel4 = 2;
+    uint32_t                    m_bloomBlurLevel8 = 4;
+    uint32_t                    m_bloomBlurLevel16 = 8;
+    uint32_t                    m_bloomBlurLevel32 = 16;
     
     // HDR stuff + bloom application
-    kit::ProgramPtr           m_hdrTonemap;
-    kit::ProgramPtr           m_hdrTonemapBloomHigh;
-    kit::ProgramPtr           m_hdrTonemapBloomLow;
-    kit::ProgramPtr           m_hdrTonemapBloomHighDirt;
-    kit::ProgramPtr           m_hdrTonemapBloomLowDirt;
+    kit::ProgramPtr             m_hdrTonemap = nullptr;
+    kit::ProgramPtr             m_hdrTonemapBloomHigh = nullptr;
+    kit::ProgramPtr             m_hdrTonemapBloomLow = nullptr;
+    kit::ProgramPtr             m_hdrTonemapBloomHighDirt = nullptr;
+    kit::ProgramPtr             m_hdrTonemapBloomLowDirt = nullptr;
 
     // Scene fringe stuff
-    bool                        m_fringeEnabled;
-    kit::ProgramPtr           m_fringeProgram;
-    float                       m_fringeExponential;
-    float                       m_fringeScale;
+    bool                        m_fringeEnabled = true;
+    kit::ProgramPtr             m_fringeProgram = nullptr;
+    float                       m_fringeExponential = 1.5f;
+    float                       m_fringeScale = 0.01f;
     
     // FXAA stuff
-    bool                        m_fxaaEnabled;
-    kit::ProgramPtr           m_fxaaProgram;
+    bool                        m_fxaaEnabled = true;
+    kit::ProgramPtr             m_fxaaProgram = nullptr;
     
     // Color correction stuff
-    bool                          m_ccEnabled;
-    kit::ProgramPtr               m_ccProgram;
-    kit::TexturePtr               m_ccLookupTable;
+    bool                          m_ccEnabled = false;
+    kit::ProgramPtr               m_ccProgram = nullptr;
+    kit::TexturePtr               m_ccLookupTable = nullptr;
 
     // sRGB conversion ???
-    kit::ProgramPtr               m_srgbProgram;
-    bool                          m_srgbEnabled;
+    kit::ProgramPtr               m_srgbProgram = nullptr;
+    bool                          m_srgbEnabled = true;
 
     // Debug information (GPU metrics, fps etc)
-    bool                        m_metricsEnabled;
-    kit::TextPtr              m_metrics;
-    kit::GLTimerPtr           m_metricsTimer;
-    kit::Timer                m_metricsFPSTimer;
-    uint32_t               m_framesCount;
-    uint32_t               m_metricsFPS;
-    uint32_t               m_metricsFPSCalibrated;
+    bool                        m_metricsEnabled = false;
+    kit::TextPtr                m_metrics = nullptr;
+    kit::GLTimerPtr             m_metricsTimer = nullptr;
+    kit::Timer                  m_metricsFPSTimer;
+    uint32_t                    m_framesCount = 0;
+    uint32_t                    m_metricsFPS = 0;
+    uint32_t                    m_metricsFPSCalibrated = 0;
 
   };
   

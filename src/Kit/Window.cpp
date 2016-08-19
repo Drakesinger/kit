@@ -49,6 +49,7 @@ kit::Window::Window(kit::Window::Args const & windowArgs)
   this->m_isFocused = true;
   this->m_isMinimized = false;
   this->m_virtualMouse = false;
+  this->m_eventsDistributed = false;
 
   // Get the GLFW handle from the window to share resources with
   GLFWwindow * glfwSharedWindow = nullptr;  

@@ -427,20 +427,20 @@ namespace kit{
     private:
       kit::GL             m_glSingleton;
 
-      std::string         m_filename;
+      std::string         m_filename = "";
 
-      GLuint              m_glHandle;
-      Type                m_type;
+      GLuint              m_glHandle = 0;
+      Type                m_type = Type::Texture2D;
 
-      InternalFormat      m_internalFormat;
-      FilteringMode       m_minFilteringMode;
-      FilteringMode       m_magFilteringMode;
-      EdgeSamplingMode    m_edgeSamplingModeS;
-      EdgeSamplingMode    m_edgeSamplingModeT;
-      EdgeSamplingMode    m_edgeSamplingModeR;
-      glm::uvec3          m_resolution;
-      uint32_t            m_arraySize;
-      float               m_anisotropicLevel;
+      InternalFormat      m_internalFormat = InternalFormat::RGBA8;
+      FilteringMode       m_minFilteringMode = FilteringMode::Linear;
+      FilteringMode       m_magFilteringMode = FilteringMode::Linear;
+      EdgeSamplingMode    m_edgeSamplingModeS = EdgeSamplingMode::Repeat;
+      EdgeSamplingMode    m_edgeSamplingModeT = EdgeSamplingMode::Repeat;
+      EdgeSamplingMode    m_edgeSamplingModeR = EdgeSamplingMode::Repeat;
+      glm::uvec3          m_resolution = glm::uvec3(0, 0, 0);
+      uint32_t            m_arraySize = 0;
+      float               m_anisotropicLevel = 4.0f;
 
       static std::map<std::string, kit::Texture::Ptr> m_cachedTextures;
   };
