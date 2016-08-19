@@ -18,13 +18,13 @@
 #include <Kit/Model.hpp>  // Action!
 #include <Kit/Skybox.hpp>
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
   // Create a window
   kit::Window::Args winArgs;
   winArgs.mode = kit::Window::Windowed;
   winArgs.resizable = true;
-  winArgs.title = "Sphere example";
+  winArgs.title = std::string("Sphere example");
   winArgs.resolution = glm::uvec2(1280, 720);
 
   auto win = kit::Window::create(winArgs);

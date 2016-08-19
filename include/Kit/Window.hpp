@@ -44,7 +44,7 @@ namespace kit
       ///
       struct KITAPI Args
       {
-	public:
+        public:
           
           /// 
           /// \brief Default constructor

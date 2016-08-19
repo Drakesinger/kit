@@ -9,7 +9,7 @@ namespace kit{
   void KITAPI glfwError(int error, const char* desc);
   void KITAPI initializeGL3W();
 
-  class GLFWSingleton
+  class KITAPI GLFWSingleton
   {
   public:
     GLFWSingleton();
