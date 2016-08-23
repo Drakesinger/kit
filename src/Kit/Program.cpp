@@ -422,7 +422,12 @@ uint32_t kit::Program::getUniformLocation(const std::string & name)
     if(t)
     {
       KIT_GL(glUniform1i(it.first, i));
+#ifndef KIT_SHITTY_INTEL
       KIT_GL(glBindTextureUnit(i, t->getHandle()));
+#else
+      KIT_GL(glActiveTexture(GL_TEXTURE0 + i));
+      t->bind();
+#endif 
       i++;
     }
   }
@@ -433,7 +438,12 @@ uint32_t kit::Program::getUniformLocation(const std::string & name)
     if(t)
     {
       KIT_GL(glUniform1i(it.first, i));
+#ifndef KIT_SHITTY_INTEL
       KIT_GL(glBindTextureUnit(i, t->getHandle()));
+#else 
+      KIT_GL(glActiveTexture(GL_TEXTURE0 + i));
+      t->bind();
+#endif
       i++;
     }
   }

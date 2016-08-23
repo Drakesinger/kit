@@ -24,12 +24,15 @@ kit::PixelBuffer::PixelBuffer()
   this->m_glHandle = 0;
   this->m_resolution = glm::uvec2(0, 0);
   this->m_depthAttachment = nullptr;
+#ifndef KIT_SHITTY_INTEL
   KIT_GL(glCreateFramebuffers(1, &this->m_glHandle));
+#else
+  KIT_GL(glGenFramebuffers(1, &this->m_glHandle)); 
+#endif 
 }
 
 kit::PixelBuffer::~PixelBuffer()
 {
-  
   glDeleteFramebuffers(1, &this->m_glHandle);
   this->m_glHandle = 0;
   glGetError();
@@ -78,7 +81,12 @@ kit::PixelBuffer::Ptr kit::PixelBuffer::create(glm::uvec2 resolution, kit::Pixel
   
   if(colorattachments.size() == 0)
   {
+#ifndef KIT_SHITTY_INTEL
     KIT_GL(glNamedFramebufferDrawBuffer(returner->m_glHandle, GL_NONE));
+#else 
+    returner->bind();
+    KIT_GL(glDrawBuffer(GL_NONE));
+#endif 
   }
   else
   {
@@ -104,19 +112,34 @@ kit::PixelBuffer::Ptr kit::PixelBuffer::create(glm::uvec2 resolution, kit::Pixel
         }
         
         returner->m_colorAttachments.push_back(info.texture);
+#ifndef KIT_SHITTY_INTEL
         KIT_GL(glNamedFramebufferTexture(returner->m_glHandle, currEnum, info.texture->getHandle(), 0));
+#else 
+        returner->bind();
+        KIT_GL(glFramebufferTexture(GL_FRAMEBUFFER, currEnum, info.texture->getHandle(), 0));
+#endif 
       }
       else
       {
         kit::Texture::Ptr adder = kit::Texture::create2D(resolution, info.format, info.edgeSamplingMode, info.minFilteringMode, info.magFilteringMode);
         returner->m_colorAttachments.push_back(adder);
+#ifndef KIT_SHITTY_INTEL
         KIT_GL(glNamedFramebufferTexture(returner->m_glHandle, currEnum, adder->getHandle(), 0));
+#else 
+        returner->bind();
+        KIT_GL(glFramebufferTexture(GL_FRAMEBUFFER, currEnum, adder->getHandle(), 0));
+#endif 
       }
     }
 
     
     // Set drawbuffers
+#ifndef KIT_SHITTY_INTEL
     KIT_GL(glNamedFramebufferDrawBuffers(returner->m_glHandle, (GLsizei)drawBuffers.size(), &drawBuffers[0]));
+#else 
+    returner->bind();
+    KIT_GL(glDrawBuffers((GLsizei)drawBuffers.size(), &drawBuffers[0]));
+#endif 
   }
   
   return returner;
@@ -130,7 +153,12 @@ kit::PixelBuffer::Ptr kit::PixelBuffer::create(glm::uvec2 resolution, kit::Pixel
   
   if(colorattachments.size() == 0)
   {
+#ifndef KIT_SHITTY_INTEL
     KIT_GL(glNamedFramebufferDrawBuffer(returner->m_glHandle, GL_NONE));
+#else 
+    returner->bind();
+    KIT_GL(glDrawBuffer(GL_NONE));
+#endif 
   }
   else
   {
@@ -156,18 +184,33 @@ kit::PixelBuffer::Ptr kit::PixelBuffer::create(glm::uvec2 resolution, kit::Pixel
         }
         
         returner->m_colorAttachments.push_back(info.texture);
+#ifndef KIT_SHITTY_INTEL
         KIT_GL(glNamedFramebufferTexture(returner->m_glHandle, currEnum, info.texture->getHandle(), 0));
+#else 
+        returner->bind();
+        KIT_GL(glFramebufferTexture(GL_FRAMEBUFFER, currEnum, info.texture->getHandle(), 0));
+#endif 
       }
       else
       {
         kit::Texture::Ptr adder = kit::Texture::create2D(resolution, info.format, info.edgeSamplingMode, info.minFilteringMode, info.magFilteringMode);
         returner->m_colorAttachments.push_back(adder);
+#ifndef KIT_SHITTY_INTEL
         KIT_GL(glNamedFramebufferTexture(returner->m_glHandle, currEnum, adder->getHandle(), 0));
+#else 
+        returner->bind();
+        KIT_GL(glFramebufferTexture(GL_FRAMEBUFFER, currEnum, adder->getHandle(), 0));
+#endif 
       }
     }
     
     // Set drawbuffers
+#ifndef KIT_SHITTY_INTEL
     KIT_GL(glNamedFramebufferDrawBuffers(returner->m_glHandle, (GLsizei)drawBuffers.size(), &drawBuffers[0]));
+#else 
+    returner->bind();
+    KIT_GL(glDrawBuffers((GLsizei)drawBuffers.size(), &drawBuffers[0]));
+#endif 
   }
   
   // Add depth attachment or create it if it doesnt exist
@@ -187,7 +230,12 @@ kit::PixelBuffer::Ptr kit::PixelBuffer::create(glm::uvec2 resolution, kit::Pixel
     }
     
     returner->m_depthAttachment = depthattachment.texture;
+#ifndef KIT_SHITTY_INTEL
     KIT_GL(glNamedFramebufferTexture(returner->m_glHandle, GL_DEPTH_ATTACHMENT, returner->m_depthAttachment->getHandle(), 0));
+#else 
+    returner->bind();
+    KIT_GL(glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, returner->m_depthAttachment->getHandle(), 0));
+#endif 
   }
   else
   {
@@ -199,7 +247,12 @@ kit::PixelBuffer::Ptr kit::PixelBuffer::create(glm::uvec2 resolution, kit::Pixel
     }
     
     returner->m_depthAttachment = kit::Texture::create2D(resolution, depthattachment.format, depthattachment.edgeSamplingMode, depthattachment.minFilteringMode, depthattachment.magFilteringMode);
+#ifndef KIT_SHITTY_INTEL
     KIT_GL(glNamedFramebufferTexture(returner->m_glHandle, GL_DEPTH_ATTACHMENT, returner->m_depthAttachment->getHandle(), 0));
+#else 
+    returner->bind();
+    KIT_GL(glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, returner->m_depthAttachment->getHandle(), 0));
+#endif
   }
   
   return returner;
@@ -212,13 +265,18 @@ kit::PixelBuffer::Ptr kit::PixelBuffer::createShadowBuffer(glm::uvec2 resolution
 
 void kit::PixelBuffer::setDrawBuffers(std::vector< uint32_t > drawBuffers)
 {
+#ifndef KIT_SHITTY_INTEL
   KIT_GL(glNamedFramebufferDrawBuffers(this->m_glHandle, (GLsizei)drawBuffers.size(), &drawBuffers[0]));
+#else 
+  this->bind();
+  KIT_GL(glDrawBuffers((GLsizei)drawBuffers.size(), &drawBuffers[0]));
+#endif 
 }
 
 
 void kit::PixelBuffer::clear(std::vector<glm::vec4> colours, float depth)
 {
-    kit::GL::depthMask(GL_TRUE);
+  kit::GL::depthMask(GL_TRUE);
   this->bind();
   
   if(this->m_depthAttachment == nullptr)

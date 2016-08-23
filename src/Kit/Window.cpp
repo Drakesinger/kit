@@ -69,8 +69,13 @@ kit::Window::Window(kit::Window::Args const & windowArgs)
 #else
   std::cout << "Allowing EGL contexts" << std::endl;
 #endif
+#ifndef KIT_SHITTY_INTEL
+  kit::Window::prepareGLFWHints(GLFW_CONTEXT_VERSION_MAJOR, 4);
+  kit::Window::prepareGLFWHints(GLFW_CONTEXT_VERSION_MINOR, 5);
+#else 
   kit::Window::prepareGLFWHints(GLFW_CONTEXT_VERSION_MAJOR, 4);
   kit::Window::prepareGLFWHints(GLFW_CONTEXT_VERSION_MINOR, 3);
+#endif 
   kit::Window::prepareGLFWHints(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
   // Set window-specific hints and create window according to our window-arguments
