@@ -58,16 +58,16 @@ kit::BakedTerrain::BakedTerrain()
   this->m_xzScale = 1.0f;
   this->m_yScale = 1.0f;
 
-  KIT_GL(glGenVertexArrays(1, &this->m_glVertexArray));
-  KIT_GL(glGenBuffers(1, &this->m_glVertexIndices));
-  KIT_GL(glGenBuffers(1, &this->m_glVertexBuffer));
+  glGenVertexArrays(1, &this->m_glVertexArray);
+  glGenBuffers(1, &this->m_glVertexIndices);
+  glGenBuffers(1, &this->m_glVertexBuffer);
 }
 
 kit::BakedTerrain::~BakedTerrain()
 {
-  KIT_GL(glDeleteBuffers(1, &this->m_glVertexIndices));
-  KIT_GL(glDeleteBuffers(1, &this->m_glVertexBuffer));
-  KIT_GL(glDeleteVertexArrays(1, &this->m_glVertexArray));
+  glDeleteBuffers(1, &this->m_glVertexIndices);
+  glDeleteBuffers(1, &this->m_glVertexBuffer);
+  glDeleteVertexArrays(1, &this->m_glVertexArray);
 }
 
 kit::BakedTerrain::Ptr kit::BakedTerrain::load(const std::string&name)
@@ -116,17 +116,17 @@ kit::BakedTerrain::Ptr kit::BakedTerrain::load(const std::string&name)
   {
     std::cout << "Uploading data to GPU" << std::endl;
 
-    kit::GL::bindVertexArray(returner->m_glVertexArray);
+    glBindVertexArray(returner->m_glVertexArray);
 
     // Upload indices
     std::cout << "Uploading indices (" << (returner->m_indexCount * sizeof(uint32_t)) << " bytes)" << std::endl;
-    kit::GL::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, returner->m_glVertexIndices);
-    KIT_GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, returner->m_indexCount * sizeof(uint32_t), &indexData[0], GL_STATIC_DRAW));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, returner->m_glVertexIndices);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, returner->m_indexCount * sizeof(uint32_t), &indexData[0], GL_STATIC_DRAW);
 
     // Upload vertices 
     std::cout << "Uploading vertices (" << (vertexDataLen * sizeof(float)) << " bytes)" << std::endl;
-    kit::GL::bindBuffer(GL_ARRAY_BUFFER, returner->m_glVertexBuffer);
-    KIT_GL(glBufferData(GL_ARRAY_BUFFER, vertexDataLen * sizeof(float) , &vertexData[0], GL_STATIC_DRAW));
+    glBindBuffer(GL_ARRAY_BUFFER, returner->m_glVertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, vertexDataLen * sizeof(float) , &vertexData[0], GL_STATIC_DRAW);
   }
 
   // Cleanup data
@@ -142,23 +142,23 @@ kit::BakedTerrain::Ptr kit::BakedTerrain::load(const std::string&name)
     static const uint32_t attributeSize = sizeof(float) * 14;
 
     // Positions
-    KIT_GL(glEnableVertexAttribArray(0));
-    KIT_GL(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*)0));
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*)0);
 
     // Texture coordinates
-    KIT_GL(glEnableVertexAttribArray(1));
-    KIT_GL(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(float) * 3) ));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(float) * 3) );
 
     // Normals
-    KIT_GL(glEnableVertexAttribArray(2));
-    KIT_GL(glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(float) * 5) ));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(float) * 5) );
 
     // Tangents
-    KIT_GL(glEnableVertexAttribArray(3));
-    KIT_GL(glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(float) * 8) ));
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(float) * 8) );
 
-    KIT_GL(glEnableVertexAttribArray(4));
-    KIT_GL(glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(float) * 11) ));
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(float) * 11) );
   }
 
   // Load maps
@@ -289,9 +289,9 @@ void kit::BakedTerrain::renderDeferred(kit::Renderer::Ptr renderer)
   glm::mat4 modelViewMatrix = renderer->getActiveCamera()->getViewMatrix() * this->getTransformMatrix();
   glm::mat4 modelViewProjectionMatrix = renderer->getActiveCamera()->getProjectionMatrix() * renderer->getActiveCamera()->getViewMatrix() * this->getTransformMatrix();
 
-  kit::GL::disable(GL_BLEND);
-  kit::GL::disable(GL_CULL_FACE);
-  //kit::GL::cullFace(GL_BACK);
+  glDisable(GL_BLEND);
+  glDisable(GL_CULL_FACE);
+  //glCullFace(GL_BACK);
 
   this->m_program->use();
   this->m_program->setUniformMat4("uniform_mvMatrix", modelViewMatrix);
@@ -302,7 +302,7 @@ void kit::BakedTerrain::renderDeferred(kit::Renderer::Ptr renderer)
 
 void kit::BakedTerrain::renderShadows(glm::mat4 viewmatrix, glm::mat4 projectionmatrix)
 {
-  kit::GL::disable(GL_CULL_FACE);
+  glDisable(GL_CULL_FACE);
   kit::Model::getShadowProgram(false, false, false)->use();
   kit::Model::getShadowProgram(false, false, false)->setUniformMat4("uniform_mvpMatrix", projectionmatrix * viewmatrix * this->getTransformMatrix());
   this->renderGeometry();
@@ -315,8 +315,8 @@ void kit::BakedTerrain::renderGeometry()
     return;
   }
 
-  kit::GL::bindVertexArray(this->m_glVertexArray);
-  KIT_GL(glDrawElements( GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0));
+  glBindVertexArray(this->m_glVertexArray);
+  glDrawElements( GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0);
 }
 
 void kit::BakedTerrain::updateGpuProgram()

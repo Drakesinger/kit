@@ -80,11 +80,11 @@ void kit::DoubleBuffer::blitFrom(kit::DoubleBuffer::Ptr source)
 #else 
   source->getFrontBuffer()->bind(kit::PixelBuffer::Read);
   this->getFrontBuffer()->bind(kit::PixelBuffer::Draw);
-  KIT_GL(glBlitFramebuffer(
+  glBlitFramebuffer(
     0, 0, source->getResolution().x, source->getResolution().y,
     0, 0, this->getResolution().x, this->getResolution().y,
     GL_COLOR_BUFFER_BIT, GL_LINEAR
-  ));
+  );
 #endif
 }
 

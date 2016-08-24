@@ -40,7 +40,6 @@ namespace kit
       static SelectionIterator select(const std::string& title, SelectionIterator currIndex, SelectionList & list);
       
     private:
-      kit::GL m_glSingleton;
       static void invalidateDeviceObjects();
       static bool createDeviceObjects();
       static bool createFontsTexture();

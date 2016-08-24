@@ -18,14 +18,14 @@ kit::Submesh::~Submesh()
 
 void kit::Submesh::renderGeometry()
 {
-  kit::GL::bindVertexArray(this->m_glVertexArray);
-  KIT_GL(glDrawElements( GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0));
+  glBindVertexArray(this->m_glVertexArray);
+  glDrawElements( GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0);
 }
 
 void kit::Submesh::renderGeometryInstanced(uint32_t numInstances)
 {
-  kit::GL::bindVertexArray(this->m_glVertexArray);
-  KIT_GL(glDrawElementsInstanced( GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0, numInstances));
+  glBindVertexArray(this->m_glVertexArray);
+  glDrawElementsInstanced( GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0, numInstances);
 }
 
 kit::Submesh::Ptr kit::Submesh::load(const std::string& name)
@@ -49,17 +49,17 @@ void kit::Submesh::flushCache()
 void kit::Submesh::allocateBuffers()
 {
   
-  KIT_GL(glGenVertexArrays(1, &this->m_glVertexArray));
-  KIT_GL(glGenBuffers(1, &this->m_glVertexIndices));
-  KIT_GL(glGenBuffers(1, &this->m_glVertexBuffer));
+  glGenVertexArrays(1, &this->m_glVertexArray);
+  glGenBuffers(1, &this->m_glVertexIndices);
+  glGenBuffers(1, &this->m_glVertexBuffer);
 }
 
 void kit::Submesh::releaseBuffers()
 {
   
-  KIT_GL(glDeleteBuffers(1, &this->m_glVertexIndices));
-  KIT_GL(glDeleteBuffers(1, &this->m_glVertexBuffer));
-  KIT_GL(glDeleteVertexArrays(1, &this->m_glVertexArray));
+  glDeleteBuffers(1, &this->m_glVertexIndices);
+  glDeleteBuffers(1, &this->m_glVertexBuffer);
+  glDeleteVertexArrays(1, &this->m_glVertexArray);
 }
 
 void kit::Submesh::loadGeometry(const std::string&filename)
@@ -73,40 +73,40 @@ void kit::Submesh::loadGeometry(const std::string&filename)
   
   this->m_indexCount = (uint32_t)data.m_indices.size();
   
-  kit::GL::bindVertexArray(this->m_glVertexArray);
+  glBindVertexArray(this->m_glVertexArray);
   
   // Upload indices
-  kit::GL::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_glVertexIndices);
-  KIT_GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.m_indices.size() * sizeof(uint32_t), &data.m_indices[0], GL_STATIC_DRAW));
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_glVertexIndices);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.m_indices.size() * sizeof(uint32_t), &data.m_indices[0], GL_STATIC_DRAW);
   
   // Upload vertices 
-  kit::GL::bindBuffer(GL_ARRAY_BUFFER, this->m_glVertexBuffer);
-  KIT_GL(glBufferData(GL_ARRAY_BUFFER, data.m_vertices.size() * 19 * sizeof(float) , &data.m_vertices[0], GL_STATIC_DRAW));
+  glBindBuffer(GL_ARRAY_BUFFER, this->m_glVertexBuffer);
+  glBufferData(GL_ARRAY_BUFFER, data.m_vertices.size() * 19 * sizeof(float) , &data.m_vertices[0], GL_STATIC_DRAW);
   
   // Total size
   uint32_t attributeSize = (sizeof(GLfloat) * 15) + (sizeof(GLint) * 4);
   
   // Positions
-  KIT_GL(glEnableVertexAttribArray(0));
-  KIT_GL(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*)0));
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*)0);
   
   // Texture coordinates
-  KIT_GL(glEnableVertexAttribArray(1));
-  KIT_GL(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(GLfloat) * 3) ));
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(GLfloat) * 3) );
 
   // Normals
-  KIT_GL(glEnableVertexAttribArray(2));
-  KIT_GL(glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(GLfloat) * 5) ));
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(GLfloat) * 5) );
   
   // Tangents
-  KIT_GL(glEnableVertexAttribArray(3));
-  KIT_GL(glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(GLfloat) * 8) ));
+  glEnableVertexAttribArray(3);
+  glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(GLfloat) * 8) );
   
   // Bone ID's
-  KIT_GL(glEnableVertexAttribArray(4));
-  KIT_GL(glVertexAttribIPointer(4, 4, GL_INT, attributeSize, (void*) (sizeof(GLfloat) * 11)  ));
+  glEnableVertexAttribArray(4);
+  glVertexAttribIPointer(4, 4, GL_INT, attributeSize, (void*) (sizeof(GLfloat) * 11)  );
   
   // Bone weights
-  KIT_GL(glEnableVertexAttribArray(5));
-  KIT_GL(glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, attributeSize, (void*)((sizeof(GLfloat) * 11) + (sizeof(GLint) * 4)) ));
+  glEnableVertexAttribArray(5);
+  glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, attributeSize, (void*)((sizeof(GLfloat) * 11) + (sizeof(GLint) * 4)) );
 }

@@ -55,7 +55,6 @@ namespace kit
       
       void PrepareProgram(kit::ProgramPtr customprogram = nullptr);
       
-      kit::GL m_glSingleton;
       
       // Shared GPU data
       static void allocateShared();

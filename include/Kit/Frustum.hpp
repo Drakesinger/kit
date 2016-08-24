@@ -22,7 +22,6 @@ namespace kit
     void renderGeometry();
 
   private:
-    kit::GL m_glSingleton;
     // Individual GPU data
     void allocateBuffers();
     void releaseBuffers();

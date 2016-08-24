@@ -192,26 +192,26 @@ void kit::GridFloor::allocateShared()
   kit::GridFloor::m_indexCount = (uint32_t)indexData.size();
   
   // Generate and bind our Vertex Array Object
-  KIT_GL(glGenVertexArrays(1, &kit::GridFloor::m_glVertexArray));
-  kit::GL::bindVertexArray(kit::GridFloor::m_glVertexArray);
+  glGenVertexArrays(1, &kit::GridFloor::m_glVertexArray);
+  glBindVertexArray(kit::GridFloor::m_glVertexArray);
 
   // Generate our Vertex Index Buffer Object
-  KIT_GL(glGenBuffers(1, &kit::GridFloor::m_glVertexIndices));
-  kit::GL::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, kit::GridFloor::m_glVertexIndices);
-  KIT_GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GLuint), &indexData[0], GL_STATIC_DRAW));
+  glGenBuffers(1, &kit::GridFloor::m_glVertexIndices);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, kit::GridFloor::m_glVertexIndices);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GLuint), &indexData[0], GL_STATIC_DRAW);
 
   // Generate our Vertex Buffer Object
-  KIT_GL(glGenBuffers(1, &kit::GridFloor::m_glVertexBuffer));
-  kit::GL::bindBuffer(GL_ARRAY_BUFFER, kit::GridFloor::m_glVertexBuffer);
-  KIT_GL(glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), &vertexData[0], GL_STATIC_DRAW));
+  glGenBuffers(1, &kit::GridFloor::m_glVertexBuffer);
+  glBindBuffer(GL_ARRAY_BUFFER, kit::GridFloor::m_glVertexBuffer);
+  glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), &vertexData[0], GL_STATIC_DRAW);
   
   // XYZ
-  KIT_GL(glEnableVertexAttribArray(0));
-  KIT_GL(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 7, (void*)0));
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 7, (void*)0);
   
   // RGBA
-  KIT_GL(glEnableVertexAttribArray(1));
-  KIT_GL(glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 7, (void*) (sizeof(GLfloat) * 3)));
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 7, (void*) (sizeof(GLfloat) * 3));
   
   kit::GridFloor::m_program = kit::Program::load({"gridfloor.vert"}, {}, {"gridfloor.frag"});
 }
@@ -221,17 +221,17 @@ void kit::GridFloor::releaseShared()
   
   kit::GridFloor::m_program.reset();
   
-  KIT_GL(glDeleteBuffers(1, &kit::GridFloor::m_glVertexIndices));
-  KIT_GL(glDeleteBuffers(1, &kit::GridFloor::m_glVertexBuffer));
-  KIT_GL(glDeleteVertexArrays(1, &kit::GridFloor::m_glVertexArray));
+  glDeleteBuffers(1, &kit::GridFloor::m_glVertexIndices);
+  glDeleteBuffers(1, &kit::GridFloor::m_glVertexBuffer);
+  glDeleteVertexArrays(1, &kit::GridFloor::m_glVertexArray);
 }
 
 void kit::GridFloor::renderForward(kit::Renderer::Ptr renderer)
 {
   
-  kit::GL::enable(GL_BLEND);
-  kit::GL::blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  kit::GL::enable(GL_DEPTH_TEST);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_DEPTH_TEST);
   
   glm::mat4 modelViewProjectionMatrix = renderer->getActiveCamera()->getProjectionMatrix() * renderer->getActiveCamera()->getViewMatrix() * this->getTransformMatrix();
   
@@ -244,8 +244,8 @@ void kit::GridFloor::renderForward(kit::Renderer::Ptr renderer)
 
 void kit::GridFloor::renderGeometry()
 {
-  kit::GL::bindVertexArray(kit::GridFloor::m_glVertexArray);
-  KIT_GL(glDrawElements(GL_LINES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0));
+  glBindVertexArray(kit::GridFloor::m_glVertexArray);
+  glDrawElements(GL_LINES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0);
 }
 
 bool kit::GridFloor::isShadowCaster()

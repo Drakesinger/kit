@@ -87,26 +87,26 @@ kit::Water::Water(glm::uvec2 resolution)
   }
 
   // Create a vertex array object and two vertex buffer objects (for vertex data and index data)
-  KIT_GL(glGenVertexArrays(1, &this->m_glVao));
-  KIT_GL(glGenBuffers(1, &this->m_glVertexBuffer));
-  KIT_GL(glGenBuffers(1, &this->m_glIndexBuffer));
+  glGenVertexArrays(1, &this->m_glVao);
+  glGenBuffers(1, &this->m_glVertexBuffer);
+  glGenBuffers(1, &this->m_glIndexBuffer);
 
   // Use the newly created VAO
-  kit::GL::bindVertexArray(this->m_glVao);
+  glBindVertexArray(this->m_glVao);
 
   // Upload indices
-  kit::GL::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_glIndexBuffer);
-  KIT_GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GLuint), &indexData[0], GL_STATIC_DRAW));
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_glIndexBuffer);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GLuint), &indexData[0], GL_STATIC_DRAW);
   this->m_indexCount = (uint32_t)indexData.size();
 
   // Upload vertices 
-  kit::GL::bindBuffer(GL_ARRAY_BUFFER, this->m_glVertexBuffer);
-  KIT_GL(glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), &vertexData[0], GL_STATIC_DRAW));
+  glBindBuffer(GL_ARRAY_BUFFER, this->m_glVertexBuffer);
+  glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), &vertexData[0], GL_STATIC_DRAW);
 
   // Set the vertex data layout in our VAO
   uint32_t attributeSize = (sizeof(GLfloat) * 2);
-  KIT_GL(glEnableVertexAttribArray(0));
-  KIT_GL(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*)0));
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*)0);
 
   // Lets also create a shader program  and load some textures we need
   this->m_program = kit::Program::load({ "water.vert" }, {}, {"lighting/cooktorrance.glsl", "water.frag" });
@@ -119,20 +119,20 @@ kit::Water::Water(glm::uvec2 resolution)
 
 kit::Water::~Water()
 {
-  KIT_GL(glDeleteBuffers(1, &this->m_glIndexBuffer));
-  KIT_GL(glDeleteBuffers(1, &this->m_glVertexBuffer));
-  KIT_GL(glDeleteVertexArrays(1, &this->m_glVao));
+  glDeleteBuffers(1, &this->m_glIndexBuffer);
+  glDeleteBuffers(1, &this->m_glVertexBuffer);
+  glDeleteVertexArrays(1, &this->m_glVao);
 }
 
 void kit::Water::renderForward(kit::Renderer::Ptr renderer)
 {
   // Set OpenGL states
-  kit::GL::enable(GL_BLEND);
-  kit::GL::blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  //kit::GL::blendFunc(GL_ONE, GL_ONE);
-  kit::GL::disable(GL_CULL_FACE);
-  kit::GL::enable(GL_DEPTH_TEST);
-  kit::GL::depthMask(GL_TRUE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  //glBlendFunc(GL_ONE, GL_ONE);
+  glDisable(GL_CULL_FACE);
+  glEnable(GL_DEPTH_TEST);
+  glDepthMask(GL_TRUE);
 
   // Calculate matrices to pass into shader
   glm::mat4 modelMatrix = this->getTransformMatrix();
@@ -169,8 +169,8 @@ void kit::Water::renderForward(kit::Renderer::Ptr renderer)
   this->m_program->setUniformMat4("uniform_mvMatrix", mvMatrix);
   
   // Bind our OpenGL VAO and push a draw-call to the GPU to render our water
-  kit::GL::bindVertexArray(this->m_glVao);
-  KIT_GL(glDrawElements(GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0));
+  glBindVertexArray(this->m_glVao);
+  glDrawElements(GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0);
 }
 
 kit::Water::Ptr kit::Water::create(glm::uvec2 resolution)

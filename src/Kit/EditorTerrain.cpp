@@ -79,24 +79,24 @@ kit::EditorTerrain::EditorTerrain() : kit::Renderable()
   this->m_decalBrushPosition = glm::vec2(0.0f, 0.0f);
   this->m_decalBrushSize = glm::vec2(0.0f, 0.0f);
   
-  KIT_GL(glGenVertexArrays(1, &this->m_glVertexArray));
-  KIT_GL(glGenBuffers(1, &this->m_glVertexIndices));
-  KIT_GL(glGenBuffers(1, &this->m_glVertexBuffer));
+  glGenVertexArrays(1, &this->m_glVertexArray);
+  glGenBuffers(1, &this->m_glVertexIndices);
+  glGenBuffers(1, &this->m_glVertexBuffer);
   
   // Configure attributes
-  kit::GL::bindVertexArray(this->m_glVertexArray);
-  kit::GL::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_glVertexIndices);
-  kit::GL::bindBuffer(GL_ARRAY_BUFFER, this->m_glVertexBuffer);
+  glBindVertexArray(this->m_glVertexArray);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_glVertexIndices);
+  glBindBuffer(GL_ARRAY_BUFFER, this->m_glVertexBuffer);
   
   static const uint32_t attributeSize = sizeof(GLfloat) * 4;
 
   // Positions
-  KIT_GL(glEnableVertexAttribArray(0));
-  KIT_GL(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, attributeSize, (void*)0));
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, attributeSize, (void*)0);
 
   // Texture coordinates
-  KIT_GL(glEnableVertexAttribArray(1));
-  KIT_GL(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(GLfloat) * 2) ));
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(GLfloat) * 2) );
   
   // Compile static programs
   {
@@ -107,9 +107,9 @@ kit::EditorTerrain::EditorTerrain() : kit::Renderable()
 
 kit::EditorTerrain::~EditorTerrain()
 {
-  KIT_GL(glDeleteBuffers(1, &this->m_glVertexIndices));
-  KIT_GL(glDeleteBuffers(1, &this->m_glVertexBuffer));
-  KIT_GL(glDeleteVertexArrays(1, &this->m_glVertexArray));
+  glDeleteBuffers(1, &this->m_glVertexIndices);
+  glDeleteBuffers(1, &this->m_glVertexBuffer);
+  glDeleteVertexArrays(1, &this->m_glVertexArray);
 
   for(Triangle *currTriangle : this->m_triangles)
   {
@@ -252,15 +252,15 @@ void kit::EditorTerrain::generateCache()
     vertexData.push_back(currVertex->m_uv.y);
   }
 
-  kit::GL::bindVertexArray(this->m_glVertexArray);
+  glBindVertexArray(this->m_glVertexArray);
 
   // Upload indices
-  kit::GL::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_glVertexIndices);
-  KIT_GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GLuint), &indexData[0], GL_STATIC_DRAW));
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_glVertexIndices);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GLuint), &indexData[0], GL_STATIC_DRAW);
 
   // Upload vertices 
-  kit::GL::bindBuffer(GL_ARRAY_BUFFER, this->m_glVertexBuffer);
-  KIT_GL(glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat) , &vertexData[0], GL_STATIC_DRAW));
+  glBindBuffer(GL_ARRAY_BUFFER, this->m_glVertexBuffer);
+  glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat) , &vertexData[0], GL_STATIC_DRAW);
   
   // Create buffers etc
   glm::vec2 mapResolutionf = glm::vec2(this->m_resolution.x, this->m_resolution.y) * this->m_xzScale * 8.0f;// 8 fragments per meter, gives us 1.25dm  precision
@@ -428,9 +428,9 @@ void kit::EditorTerrain::renderDeferred(kit::Renderer::Ptr renderer)
   glm::mat4 modelViewMatrix = renderer->getActiveCamera()->getViewMatrix() * this->getTransformMatrix();
   glm::mat4 modelViewProjectionMatrix = renderer->getActiveCamera()->getProjectionMatrix() * renderer->getActiveCamera()->getViewMatrix() * this->getTransformMatrix();
 
-  kit::GL::disable(GL_BLEND);
-  kit::GL::enable(GL_CULL_FACE);
-  kit::GL::cullFace(GL_BACK);
+  glDisable(GL_BLEND);
+  glEnable(GL_CULL_FACE);
+  glCullFace(GL_BACK);
 
   this->m_program->use();
   this->m_program->setUniformMat4("uniform_mvMatrix", modelViewMatrix);
@@ -441,7 +441,7 @@ void kit::EditorTerrain::renderDeferred(kit::Renderer::Ptr renderer)
 
 void kit::EditorTerrain::renderShadows(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
 {
-  kit::GL::disable(GL_CULL_FACE);
+  glDisable(GL_CULL_FACE);
   this->m_shadowProgram->use();
   this->m_shadowProgram->setUniformMat4("uniform_mvpMatrix", projectionMatrix * viewMatrix * this->getTransformMatrix());
   this->renderGeometry();
@@ -461,12 +461,12 @@ void kit::EditorTerrain::renderForward(kit::Renderer::Ptr renderer)
 
   glm::mat4 modelViewProjectionMatrix = renderer->getActiveCamera()->getProjectionMatrix() * renderer->getActiveCamera()->getViewMatrix() * this->getTransformMatrix();
 
-  kit::GL::enable(GL_BLEND);
-  kit::GL::blendFunc(GL_ONE, GL_ONE);
-  kit::GL::disable(GL_DEPTH_TEST);
-  kit::GL::depthMask(GL_FALSE);
-  kit::GL::enable(GL_CULL_FACE);
-  kit::GL::cullFace(GL_BACK);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_ONE, GL_ONE);
+  glDisable(GL_DEPTH_TEST);
+  glDepthMask(GL_FALSE);
+  glEnable(GL_CULL_FACE);
+  glCullFace(GL_BACK);
 
   this->m_decalProgram->use();
   this->m_decalProgram->setUniformMat4("uniform_mvpMatrix", modelViewProjectionMatrix);
@@ -478,20 +478,20 @@ void kit::EditorTerrain::renderForward(kit::Renderer::Ptr renderer)
   this->m_wireProgram->setUniformMat4("uniform_mvpMatrix", modelViewProjectionMatrix);
   this->m_wireProgram->setUniform1f("uniform_whitepoint", renderer->getWhitepoint());
 
-  KIT_GL(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
-  kit::GL::enable(GL_POLYGON_OFFSET_LINE);
-  KIT_GL(glPolygonOffset(-1.0f, 1.0f));
-  kit::GL::enable(GL_DEPTH_TEST);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  glEnable(GL_POLYGON_OFFSET_LINE);
+  glPolygonOffset(-1.0f, 1.0f);
+  glEnable(GL_DEPTH_TEST);
   this->renderGeometry();
-  KIT_GL(glPolygonOffset(0.0f, 0.0f));
-  kit::GL::disable(GL_POLYGON_OFFSET_LINE);
-  KIT_GL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
+  glPolygonOffset(0.0f, 0.0f);
+  glDisable(GL_POLYGON_OFFSET_LINE);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 
   // Reset defaults!
-  kit::GL::depthMask(GL_TRUE);
-  kit::GL::enable(GL_DEPTH_TEST);
-  kit::GL::blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glDepthMask(GL_TRUE);
+  glEnable(GL_DEPTH_TEST);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void kit::EditorTerrain::renderGeometry()
@@ -501,8 +501,8 @@ void kit::EditorTerrain::renderGeometry()
     return;
   }
 
-  kit::GL::bindVertexArray(this->m_glVertexArray);
-  KIT_GL(glDrawElements( GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0));
+  glBindVertexArray(this->m_glVertexArray);
+  glDrawElements( GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0);
 }
 
 void kit::EditorTerrain::updateGpuProgram()
@@ -1262,10 +1262,10 @@ void kit::EditorTerrain::bakeARNXCache()
   this->m_bakeProgramArnx->use();
   this->m_arnxCache->bind();
   
-  kit::GL::disable(GL_BLEND);
-  kit::GL::disable(GL_CULL_FACE);
-  kit::GL::disable(GL_DEPTH_TEST);
-  KIT_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+  glDisable(GL_BLEND);
+  glDisable(GL_CULL_FACE);
+  glDisable(GL_DEPTH_TEST);
+  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
 kit::TexturePtr kit::EditorTerrain::getARCache()
@@ -1289,11 +1289,11 @@ void kit::EditorTerrain::renderPickbuffer(kit::Camera::Ptr cam)
   glm::mat4 modelViewProjectionMatrix = cam->getProjectionMatrix() * cam->getViewMatrix() * this->getTransformMatrix();
   glm::mat4 modelViewMatrix = cam->getViewMatrix() * this->getTransformMatrix();
 
-  kit::GL::enable(GL_CULL_FACE);
-  kit::GL::cullFace(GL_BACK);
-  kit::GL::disable(GL_BLEND);
-  kit::GL::depthMask(GL_TRUE);
-  kit::GL::enable(GL_DEPTH_TEST);
+  glEnable(GL_CULL_FACE);
+  glCullFace(GL_BACK);
+  glDisable(GL_BLEND);
+  glDepthMask(GL_TRUE);
+  glEnable(GL_DEPTH_TEST);
 
   this->m_pickProgram->use();
   this->m_pickProgram->setUniformMat4("uniform_mvpMatrix", modelViewProjectionMatrix);
@@ -1334,9 +1334,9 @@ void kit::EditorTerrain::paintMaterialMask(uint8_t layerid, kit::TexturePtr brus
   this->m_materialMask->getBackBuffer()->bind();
   this->m_materialMask->getBackBuffer()->clearAttachment(0, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
   this->m_materialMask->getBackBuffer()->clearAttachment(1, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
-  kit::GL::disable(GL_BLEND);
-  kit::GL::disable(GL_DEPTH_TEST);
-  KIT_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+  glDisable(GL_BLEND);
+  glDisable(GL_DEPTH_TEST);
+  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
   this->m_materialMask->flip();
   this->m_materialMask->getFrontBuffer()->getColorAttachment(0)->generateMipmap();
   this->m_materialMask->getFrontBuffer()->getColorAttachment(1)->generateMipmap();
@@ -1370,9 +1370,9 @@ void kit::EditorTerrain::paintHeightmap(kit::TexturePtr brush, glm::vec2 positio
 
   this->m_heightmap->getBackBuffer()->bind();
   this->m_heightmap->getBackBuffer()->clearAttachment(0, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
-  kit::GL::disable(GL_BLEND);
-  kit::GL::disable(GL_DEPTH_TEST);
-  KIT_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+  glDisable(GL_BLEND);
+  glDisable(GL_DEPTH_TEST);
+  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
   this->m_heightmap->flip();
   this->m_heightmap->getFrontBuffer()->getColorAttachment(0)->generateMipmap();
   this->m_program->setUniformTexture("uniform_heightmap", this->m_heightmap->getFrontBuffer()->getColorAttachment(0));

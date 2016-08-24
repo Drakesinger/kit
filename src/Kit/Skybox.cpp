@@ -109,9 +109,9 @@ kit::Skybox::~Skybox()
 
 void kit::Skybox::renderGeometry()
 {
-  kit::GL::bindVertexArray(kit::Skybox::m_glVertexArray);
+  glBindVertexArray(kit::Skybox::m_glVertexArray);
   // A cube has 6 faces, 2 triangles each, 3 verticces per triangle
-  KIT_GL(glDrawElements(GL_TRIANGLES, (uint32_t)indices.size(), GL_UNSIGNED_INT, (void*)0));
+  glDrawElements(GL_TRIANGLES, (uint32_t)indices.size(), GL_UNSIGNED_INT, (void*)0);
 }
 
 void kit::Skybox::render(kit::Renderer::Ptr renderer)
@@ -146,27 +146,27 @@ void kit::Skybox::allocateShared()
 {
   
   // Generate and bind our Vertex Array Object
-  KIT_GL(glGenVertexArrays(1, &kit::Skybox::m_glVertexArray));
+  glGenVertexArrays(1, &kit::Skybox::m_glVertexArray);
   
-  kit::GL::bindVertexArray(kit::Skybox::m_glVertexArray);
+  glBindVertexArray(kit::Skybox::m_glVertexArray);
   
   // Generate our Vertex Index Buffer Object
-  KIT_GL(glGenBuffers(1, &kit::Skybox::m_glVertexIndices));
+  glGenBuffers(1, &kit::Skybox::m_glVertexIndices);
 
   // Generate our Vertex Buffer Object
-  KIT_GL(glGenBuffers(1, &kit::Skybox::m_glVertexBuffer));
+  glGenBuffers(1, &kit::Skybox::m_glVertexBuffer);
   
   // Upload indices
-  kit::GL::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, kit::Skybox::m_glVertexIndices);
-  KIT_GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), &indices[0], GL_STATIC_DRAW));
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, kit::Skybox::m_glVertexIndices);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), &indices[0], GL_STATIC_DRAW);
   
   // Upload positions
-  kit::GL::bindBuffer(GL_ARRAY_BUFFER, kit::Skybox::m_glVertexBuffer);
-  KIT_GL(glBufferData(GL_ARRAY_BUFFER, bufferdata.size() * sizeof(float) , &bufferdata[0], GL_STATIC_DRAW));
+  glBindBuffer(GL_ARRAY_BUFFER, kit::Skybox::m_glVertexBuffer);
+  glBufferData(GL_ARRAY_BUFFER, bufferdata.size() * sizeof(float) , &bufferdata[0], GL_STATIC_DRAW);
 
   // Positions
-  KIT_GL(glEnableVertexAttribArray(0));
-  KIT_GL(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0));
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0);
 
   kit::Skybox::m_program = kit::Program::create();
   kit::Skybox::m_programNoTexture = kit::Program::create();
@@ -198,9 +198,9 @@ void kit::Skybox::allocateShared()
 
 void kit::Skybox::releaseShared()
 {
-  KIT_GL(glDeleteBuffers(1, &kit::Skybox::m_glVertexIndices));
-  KIT_GL(glDeleteBuffers(1, &kit::Skybox::m_glVertexBuffer));
-  KIT_GL(glDeleteVertexArrays(1, &kit::Skybox::m_glVertexArray));
+  glDeleteBuffers(1, &kit::Skybox::m_glVertexIndices);
+  glDeleteBuffers(1, &kit::Skybox::m_glVertexBuffer);
+  glDeleteVertexArrays(1, &kit::Skybox::m_glVertexArray);
 }
 
 kit::Cubemap::Ptr kit::Skybox::getTexture()

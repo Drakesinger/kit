@@ -109,29 +109,29 @@ void kit::UISystem::imgui_renderDrawLists(ImDrawData* draw_data)
 {
   
   // Backup GL state
-  GLint last_program; KIT_GL(glGetIntegerv(GL_CURRENT_PROGRAM, &last_program));
-  GLint last_texture; KIT_GL(glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture));
-  GLint last_array_buffer; KIT_GL(glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer));
-  GLint last_element_array_buffer; KIT_GL(glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &last_element_array_buffer));
-  GLint last_vertex_array; KIT_GL(glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array));
-  GLint last_blend_src; KIT_GL(glGetIntegerv(GL_BLEND_SRC, &last_blend_src));
-  GLint last_blend_dst; KIT_GL(glGetIntegerv(GL_BLEND_DST, &last_blend_dst));
-  GLint last_blend_equation_rgb; KIT_GL(glGetIntegerv(GL_BLEND_EQUATION_RGB, &last_blend_equation_rgb));
-  GLint last_blend_equation_alpha; KIT_GL(glGetIntegerv(GL_BLEND_EQUATION_ALPHA, &last_blend_equation_alpha));
-  GLint last_viewport[4]; KIT_GL(glGetIntegerv(GL_VIEWPORT, last_viewport));
+  GLint last_program; glGetIntegerv(GL_CURRENT_PROGRAM, &last_program);
+  GLint last_texture; glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
+  GLint last_array_buffer; glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
+  GLint last_element_array_buffer; glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &last_element_array_buffer);
+  GLint last_vertex_array; glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array);
+  GLint last_blend_src; glGetIntegerv(GL_BLEND_SRC, &last_blend_src);
+  GLint last_blend_dst; glGetIntegerv(GL_BLEND_DST, &last_blend_dst);
+  GLint last_blend_equation_rgb; glGetIntegerv(GL_BLEND_EQUATION_RGB, &last_blend_equation_rgb);
+  GLint last_blend_equation_alpha; glGetIntegerv(GL_BLEND_EQUATION_ALPHA, &last_blend_equation_alpha);
+  GLint last_viewport[4]; glGetIntegerv(GL_VIEWPORT, last_viewport);
   GLboolean last_enable_blend = glIsEnabled(GL_BLEND);
   GLboolean last_enable_cull_face = glIsEnabled(GL_CULL_FACE);
   GLboolean last_enable_depth_test = glIsEnabled(GL_DEPTH_TEST);
   GLboolean last_enable_scissor_test = glIsEnabled(GL_SCISSOR_TEST);
 
   // Setup render state: alpha-blending enabled, no face culling, no depth testing, scissor enabled
-  KIT_GL(glEnable(GL_BLEND));
-  KIT_GL(glBlendEquation(GL_FUNC_ADD));
-  KIT_GL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-  KIT_GL(glDisable(GL_CULL_FACE));
-  KIT_GL(glDisable(GL_DEPTH_TEST));
-  KIT_GL(glEnable(GL_SCISSOR_TEST));
-  KIT_GL(glActiveTexture(GL_TEXTURE0));
+  glEnable(GL_BLEND);
+  glBlendEquation(GL_FUNC_ADD);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glDisable(GL_CULL_FACE);
+  glDisable(GL_DEPTH_TEST);
+  glEnable(GL_SCISSOR_TEST);
+  glActiveTexture(GL_TEXTURE0);
 
   // Handle cases of screen coordinates != from framebuffer coordinates (e.g. retina displays)
   ImGuiIO& io = ImGui::GetIO();
@@ -140,7 +140,7 @@ void kit::UISystem::imgui_renderDrawLists(ImDrawData* draw_data)
   draw_data->ScaleClipRects(io.DisplayFramebufferScale);
 
   // Setup viewport, orthographic projection matrix
-  KIT_GL(glViewport(0, 0, (GLsizei)fb_width, (GLsizei)fb_height));
+  glViewport(0, 0, (GLsizei)fb_width, (GLsizei)fb_height);
   const float ortho_projection[4][4] =
   {
     { 2.0f / io.DisplaySize.x, 0.0f,                   0.0f, 0.0f },
@@ -148,21 +148,21 @@ void kit::UISystem::imgui_renderDrawLists(ImDrawData* draw_data)
     { 0.0f,                  0.0f,                  -1.0f, 0.0f },
     { -1.0f,                  1.0f,                   0.0f, 1.0f },
   };
-  KIT_GL(glUseProgram(kit::UISystem::imgui_shaderHandle));
-  KIT_GL(glUniform1i(kit::UISystem::imgui_attribLocationTex, 0));
-  KIT_GL(glUniformMatrix4fv(kit::UISystem::imgui_attribLocationProjMtx, 1, GL_FALSE, &ortho_projection[0][0]));
-  KIT_GL(glBindVertexArray(kit::UISystem::imgui_vaoHandle));
+  glUseProgram(kit::UISystem::imgui_shaderHandle);
+  glUniform1i(kit::UISystem::imgui_attribLocationTex, 0);
+  glUniformMatrix4fv(kit::UISystem::imgui_attribLocationProjMtx, 1, GL_FALSE, &ortho_projection[0][0]);
+  glBindVertexArray(kit::UISystem::imgui_vaoHandle);
 
   for (int n = 0; n < draw_data->CmdListsCount; n++)
   {
     const ImDrawList* cmd_list = draw_data->CmdLists[n];
     const ImDrawIdx* idx_buffer_offset = 0;
 
-    KIT_GL(glBindBuffer(GL_ARRAY_BUFFER, imgui_vboHandle));
-    KIT_GL(glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)cmd_list->VtxBuffer.size() * sizeof(ImDrawVert), (GLvoid*)&cmd_list->VtxBuffer.front(), GL_STREAM_DRAW));
+    glBindBuffer(GL_ARRAY_BUFFER, imgui_vboHandle);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)cmd_list->VtxBuffer.size() * sizeof(ImDrawVert), (GLvoid*)&cmd_list->VtxBuffer.front(), GL_STREAM_DRAW);
 
-    KIT_GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, imgui_elementsHandle));
-    KIT_GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)cmd_list->IdxBuffer.size() * sizeof(ImDrawIdx), (GLvoid*)&cmd_list->IdxBuffer.front(), GL_STREAM_DRAW));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, imgui_elementsHandle);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)cmd_list->IdxBuffer.size() * sizeof(ImDrawIdx), (GLvoid*)&cmd_list->IdxBuffer.front(), GL_STREAM_DRAW);
 
     for (const ImDrawCmd* pcmd = cmd_list->CmdBuffer.begin(); pcmd != cmd_list->CmdBuffer.end(); pcmd++)
     {
@@ -172,27 +172,27 @@ void kit::UISystem::imgui_renderDrawLists(ImDrawData* draw_data)
       }
       else
       {
-        KIT_GL(glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId));
-        KIT_GL(glScissor((int)pcmd->ClipRect.x, (int)(fb_height - pcmd->ClipRect.w), (int)(pcmd->ClipRect.z - pcmd->ClipRect.x), (int)(pcmd->ClipRect.w - pcmd->ClipRect.y)));
-        KIT_GL(glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, idx_buffer_offset));
+        glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId);
+        glScissor((int)pcmd->ClipRect.x, (int)(fb_height - pcmd->ClipRect.w), (int)(pcmd->ClipRect.z - pcmd->ClipRect.x), (int)(pcmd->ClipRect.w - pcmd->ClipRect.y));
+        glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, idx_buffer_offset);
       }
       idx_buffer_offset += pcmd->ElemCount;
     }
   }
 
   // Restore modified GL state
-  KIT_GL(glUseProgram(last_program));
-  KIT_GL(glBindTexture(GL_TEXTURE_2D, last_texture));
-  KIT_GL(glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer));
-  KIT_GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, last_element_array_buffer));
-  KIT_GL(glBindVertexArray(last_vertex_array));
-  KIT_GL(glBlendEquationSeparate(last_blend_equation_rgb, last_blend_equation_alpha));
-  KIT_GL(glBlendFunc(last_blend_src, last_blend_dst));
-  if (last_enable_blend) KIT_GL(glEnable(GL_BLEND)); else KIT_GL(glDisable(GL_BLEND));
-  if (last_enable_cull_face) KIT_GL(glEnable(GL_CULL_FACE)); else KIT_GL(glDisable(GL_CULL_FACE));
-  if (last_enable_depth_test) KIT_GL(glEnable(GL_DEPTH_TEST)); else KIT_GL(glDisable(GL_DEPTH_TEST));
-  if (last_enable_scissor_test) KIT_GL(glEnable(GL_SCISSOR_TEST)); else KIT_GL(glDisable(GL_SCISSOR_TEST));
-  KIT_GL(glViewport(last_viewport[0], last_viewport[1], (GLsizei)last_viewport[2], (GLsizei)last_viewport[3]));
+  glUseProgram(last_program);
+  glBindTexture(GL_TEXTURE_2D, last_texture);
+  glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, last_element_array_buffer);
+  glBindVertexArray(last_vertex_array);
+  glBlendEquationSeparate(last_blend_equation_rgb, last_blend_equation_alpha);
+  glBlendFunc(last_blend_src, last_blend_dst);
+  if (last_enable_blend) glEnable(GL_BLEND); else glDisable(GL_BLEND);
+  if (last_enable_cull_face) glEnable(GL_CULL_FACE); else glDisable(GL_CULL_FACE);
+  if (last_enable_depth_test) glEnable(GL_DEPTH_TEST); else glDisable(GL_DEPTH_TEST);
+  if (last_enable_scissor_test) glEnable(GL_SCISSOR_TEST); else glDisable(GL_SCISSOR_TEST);
+  glViewport(last_viewport[0], last_viewport[1], (GLsizei)last_viewport[2], (GLsizei)last_viewport[3]);
 }
 
 
@@ -226,18 +226,18 @@ bool kit::UISystem::createFontsTexture()
   io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
   
   GLint last_texture;
-  KIT_GL(glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture));
-  KIT_GL(glGenTextures(1, &kit::UISystem::imgui_fontTexture));
-  KIT_GL(glBindTexture(GL_TEXTURE_2D, kit::UISystem::imgui_fontTexture));
-  KIT_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-  KIT_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-  KIT_GL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels));
+  glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
+  glGenTextures(1, &kit::UISystem::imgui_fontTexture);
+  glBindTexture(GL_TEXTURE_2D, kit::UISystem::imgui_fontTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
   // Store our identifier
   io.Fonts->TexID = (void *)(intptr_t)kit::UISystem::imgui_fontTexture;
 
   // Restore state
-  KIT_GL(glBindTexture(GL_TEXTURE_2D, last_texture));
+  glBindTexture(GL_TEXTURE_2D, last_texture);
 
   return true;
 }
@@ -247,9 +247,9 @@ bool kit::UISystem::createDeviceObjects()
   
   // Backup GL state
   GLint last_texture, last_array_buffer, last_vertex_array;
-  KIT_GL(glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture));
-  KIT_GL(glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer));
-  KIT_GL(glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array));
+  glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
+  glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
+  glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array);
 
   const GLchar *vertex_shader =
     "#version 330\n"
@@ -280,15 +280,15 @@ bool kit::UISystem::createDeviceObjects()
   kit::UISystem::imgui_shaderHandle = glCreateProgram();
   kit::UISystem::imgui_vertHandle = glCreateShader(GL_VERTEX_SHADER);
   kit::UISystem::imgui_fragHandle = glCreateShader(GL_FRAGMENT_SHADER);
-  KIT_GL(void());
+  void();
 
-  KIT_GL(glShaderSource(kit::UISystem::imgui_vertHandle, 1, &vertex_shader, 0));
-  KIT_GL(glShaderSource(kit::UISystem::imgui_fragHandle, 1, &fragment_shader, 0));
-  KIT_GL(glCompileShader(kit::UISystem::imgui_vertHandle));
-  KIT_GL(glCompileShader(kit::UISystem::imgui_fragHandle));
-  KIT_GL(glAttachShader(kit::UISystem::imgui_shaderHandle, kit::UISystem::imgui_vertHandle));
-  KIT_GL(glAttachShader(kit::UISystem::imgui_shaderHandle, kit::UISystem::imgui_fragHandle));
-  KIT_GL(glLinkProgram(kit::UISystem::imgui_shaderHandle));
+  glShaderSource(kit::UISystem::imgui_vertHandle, 1, &vertex_shader, 0);
+  glShaderSource(kit::UISystem::imgui_fragHandle, 1, &fragment_shader, 0);
+  glCompileShader(kit::UISystem::imgui_vertHandle);
+  glCompileShader(kit::UISystem::imgui_fragHandle);
+  glAttachShader(kit::UISystem::imgui_shaderHandle, kit::UISystem::imgui_vertHandle);
+  glAttachShader(kit::UISystem::imgui_shaderHandle, kit::UISystem::imgui_fragHandle);
+  glLinkProgram(kit::UISystem::imgui_shaderHandle);
 
   kit::UISystem::imgui_attribLocationTex = glGetUniformLocation(kit::UISystem::imgui_shaderHandle, "Texture");
   kit::UISystem::imgui_attribLocationProjMtx = glGetUniformLocation(kit::UISystem::imgui_shaderHandle, "ProjMtx");
@@ -296,30 +296,30 @@ bool kit::UISystem::createDeviceObjects()
   kit::UISystem::imgui_attribLocationUV = glGetAttribLocation(kit::UISystem::imgui_shaderHandle, "UV");
   kit::UISystem::imgui_attribLocationColor = glGetAttribLocation(kit::UISystem::imgui_shaderHandle, "Color");
 
-  KIT_GL(void());
+  void();
 
-  KIT_GL(glGenBuffers(1, &kit::UISystem::imgui_vboHandle));
-  KIT_GL(glGenBuffers(1, &kit::UISystem::imgui_elementsHandle));
+  glGenBuffers(1, &kit::UISystem::imgui_vboHandle);
+  glGenBuffers(1, &kit::UISystem::imgui_elementsHandle);
 
-  KIT_GL(glGenVertexArrays(1, &kit::UISystem::imgui_vaoHandle));
-  KIT_GL(glBindVertexArray(kit::UISystem::imgui_vaoHandle));
-  KIT_GL(glBindBuffer(GL_ARRAY_BUFFER, kit::UISystem::imgui_vboHandle));
-  KIT_GL(glEnableVertexAttribArray(kit::UISystem::imgui_attribLocationPosition));
-  KIT_GL(glEnableVertexAttribArray(kit::UISystem::imgui_attribLocationUV));
-  KIT_GL(glEnableVertexAttribArray(kit::UISystem::imgui_attribLocationColor));
+  glGenVertexArrays(1, &kit::UISystem::imgui_vaoHandle);
+  glBindVertexArray(kit::UISystem::imgui_vaoHandle);
+  glBindBuffer(GL_ARRAY_BUFFER, kit::UISystem::imgui_vboHandle);
+  glEnableVertexAttribArray(kit::UISystem::imgui_attribLocationPosition);
+  glEnableVertexAttribArray(kit::UISystem::imgui_attribLocationUV);
+  glEnableVertexAttribArray(kit::UISystem::imgui_attribLocationColor);
 
 #define OFFSETOF(TYPE, ELEMENT) ((size_t)&(((TYPE *)0)->ELEMENT))
-  KIT_GL(glVertexAttribPointer(kit::UISystem::imgui_attribLocationPosition, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert), (GLvoid*)OFFSETOF(ImDrawVert, pos)));
-  KIT_GL(glVertexAttribPointer(kit::UISystem::imgui_attribLocationUV, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert), (GLvoid*)OFFSETOF(ImDrawVert, uv)));
-  KIT_GL(glVertexAttribPointer(kit::UISystem::imgui_attribLocationColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ImDrawVert), (GLvoid*)OFFSETOF(ImDrawVert, col)));
+  glVertexAttribPointer(kit::UISystem::imgui_attribLocationPosition, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert), (GLvoid*)OFFSETOF(ImDrawVert, pos));
+  glVertexAttribPointer(kit::UISystem::imgui_attribLocationUV, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert), (GLvoid*)OFFSETOF(ImDrawVert, uv));
+  glVertexAttribPointer(kit::UISystem::imgui_attribLocationColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ImDrawVert), (GLvoid*)OFFSETOF(ImDrawVert, col));
 #undef OFFSETOF
 
   kit::UISystem::createFontsTexture();
 
   // Restore modified GL state
-  KIT_GL(glBindTexture(GL_TEXTURE_2D, last_texture));
-  KIT_GL(glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer));
-  KIT_GL(glBindVertexArray(last_vertex_array));
+  glBindTexture(GL_TEXTURE_2D, last_texture);
+  glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer);
+  glBindVertexArray(last_vertex_array);
 
   return true;
 }
@@ -327,34 +327,34 @@ bool kit::UISystem::createDeviceObjects()
 void kit::UISystem::invalidateDeviceObjects()
 {
   
-  if (kit::UISystem::imgui_vaoHandle) KIT_GL(glDeleteVertexArrays(1, &kit::UISystem::imgui_vaoHandle));
-  if (kit::UISystem::imgui_vboHandle) KIT_GL(glDeleteBuffers(1, &kit::UISystem::imgui_vboHandle));
-  if (kit::UISystem::imgui_elementsHandle) KIT_GL(glDeleteBuffers(1, &kit::UISystem::imgui_elementsHandle));
+  if (kit::UISystem::imgui_vaoHandle) glDeleteVertexArrays(1, &kit::UISystem::imgui_vaoHandle);
+  if (kit::UISystem::imgui_vboHandle) glDeleteBuffers(1, &kit::UISystem::imgui_vboHandle);
+  if (kit::UISystem::imgui_elementsHandle) glDeleteBuffers(1, &kit::UISystem::imgui_elementsHandle);
   kit::UISystem::imgui_vaoHandle = kit::UISystem::imgui_vboHandle = kit::UISystem::imgui_elementsHandle = 0;
 
   if (kit::UISystem::imgui_vertHandle != 0)
   {
-    KIT_GL(glDetachShader(kit::UISystem::imgui_shaderHandle, kit::UISystem::imgui_vertHandle));
-    KIT_GL(glDeleteShader(kit::UISystem::imgui_vertHandle));
+    glDetachShader(kit::UISystem::imgui_shaderHandle, kit::UISystem::imgui_vertHandle);
+    glDeleteShader(kit::UISystem::imgui_vertHandle);
   }
   kit::UISystem::imgui_vertHandle = 0;
 
   if (kit::UISystem::imgui_fragHandle != 0)
   {
-    KIT_GL(glDetachShader(kit::UISystem::imgui_shaderHandle, kit::UISystem::imgui_fragHandle));
-    KIT_GL(glDeleteShader(kit::UISystem::imgui_fragHandle));
+    glDetachShader(kit::UISystem::imgui_shaderHandle, kit::UISystem::imgui_fragHandle);
+    glDeleteShader(kit::UISystem::imgui_fragHandle);
   }
   kit::UISystem::imgui_fragHandle = 0;
 
   if (kit::UISystem::imgui_shaderHandle != 0)
   {
-    KIT_GL(glDeleteProgram(kit::UISystem::imgui_shaderHandle));
+    glDeleteProgram(kit::UISystem::imgui_shaderHandle);
   }
   kit::UISystem::imgui_shaderHandle = 0;
 
   if (kit::UISystem::imgui_fontTexture)
   {
-    KIT_GL(glDeleteTextures(1, &kit::UISystem::imgui_fontTexture));
+    glDeleteTextures(1, &kit::UISystem::imgui_fontTexture);
     ImGui::GetIO().Fonts->TexID = 0;
     kit::UISystem::imgui_fontTexture = 0;
   }

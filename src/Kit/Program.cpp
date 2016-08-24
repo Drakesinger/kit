@@ -159,22 +159,22 @@ kit::Program::Ptr kit::Program::load(SourceList v, SourceList tc, SourceList te,
 bool kit::Program::link()
 {
   // Attempt to link the program
-  KIT_GL(glLinkProgram(this->m_glHandle));  
+  glLinkProgram(this->m_glHandle);  
 
   // Retrieve the link status
   GLint status;
-  KIT_GL(glGetProgramiv(this->m_glHandle, GL_LINK_STATUS, &status));
+  glGetProgramiv(this->m_glHandle, GL_LINK_STATUS, &status);
 
   if(!status)
   {
     GLint blen = 0;
     GLsizei slen = 0;
-    KIT_GL(glGetProgramiv(this->m_glHandle, GL_INFO_LOG_LENGTH , &blen));
+    glGetProgramiv(this->m_glHandle, GL_INFO_LOG_LENGTH , &blen);
 
     if(blen > 1)
     {
       GLchar * compiler_log = new GLchar[blen];
-      KIT_GL(glGetProgramInfoLog(this->m_glHandle, blen, &slen, compiler_log));
+      glGetProgramInfoLog(this->m_glHandle, blen, &slen, compiler_log);
 
       std::stringstream ss;
       ss << "Program linkage failed: " << compiler_log;
@@ -190,13 +190,13 @@ bool kit::Program::link()
 
 void kit::Program::use()
 {
-  kit::GL::useProgram(this->m_glHandle);
+  glUseProgram(this->m_glHandle);
   this->prepareTextures();
 }
 
 void kit::Program::useFixed()
 {
-  kit::GL::useProgram(0);
+  glUseProgram(0);
 }
 
 GLuint kit::Program::getHandle()
@@ -206,7 +206,7 @@ GLuint kit::Program::getHandle()
 
 void kit::Program::setUniformTexture(const std::string & name, kit::Texture::WPtr texture )
 {
-  kit::GL::useProgram(this->m_glHandle);
+  glUseProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
 
   if(loc != (uint32_t) - 1)
@@ -236,7 +236,7 @@ void kit::Program::setUniformTexture(const std::string & name, kit::Texture::WPt
 
 void kit::Program::setUniformCubemap(const std::string & name, kit::Cubemap::WPtr texture )
 {
-  kit::GL::useProgram(this->m_glHandle);
+  glUseProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
 
   if(loc != (uint32_t) - 1)
@@ -266,123 +266,123 @@ void kit::Program::setUniformCubemap(const std::string & name, kit::Cubemap::WPt
 
 void kit::Program::setUniformMat3(const std::string & name, const glm::mat3 & matrix)
 {
-  kit::GL::useProgram(this->m_glHandle);
+  glUseProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
 
   if (loc != (uint32_t)-1)
   {
-    KIT_GL(glUniformMatrix3fv(loc, 1, GL_FALSE, &matrix[0][0]));
+    glUniformMatrix3fv(loc, 1, GL_FALSE, &matrix[0][0]);
   }
 }
 
 void kit::Program::setUniformMat4(const std::string & name, const glm::mat4 & matrix)
 {
-  kit::GL::useProgram(this->m_glHandle);
+  glUseProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
 
   if(loc != (uint32_t) - 1)
   {
-    KIT_GL(glUniformMatrix4fv(loc, 1, GL_FALSE, &matrix[0][0]));
+    glUniformMatrix4fv(loc, 1, GL_FALSE, &matrix[0][0]);
   }
 }
 
 void kit::Program::setUniformMat4v(const std::string & name, const std::vector<glm::mat4> & matrices)
 {
-  kit::GL::useProgram(this->m_glHandle);
+  glUseProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
 
   if(loc != (uint32_t) - 1)
   {
-    KIT_GL(glUniformMatrix4fv(loc, (uint32_t)matrices.size(), GL_FALSE, glm::value_ptr(matrices[0])));
+    glUniformMatrix4fv(loc, (uint32_t)matrices.size(), GL_FALSE, glm::value_ptr(matrices[0]));
   }
 }
 
 void kit::Program::setUniform3f(const std::string & name, const glm::vec3 & vec)
 {
-  kit::GL::useProgram(this->m_glHandle);
+  glUseProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
 
   if(loc != (uint32_t) - 1)
   {
-    KIT_GL(glUniform3fv(loc, 1, &vec[0]));
+    glUniform3fv(loc, 1, &vec[0]);
   }
 }
 
 void kit::Program::setUniform3fv(const std::string & name, const std::vector<glm::vec3> & v)
 {
-  kit::GL::useProgram(this->m_glHandle);
+  glUseProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
 
   if (loc != (uint32_t) - 1)
   {
-    KIT_GL(glUniform3fv(loc, (uint32_t)v.size(), &v[0][0]));
+    glUniform3fv(loc, (uint32_t)v.size(), &v[0][0]);
   }
 }
 
 void kit::Program::setUniform1f(const std::string & name, float val)
 {
-  kit::GL::useProgram(this->m_glHandle);
+  glUseProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
 
   if(loc != (uint32_t) - 1)
   {
-    KIT_GL(glUniform1f(loc, val));
+    glUniform1f(loc, val);
   }
 }
 
 void kit::Program::setUniform1d(const std::string & name, double val)
 {
-  kit::GL::useProgram(this->m_glHandle);
+  glUseProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
 
   if(loc != (uint32_t) - 1)
   {
-    KIT_GL(glUniform1f(loc, float(val)));
+    glUniform1f(loc, float(val));
   }
 }
 
 void kit::Program::setUniform1i(const std::string & name, int i)
 {
-  kit::GL::useProgram(this->m_glHandle);
+  glUseProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
 
   if(loc != (uint32_t) - 1)
   {
-    KIT_GL(glUniform1i(loc, i));
+    glUniform1i(loc, i);
   }
 }
 
 void kit::Program::setUniform1ui(const std::string & name, uint32_t i)
 {
-  kit::GL::useProgram(this->m_glHandle);
+  glUseProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
 
   if (loc != (uint32_t) - 1)
   {
-    KIT_GL(glUniform1ui(loc, i));
+    glUniform1ui(loc, i);
   }
 }
 
 void kit::Program::setUniform4f(const std::string & name, const glm::vec4 & vec)
 {
-  kit::GL::useProgram(this->m_glHandle);
+  glUseProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
 
   if(loc != (uint32_t) - 1)
   {
-    KIT_GL(glUniform4fv(loc, 1, &vec[0]));
+    glUniform4fv(loc, 1, &vec[0]);
   }
 }
 
 void kit::Program::setUniform2f(const std::string & name, const glm::vec2 & vec)
 {
-  kit::GL::useProgram(this->m_glHandle);
+  glUseProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
 
   if(loc != (uint32_t) - 1)
   {
     glm::vec2 v(vec.x, vec.y);
-    KIT_GL(glUniform2fv(loc, 1, &v[0]));
+    glUniform2fv(loc, 1, &v[0]);
   }
 }
 
@@ -396,7 +396,7 @@ uint32_t kit::Program::getUniformLocation(const std::string & name)
   }
   else
   {
-    kit::GL::useProgram(this->m_glHandle);
+    glUseProgram(this->m_glHandle);
     int loc = glGetUniformLocation(this->m_glHandle, name.c_str());
 
     if(loc == -1)
@@ -421,11 +421,11 @@ uint32_t kit::Program::getUniformLocation(const std::string & name)
     kit::Texture::Ptr t = it.second.lock();
     if(t)
     {
-      KIT_GL(glUniform1i(it.first, i));
+      glUniform1i(it.first, i);
 #ifndef KIT_SHITTY_INTEL
-      KIT_GL(glBindTextureUnit(i, t->getHandle()));
+      glBindTextureUnit(i, t->getHandle());
 #else
-      KIT_GL(glActiveTexture(GL_TEXTURE0 + i));
+      glActiveTexture(GL_TEXTURE0 + i);
       t->bind();
 #endif 
       i++;
@@ -437,11 +437,11 @@ uint32_t kit::Program::getUniformLocation(const std::string & name)
     kit::Cubemap::Ptr t = it.second.lock();
     if(t)
     {
-      KIT_GL(glUniform1i(it.first, i));
+      glUniform1i(it.first, i);
 #ifndef KIT_SHITTY_INTEL
-      KIT_GL(glBindTextureUnit(i, t->getHandle()));
+      glBindTextureUnit(i, t->getHandle());
 #else 
-      KIT_GL(glActiveTexture(GL_TEXTURE0 + i));
+      glActiveTexture(GL_TEXTURE0 + i);
       t->bind();
 #endif
       i++;
@@ -452,17 +452,17 @@ uint32_t kit::Program::getUniformLocation(const std::string & name)
 int32_t kit::Program::getMaxTextureUnits()
 {
   int32_t returner;
-  KIT_GL(glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &returner));
+  glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &returner);
   return returner;
 }
 
 void kit::Program::attachShader(kit::Shader::Ptr s)
 {
-  kit::GL::attachShader(this->m_glHandle, s->getHandle());
+  glAttachShader(this->m_glHandle, s->getHandle());
   this->m_fileIdentifier += "dynamic;";
 }
 
 void kit::Program::detachShader(kit::Shader::Ptr s)
 {
-  kit::GL::detachShader(this->m_glHandle, s->getHandle());
+  glDetachShader(this->m_glHandle, s->getHandle());
 }

@@ -17,9 +17,9 @@ std::map<std::string, kit::Texture::Ptr> kit::Texture::m_cachedTextures = std::m
 kit::Texture::Texture(Type t)
 {
 #ifndef KIT_SHITTY_INTEL
-  KIT_GL(glCreateTextures(t, 1, &this->m_glHandle));
+  glCreateTextures(t, 1, &this->m_glHandle);
 #else
-  KIT_GL(glGenTextures(1, &this->m_glHandle));
+  glGenTextures(1, &this->m_glHandle);
 #endif
 
   this->m_arraySize = 0;  
@@ -47,17 +47,17 @@ kit::Texture::Ptr kit::Texture::create2D(glm::uvec2 resolution, kit::Texture::In
   returner->m_resolution        = glm::uvec3(resolution, 0);
 
 #ifndef KIT_SHITTY_INTEL
-  KIT_GL(glTextureStorage2D(returner->m_glHandle, returner->calculateMipLevels(), returner->m_internalFormat, returner->m_resolution.x, returner->m_resolution.y));
+  glTextureStorage2D(returner->m_glHandle, returner->calculateMipLevels(), returner->m_internalFormat, returner->m_resolution.x, returner->m_resolution.y);
 #else
   returner->bind();
-  KIT_GL(glTexStorage2D(returner->m_type, returner->calculateMipLevels(), returner->m_internalFormat, returner->m_resolution.x, returner->m_resolution.y));
+  glTexStorage2D(returner->m_type, returner->calculateMipLevels(), returner->m_internalFormat, returner->m_resolution.x, returner->m_resolution.y);
 #endif
 
   returner->setEdgeSamplingMode(edgemode);
 
   // Stupid AMD bug https://gist.github.com/haikarainen/97959adfe4e3ca10968a
   //std::vector<GLubyte> data(returner->m_resolution.x * returner->m_resolution.y, 0);
-  //KIT_GL(glTextureSubImage2D(returner->m_glHandle, 0, 0, 0, returner->m_resolution.x, returner->m_resolution.y, GL_RED, GL_UNSIGNED_BYTE, &data[0]));
+  //glTextureSubImage2D(returner->m_glHandle, 0, 0, 0, returner->m_resolution.x, returner->m_resolution.y, GL_RED, GL_UNSIGNED_BYTE, &data[0]);
   returner->setMinFilteringMode(minfilter);
   returner->setMagFilteringMode(magfilter);
 
@@ -96,12 +96,12 @@ kit::Texture::Ptr kit::Texture::create2DFromFile(const std::string&filename, kit
 
   // Specify storage and upload data to GPU
 #ifndef KIT_SHITTY_INTEL
-  KIT_GL(glTextureStorage2D(returner->m_glHandle, returner->calculateMipLevels(), returner->m_internalFormat, returner->m_resolution.x, returner->m_resolution.y));
-  KIT_GL(glTextureSubImage2D(returner->m_glHandle, 0, 0, 0, x, y, GL_RGBA, GL_UNSIGNED_BYTE, bufferdata));
+  glTextureStorage2D(returner->m_glHandle, returner->calculateMipLevels(), returner->m_internalFormat, returner->m_resolution.x, returner->m_resolution.y);
+  glTextureSubImage2D(returner->m_glHandle, 0, 0, 0, x, y, GL_RGBA, GL_UNSIGNED_BYTE, bufferdata);
 #else
   returner->bind();
-  KIT_GL(glTexStorage2D(returner->m_type, returner->calculateMipLevels(), returner->m_internalFormat, returner->m_resolution.x, returner->m_resolution.y));
-  KIT_GL(glTexSubImage2D(returner->m_type, 0, 0, 0, x, y, GL_RGBA, GL_UNSIGNED_BYTE, bufferdata));
+  glTexStorage2D(returner->m_type, returner->calculateMipLevels(), returner->m_internalFormat, returner->m_resolution.x, returner->m_resolution.y);
+  glTexSubImage2D(returner->m_type, 0, 0, 0, x, y, GL_RGBA, GL_UNSIGNED_BYTE, bufferdata);
 #endif
 
   // Free loaded data
@@ -149,12 +149,12 @@ kit::Texture::Ptr kit::Texture::create3DFromFile(const std::string&filename, kit
 
   // Specify storage and upload data to GPU
 #ifndef KIT_SHITTY_INTEL
-  KIT_GL(glTextureStorage3D(returner->m_glHandle, 1, returner->m_internalFormat, x, x, x));
-  KIT_GL(glTextureSubImage3D(returner->m_glHandle, 0, 0, 0, 0, x, x, x, GL_RGBA, GL_UNSIGNED_BYTE, bufferdata));
+  glTextureStorage3D(returner->m_glHandle, 1, returner->m_internalFormat, x, x, x);
+  glTextureSubImage3D(returner->m_glHandle, 0, 0, 0, 0, x, x, x, GL_RGBA, GL_UNSIGNED_BYTE, bufferdata);
 #else
   returner->bind();
-  KIT_GL(glTexStorage3D(returner->m_type, 1, returner->m_internalFormat, x, x, x));
-  KIT_GL(glTexSubImage3D(returner->m_type, 0, 0, 0, 0, x, x, x, GL_RGBA, GL_UNSIGNED_BYTE, bufferdata));
+  glTexStorage3D(returner->m_type, 1, returner->m_internalFormat, x, x, x);
+  glTexSubImage3D(returner->m_type, 0, 0, 0, 0, x, x, x, GL_RGBA, GL_UNSIGNED_BYTE, bufferdata);
 #endif
   // Free loaded data
   stbi_image_free(bufferdata);
@@ -174,10 +174,10 @@ kit::Texture::Ptr kit::Texture::createShadowmap(glm::uvec2 resolution)
 {
   kit::Texture::Ptr returner = kit::Texture::create2D(resolution, kit::Texture::DepthComponent24);
 #ifndef KIT_SHITTY_INTEL
-  KIT_GL(glTextureParameteri(returner->m_glHandle, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE ));
+  glTextureParameteri(returner->m_glHandle, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE );
 #else
   returner->bind();
-  KIT_GL(glTexParameteri(returner->m_type, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE));
+  glTexParameteri(returner->m_type, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
 #endif
   return returner;
 }
@@ -226,21 +226,21 @@ uint32_t kit::Texture::calculateMipLevels()
 void kit::Texture::generateMipmap()
 {
 #ifndef KIT_SHITTY_INTEL
-  KIT_GL(glGenerateTextureMipmap(this->m_glHandle));
+  glGenerateTextureMipmap(this->m_glHandle);
 #else
   this->bind();
-  KIT_GL(glGenerateMipmap(this->m_type));
+  glGenerateMipmap(this->m_type);
 #endif
 }
 
 void kit::Texture::bind()
 {
-  KIT_GL(glBindTexture(this->m_type, this->m_glHandle));
+  glBindTexture(this->m_type, this->m_glHandle);
 }
 
 void kit::Texture::unbind(kit::Texture::Type t)
 {
-  KIT_GL(glBindTexture(t, 0));
+  glBindTexture(t, 0);
 }
 
 glm::vec4 kit::Texture::getPixelFloat(glm::vec3 position)
@@ -270,10 +270,10 @@ glm::vec4 kit::Texture::getPixelFloat(glm::vec3 position)
 
   // Download pixels from the GPU
 #ifndef KIT_SHITTY_INTEL
-  KIT_GL(glGetTextureImage(this->m_glHandle, 0, GL_RGBA, GL_FLOAT, (GLsizei)dataSize, &data[0]));
+  glGetTextureImage(this->m_glHandle, 0, GL_RGBA, GL_FLOAT, (GLsizei)dataSize, &data[0]);
 #else
   this->bind();
-  KIT_GL(glGetTexImage(this->m_type, 0, GL_RGBA, GL_FLOAT, &data[0]));
+  glGetTexImage(this->m_type, 0, GL_RGBA, GL_FLOAT, &data[0]);
 #endif
 
   // Fill the returner
@@ -314,10 +314,10 @@ glm::uvec4 kit::Texture::getPixelUint(glm::vec3 position)
 
   // Download pixels from the GPU
 #ifndef KIT_SHITTY_INTEL
-  KIT_GL(glGetTextureImage(this->m_glHandle, 0, GL_RGBA_INTEGER, GL_UNSIGNED_INT, (GLsizei)dataSize, &data[0]));
+  glGetTextureImage(this->m_glHandle, 0, GL_RGBA_INTEGER, GL_UNSIGNED_INT, (GLsizei)dataSize, &data[0]);
 #else
   this->bind();
-  KIT_GL(glGetTexImage(this->m_type, 0, GL_RGBA_INTEGER, GL_UNSIGNED_INT,  &data[0]));
+  glGetTexImage(this->m_type, 0, GL_RGBA_INTEGER, GL_UNSIGNED_INT,  &data[0]);
 #endif
 
   // Fill the returner
@@ -374,44 +374,44 @@ void kit::Texture::setEdgeSamplingMode(kit::Texture::EdgeSamplingMode mode, kit:
       this->m_edgeSamplingModeT = mode;
       this->m_edgeSamplingModeR = mode;
 #ifndef KIT_SHITTY_INTEL
-      KIT_GL(glTextureParameteri(this->m_glHandle, S, mode));
-      KIT_GL(glTextureParameteri(this->m_glHandle, T, mode));
-      KIT_GL(glTextureParameteri(this->m_glHandle, R, mode));
+      glTextureParameteri(this->m_glHandle, S, mode);
+      glTextureParameteri(this->m_glHandle, T, mode);
+      glTextureParameteri(this->m_glHandle, R, mode);
 #else 
       this->bind();
-      KIT_GL(glTexParameteri(this->m_type, S, mode));
-      KIT_GL(glTexParameteri(this->m_type, T, mode));
-      KIT_GL(glTexParameteri(this->m_type, R, mode));
+      glTexParameteri(this->m_type, S, mode);
+      glTexParameteri(this->m_type, T, mode);
+      glTexParameteri(this->m_type, R, mode);
 #endif
       break;
 
     case kit::Texture::S:
       this->m_edgeSamplingModeS = mode;
 #ifndef KIT_SHITTY_INTEL
-      KIT_GL(glTextureParameteri(this->m_glHandle, axis, mode));
+      glTextureParameteri(this->m_glHandle, axis, mode);
 #else 
       this->bind();
-      KIT_GL(glTexParameteri(this->m_type, axis, mode));
+      glTexParameteri(this->m_type, axis, mode);
 #endif
       break;
 
     case kit::Texture::T:
       this->m_edgeSamplingModeT = mode;
 #ifndef KIT_SHITTY_INTEL
-      KIT_GL(glTextureParameteri(this->m_glHandle, axis, mode));
+      glTextureParameteri(this->m_glHandle, axis, mode);
 #else 
       this->bind();
-      KIT_GL(glTexParameteri(this->m_type, axis, mode));
+      glTexParameteri(this->m_type, axis, mode);
 #endif
       break;
 
     case kit::Texture::R:
       this->m_edgeSamplingModeR = mode;
 #ifndef KIT_SHITTY_INTEL
-      KIT_GL(glTextureParameteri(this->m_glHandle, axis, mode));
+      glTextureParameteri(this->m_glHandle, axis, mode);
 #else 
       this->bind();
-      KIT_GL(glTexParameteri(this->m_type, axis, mode));
+      glTexParameteri(this->m_type, axis, mode);
 #endif
       break;
   }
@@ -425,10 +425,10 @@ kit::Texture::FilteringMode kit::Texture::getMinFilteringMode()
 void kit::Texture::setMinFilteringMode(kit::Texture::FilteringMode mode)
 {
 #ifndef KIT_SHITTY_INTEL
-  KIT_GL(glTextureParameteri(this->m_glHandle, GL_TEXTURE_MIN_FILTER, mode));
+  glTextureParameteri(this->m_glHandle, GL_TEXTURE_MIN_FILTER, mode);
 #else 
   this->bind();
-  KIT_GL(glTexParameteri(this->m_type, GL_TEXTURE_MIN_FILTER, mode));
+  glTexParameteri(this->m_type, GL_TEXTURE_MIN_FILTER, mode);
 #endif
 }
 
@@ -440,10 +440,10 @@ kit::Texture::FilteringMode kit::Texture::getMagFilteringMode()
 void kit::Texture::setMagFilteringMode(kit::Texture::FilteringMode mode)
 {
 #ifndef KIT_SHITTY_INTEL
-  KIT_GL(glTextureParameteri(this->m_glHandle, GL_TEXTURE_MAG_FILTER, mode));
+  glTextureParameteri(this->m_glHandle, GL_TEXTURE_MAG_FILTER, mode);
 #else 
   this->bind();
-  KIT_GL(glTexParameteri(this->m_type, GL_TEXTURE_MAG_FILTER, mode));
+  glTexParameteri(this->m_type, GL_TEXTURE_MAG_FILTER, mode);
 #endif
 }
 
@@ -455,10 +455,10 @@ float kit::Texture::getAnisotropicLevel()
 void kit::Texture::setAnisotropicLevel(float l)
 {
 #ifndef KIT_SHITTY_INTEL
-  KIT_GL(glTextureParameterf(this->m_glHandle, GL_TEXTURE_MAX_ANISOTROPY_EXT, l));
+  glTextureParameterf(this->m_glHandle, GL_TEXTURE_MAX_ANISOTROPY_EXT, l);
 #else
   this->bind();
-  KIT_GL(glTexParameterf(this->m_type, GL_TEXTURE_MAX_ANISOTROPY_EXT, l));
+  glTexParameterf(this->m_type, GL_TEXTURE_MAX_ANISOTROPY_EXT, l);
 #endif
 }
 
@@ -489,10 +489,10 @@ bool kit::Texture::saveToFile(const std::string&filename)
   unsigned char * data = new unsigned char[(this->m_resolution.x * this->m_resolution.y) * 4];
 
 #ifndef KIT_SHITTY_INTEL
-  KIT_GL(glGetTextureImage(this->m_glHandle, 0, GL_RGBA, GL_UNSIGNED_BYTE, (GLsizei)(((this->m_resolution.x * this->m_resolution.y) * 4) * sizeof(unsigned char)), &data[0]));
+  glGetTextureImage(this->m_glHandle, 0, GL_RGBA, GL_UNSIGNED_BYTE, (GLsizei)(((this->m_resolution.x * this->m_resolution.y) * 4) * sizeof(unsigned char)), &data[0]);
 #else
   this->bind();
-  KIT_GL(glGetTexImage(this->m_type, 0, GL_RGBA, GL_UNSIGNED_BYTE, &data[0]));
+  glGetTexImage(this->m_type, 0, GL_RGBA, GL_UNSIGNED_BYTE, &data[0]);
 #endif 
 
   stbi_write_set_flip_vertically_on_save(1);

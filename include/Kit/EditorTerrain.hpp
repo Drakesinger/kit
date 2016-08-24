@@ -131,7 +131,6 @@ namespace kit
       void invalidateMaterials();
       
     private:
-      kit::GL m_glSingleton;
       void generateCache();
       
       std::string                     m_name;

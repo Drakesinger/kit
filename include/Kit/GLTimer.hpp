@@ -20,7 +20,6 @@ namespace kit
     uint64_t end(); // Returns nanoseconds taken since start
     
   private:
-    kit::GL m_glSingleton;
     GLuint m_glHandle;
   };
 }

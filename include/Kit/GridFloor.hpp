@@ -40,7 +40,6 @@ namespace kit
     
   private:
 
-    kit::GL m_glSingleton;
 
     static uint32_t m_instanceCount;
     

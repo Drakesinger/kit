@@ -85,7 +85,6 @@ namespace kit{
       GLuint getHandle();
 
     private:
-      kit::GL           m_glSingleton;
       GLuint            m_glHandle;
       std::string       m_source;
       Shader::Type      m_type;

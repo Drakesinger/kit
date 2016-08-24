@@ -26,7 +26,6 @@ namespace kit
     private:
       void loadGeometry(const std::string& filename);
       
-      kit::GL m_glSingleton;
       
       // Cache
       static std::map<std::string, kit::Submesh::Ptr> m_cache;

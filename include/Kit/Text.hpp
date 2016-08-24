@@ -71,7 +71,6 @@ namespace kit
       static void releaseShared();
       
       void updateBuffers();
-      kit::GL m_glSingleton;
       GLuint m_glVertexArray;
       GLuint m_glVertexIndices; 
       GLuint m_glVertexBuffer;

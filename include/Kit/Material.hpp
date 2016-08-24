@@ -207,7 +207,6 @@ namespace kit
       void renderNDCache();
 
       void updateUniforms();
-      kit::GL m_glSingleton;
       static kit::ProgramPtr getProgram(ProgramFlags);
       
       static std::map<std::string, kit::Material::Ptr> m_cache;

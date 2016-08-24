@@ -138,7 +138,7 @@ kit::Window::Window(kit::Window::Args const & windowArgs)
   
   // Make sure GL3W is initialized, and set the viewport
   kit::initializeGL3W();
-  KIT_GL(glViewport(0, 0, this->getFramebufferSize().x , this->getFramebufferSize().y));
+  glViewport(0, 0, this->getFramebufferSize().x , this->getFramebufferSize().y);
 }
 
 kit::Window::~Window()
@@ -197,15 +197,15 @@ void kit::Window::display()
 void kit::Window::clear(glm::vec4 clearColor)
 {
   this->bind();
-  KIT_GL(glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w));
-  KIT_GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-  KIT_GL(glViewport(0, 0, this->getFramebufferSize().x, this->getFramebufferSize().y));
+  glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glViewport(0, 0, this->getFramebufferSize().x, this->getFramebufferSize().y);
 }
 
 void kit::Window::bind()
 {
-  kit::GL::bindFramebuffer(GL_FRAMEBUFFER, 0);
-  KIT_GL(glViewport(0, 0, this->getFramebufferSize().x, this->getFramebufferSize().y));
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glViewport(0, 0, this->getFramebufferSize().x, this->getFramebufferSize().y);
 }
 
 GLFWwindow * kit::Window::getGLFWHandle()

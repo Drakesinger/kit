@@ -231,7 +231,6 @@ namespace kit {
       void blitFrom(kit::PixelBuffer::Ptr source, bool colorMask, std::vector<std::array<bool, 4>> componentMask, bool depthMask, bool stencilMask);
 
     private:
-      kit::GL                        m_glSingleton;
       GLuint                         m_glHandle;
       kit::Texture::Ptr              m_depthAttachment;
       std::vector<kit::Texture::Ptr> m_colorAttachments;

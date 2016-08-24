@@ -258,12 +258,12 @@ void kit::Model::renderShadows(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
 
     if (currMaterial->getDoubleSided())
     {
-      kit::GL::disable(GL_CULL_FACE);
+      glDisable(GL_CULL_FACE);
     }
     else
     {
-      kit::GL::enable(GL_CULL_FACE);
-      kit::GL::cullFace(GL_BACK);
+      glEnable(GL_CULL_FACE);
+      glCullFace(GL_BACK);
     }
 
     bool O = (currMaterial->getOpacityMask() != nullptr);

@@ -48,7 +48,6 @@ namespace kit
 
     private:
 
-      kit::GL m_glSingleton;
 
       GLuint m_glVertexBuffer; // VBO to hold vertex data
       GLuint m_glIndexBuffer; // VBO to hold index data

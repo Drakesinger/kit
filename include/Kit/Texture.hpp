@@ -425,7 +425,6 @@ namespace kit{
       std::string getFilename();
 
     private:
-      kit::GL             m_glSingleton;
 
       std::string         m_filename = "";
 

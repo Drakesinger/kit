@@ -59,15 +59,15 @@ kit::Font::GlyphMap::GlyphMap(kit::Font::WPtr wfont, float size)
   this->m_texture = kit::Texture::create2D(glm::uvec2((uint32_t)gridsizepx, (uint32_t)gridsizepx), kit::Texture::R8, Texture::ClampToEdge, Texture::Nearest, Texture::Nearest);
   this->m_texture->bind();
   
-  KIT_GL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
-  KIT_GL(glPixelStorei(GL_PACK_ALIGNMENT, 1));
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
   // AMD DSA texture bug no.2
   std::vector<GLubyte> data(uint32_t(gridsizepx*gridsizepx), 0);
-  KIT_GL(glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)gridsizepx, (GLsizei)gridsizepx, GL_RED, GL_UNSIGNED_BYTE, &data[0]));
+  glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)gridsizepx, (GLsizei)gridsizepx, GL_RED, GL_UNSIGNED_BYTE, &data[0]);
   
   //std::vector<GLubyte> data(uint32_t(gridsizepx*gridsizepx), 0);
-  //KIT_GL(glTextureSubImage2D(this->m_texture->getHandle(), 0, 0, 0, (GLsizei)gridsizepx, (GLsizei)gridsizepx, GL_RED, GL_UNSIGNED_BYTE, &data[0]));
+  //glTextureSubImage2D(this->m_texture->getHandle(), 0, 0, 0, (GLsizei)gridsizepx, (GLsizei)gridsizepx, GL_RED, GL_UNSIGNED_BYTE, &data[0]);
   
   glm::vec2 currTexPos(0.0f, 0.0f);
   currTexPos.y = gridsizepx - cellsize;
@@ -107,12 +107,12 @@ kit::Font::GlyphMap::GlyphMap(kit::Font::WPtr wfont, float size)
       // Upload the data to GPU
       
       // Non-DSA
-      KIT_GL(glTexSubImage2D(GL_TEXTURE_2D, 0, uint32_t(currTexPos.x), uint32_t(currTexPos.y), adder.m_size.x, adder.m_size.y, GL_RED, GL_UNSIGNED_BYTE, &glyphdata[0]));
+      glTexSubImage2D(GL_TEXTURE_2D, 0, uint32_t(currTexPos.x), uint32_t(currTexPos.y), adder.m_size.x, adder.m_size.y, GL_RED, GL_UNSIGNED_BYTE, &glyphdata[0]);
       
       // DSA bug no.2 -- AMD Linux still bugged
-      //KIT_GL(glTextureSubImage2D(this->m_texture->getHandle(), 0, uint32_t(currTexPos.x), uint32_t(currTexPos.y), adder.m_size.x, adder.m_size.y, GL_RED, GL_UNSIGNED_BYTE, &glyphdata[0]));
-      //KIT_GL(glPixelStorei(GL_UNPACK_ALIGNMENT, 4));
-      //KIT_GL(glPixelStorei(GL_PACK_ALIGNMENT, 4));
+      //glTextureSubImage2D(this->m_texture->getHandle(), 0, uint32_t(currTexPos.x), uint32_t(currTexPos.y), adder.m_size.x, adder.m_size.y, GL_RED, GL_UNSIGNED_BYTE, &glyphdata[0]);
+      //glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+      //glPixelStorei(GL_PACK_ALIGNMENT, 4);
 
       currTexPos.x += cellsize;
       if (currTexPos.x >= gridsizepx)
@@ -133,8 +133,8 @@ kit::Font::GlyphMap::GlyphMap(kit::Font::WPtr wfont, float size)
 
   }
 
-  KIT_GL(glPixelStorei(GL_UNPACK_ALIGNMENT, 4));
-  KIT_GL(glPixelStorei(GL_PACK_ALIGNMENT, 4));
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+  glPixelStorei(GL_PACK_ALIGNMENT, 4);
   
   // AMD DSA texture bug no.1 (reported to AMD, repro here: https://gist.github.com/haikarainen/97959adfe4e3ca10968a)
   this->m_texture->setMinFilteringMode(kit::Texture::Nearest);

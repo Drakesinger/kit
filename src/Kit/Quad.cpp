@@ -106,15 +106,15 @@ void kit::Quad::PrepareProgram(kit::Program::Ptr customprogram)
   {
       if (this->m_blending)
       {
-        kit::GL::enable(GL_BLEND);
-        kit::GL::blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       }
       else
       {
-        kit::GL::disable(GL_BLEND);
+        glDisable(GL_BLEND);
       }
-      kit::GL::disable(GL_DEPTH_TEST);
-      kit::GL::depthMask(GL_FALSE);
+      glDisable(GL_DEPTH_TEST);
+      glDepthMask(GL_FALSE);
 
       kit::Quad::m_program->use();
       kit::Quad::m_program->setUniform4f("uniform_color", kit::srgbDec(this->m_color));
@@ -125,15 +125,15 @@ void kit::Quad::PrepareProgram(kit::Program::Ptr customprogram)
   {
     if (this->m_blending)
     {
-      kit::GL::enable(GL_BLEND);
-      kit::GL::blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      glEnable(GL_BLEND);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
     else
     {
-      kit::GL::disable(GL_BLEND);
+      glDisable(GL_BLEND);
     }
-    kit::GL::disable(GL_DEPTH_TEST);
-    kit::GL::depthMask(GL_FALSE);
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
     kit::Quad::m_ProgramTextured->use();
     kit::Quad::m_ProgramTextured->setUniformTexture("uniform_texture", this->m_texture);
     kit::Quad::m_ProgramTextured->setUniform4f("uniform_color", kit::srgbDec(this->m_color));
@@ -145,14 +145,14 @@ void kit::Quad::PrepareProgram(kit::Program::Ptr customprogram)
 void kit::Quad::renderGeometry()
 {
   
-  kit::GL::bindVertexArray(kit::Quad::m_glVertexArray);
-  KIT_GL(glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, (void*)0));
+  glBindVertexArray(kit::Quad::m_glVertexArray);
+  glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, (void*)0);
 }
 
 void kit::Quad::renderAltGeometry()
 {
   
-  KIT_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
 void kit::Quad::render(kit::Program::Ptr customprogram)
@@ -202,22 +202,22 @@ void kit::Quad::allocateShared()
 {
   
   // Generate and bind our Vertex Array Object
-  KIT_GL(glGenVertexArrays(1, &kit::Quad::m_glVertexArray));
-  kit::GL::bindVertexArray(kit::Quad::m_glVertexArray);
+  glGenVertexArrays(1, &kit::Quad::m_glVertexArray);
+  glBindVertexArray(kit::Quad::m_glVertexArray);
 
   // Generate our Vertex Index Buffer Object
-  KIT_GL(glGenBuffers(1, &kit::Quad::m_glVertexIndices));
-  kit::GL::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, kit::Quad::m_glVertexIndices);
-  KIT_GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GLushort), &indexData[0], GL_STATIC_DRAW));
+  glGenBuffers(1, &kit::Quad::m_glVertexIndices);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, kit::Quad::m_glVertexIndices);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GLushort), &indexData[0], GL_STATIC_DRAW);
 
   // Generate our Vertex Buffer Object
-  KIT_GL(glGenBuffers(1, &kit::Quad::m_glVertexBuffer));
-  kit::GL::bindBuffer(GL_ARRAY_BUFFER, kit::Quad::m_glVertexBuffer);
-  KIT_GL(glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), &vertexData[0], GL_STATIC_DRAW));
-  KIT_GL(glEnableVertexAttribArray(0));
-  KIT_GL(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 5, (void*)0));
-  KIT_GL(glEnableVertexAttribArray(1));
-  KIT_GL(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 5, (void*) (sizeof(GLfloat) * 3)));
+  glGenBuffers(1, &kit::Quad::m_glVertexBuffer);
+  glBindBuffer(GL_ARRAY_BUFFER, kit::Quad::m_glVertexBuffer);
+  glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), &vertexData[0], GL_STATIC_DRAW);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 5, (void*)0);
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 5, (void*) (sizeof(GLfloat) * 3));
   
   // allocate our programs!
   auto vertexShader = kit::Shader::create(Shader::Type::Vertex);
@@ -253,9 +253,9 @@ void kit::Quad::releaseShared()
   kit::Quad::m_ProgramTextured.reset();
   kit::Quad::m_program.reset();
   
-  KIT_GL(glDeleteBuffers(1, &kit::Quad::m_glVertexIndices));
-  KIT_GL(glDeleteBuffers(1, &kit::Quad::m_glVertexBuffer));
-  KIT_GL(glDeleteVertexArrays(1, &kit::Quad::m_glVertexArray));
+  glDeleteBuffers(1, &kit::Quad::m_glVertexIndices);
+  glDeleteBuffers(1, &kit::Quad::m_glVertexBuffer);
+  glDeleteVertexArrays(1, &kit::Quad::m_glVertexArray);
 }
 
 const float & kit::Quad::getDepth()

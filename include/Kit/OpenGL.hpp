@@ -26,14 +26,12 @@ namespace kit{
   };
 }
 
-#ifdef KIT_DEBUG
+
   #ifdef _WIN32
-    #define KIT_GL(x) ((x), kit::glCheckError(__FILE__, __LINE__, __FUNCTION__, #x))
+    #define KIT_GL(x) ((x), kit::glCheckError(__FILE__, __LINE__, __FUNCTION__, #x)
   #elif __unix
-    #define  KIT_GL(expr) do { expr; kit::glCheckError(__FILE__, __LINE__, __PRETTY_FUNCTION__, #expr); } while (false)
+    #define  KIT_GL(expr) do { expr; kit::glCheckError(__FILE__, __LINE__, __PRETTY_FUNCTION__, #expr); } while (false
   #endif
-#else
-	#define KIT_GL(x) (x)
-#endif
+
 
 #endif

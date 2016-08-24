@@ -249,7 +249,6 @@ namespace kit {
       static void addShaders(kit::Program::Ptr program, kit::Shader::Type type, std::vector<std::string> const & sources, std::vector<kit::Shader::Ptr> & outShaders, char const * dataDirectory = "./data/");
       
       std::string                               m_fileIdentifier;
-      kit::GL                                   m_glSingleton;
       GLuint			                m_glHandle;
       std::map<std::string, uint32_t>           m_locationCache;
       std::map<uint32_t, kit::TextureWPtr>      m_textures;

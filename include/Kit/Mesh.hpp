@@ -52,7 +52,6 @@ namespace kit
       Mesh();
 
     private:
-      kit::GL m_glSingleton;
       std::map<std::string, kit::Mesh::SubmeshEntry> m_submeshEntries;
       std::map<std::string, bool> m_submeshesEnabled;
       

@@ -37,7 +37,6 @@ namespace kit {
       void blitFrom(kit::DoubleBuffer::Ptr source); //< Blits from the source front buffer to the destination(this) backbuffer
       
     private:
-      kit::GL               m_glSingleton;
       kit::PixelBuffer::Ptr m_frontBuffer;
       kit::PixelBuffer::Ptr m_backBuffer;
       glm::uvec2          m_resolution;

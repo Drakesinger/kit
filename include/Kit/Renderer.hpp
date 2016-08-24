@@ -211,7 +211,6 @@ namespace kit
     static void releaseShared();
     
     // General
-    kit::GL                     m_glSingleton;
     static uint32_t             m_instanceCount;
     float                       m_internalResolution = 1.0;
     glm::uvec2                  m_resolution = glm::uvec2(0, 0);

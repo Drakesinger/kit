@@ -66,7 +66,6 @@ namespace kit
       static kit::Font::Ptr getSystemFont();
       
     private:
-      kit::GL m_glSingleton;
       std::map<float, GlyphMap*> m_glyphCache; //< Index of glyphmaps of different sizes
       
       static uint32_t m_instanceCount;

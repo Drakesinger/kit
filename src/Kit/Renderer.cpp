@@ -272,7 +272,7 @@ void kit::Renderer::renderLight(kit::Light::Ptr currLight)
     
     currProgram->setUniformMat4("uniform_invProjMatrix", glm::inverse(p));
     
-    //KIT_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+    //glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     this->m_screenQuad->render(currProgram);
   }
   else if (currLight->getType() == kit::Light::Spot)
@@ -299,10 +299,10 @@ void kit::Renderer::renderLight(kit::Light::Ptr currLight)
     currProgram->setUniformMat4("uniform_MVMatrix", mv);
     currProgram->setUniform2f("uniform_projConst", glm::vec2(px, py));
     
-    kit::GL::enable(GL_CULL_FACE);
-    kit::GL::cullFace(GL_FRONT);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
     currLight->getSpotGeometry()->renderGeometry();
-    kit::GL::disable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);
   }
   else if(currLight->getType() == kit::Light::Point)
   {
@@ -328,10 +328,10 @@ void kit::Renderer::renderLight(kit::Light::Ptr currLight)
     currProgram->setUniformMat4("uniform_MVMatrix", mv);
     currProgram->setUniform2f("uniform_projConst", glm::vec2(px, py));
     
-    kit::GL::enable(GL_CULL_FACE);
-    kit::GL::cullFace(GL_FRONT);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
     this->m_pointGeometry->renderGeometry();
-    kit::GL::disable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);
   }
   else if(currLight->getType() == kit::Light::IBL)
   {
@@ -344,7 +344,7 @@ void kit::Renderer::renderLight(kit::Light::Ptr currLight)
     
     this->m_programIBL->setUniformMat4("uniform_invProjMatrix", glm::inverse(p));
     
-    //KIT_GL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+    //glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     this->m_screenQuad->render(this->m_programIBL);
     
   }
@@ -566,10 +566,10 @@ void kit::Renderer::renderFrameWithMetrics()
 
 void kit::Renderer::geometryPass()
 {
-  kit::GL::disable(GL_BLEND);
+  glDisable(GL_BLEND);
 
-  kit::GL::depthMask(GL_TRUE);
-  kit::GL::enable(GL_DEPTH_TEST);
+  glDepthMask(GL_TRUE);
+  glEnable(GL_DEPTH_TEST);
 
   // Clear and bind the geometry buffer
   this->m_geometryBuffer->clear({ glm::vec4(0.0, 0.0, 0.0, 0.0), glm::vec4(0.0, 0.0, 0.0, 0.0), glm::vec4(0.0, 0.0, 0.0, 0.0) }, 1.0f);
@@ -592,9 +592,9 @@ void kit::Renderer::shadowPass()
 {
   if (!this->m_shadowsEnabled) return;
 
-  kit::GL::depthMask(GL_TRUE);
-  kit::GL::enable(GL_DEPTH_TEST);
-  kit::GL::disable(GL_BLEND);
+  glDepthMask(GL_TRUE);
+  glEnable(GL_DEPTH_TEST);
+  glDisable(GL_BLEND);
 
   // For each payload ...
   // (note that all payloads are isolated from each other in terms of shadows)
@@ -660,11 +660,11 @@ void kit::Renderer::shadowPass()
 
 void kit::Renderer::lightPass()
 {
-  kit::GL::enable(GL_BLEND);
-  kit::GL::blendFunc(GL_ONE, GL_ONE);
-  kit::GL::disable(GL_DEPTH_TEST);
-  kit::GL::depthMask(GL_FALSE);
-  //kit::GL::disable(GL_CULL_FACE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_ONE, GL_ONE);
+  glDisable(GL_DEPTH_TEST);
+  glDepthMask(GL_FALSE);
+  //glDisable(GL_CULL_FACE);
   
   // Clear and bind the light accumulation buffer
   glm::mat4 invViewMatrix;
@@ -694,10 +694,10 @@ void kit::Renderer::lightPass()
 
 void kit::Renderer::forwardPass()
 {
-  kit::GL::depthMask(GL_TRUE);
-  kit::GL::enable(GL_DEPTH_TEST);
-  kit::GL::enable(GL_BLEND);
-  kit::GL::blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glDepthMask(GL_TRUE);
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   // Bind the accumulation buffer
   this->m_accumulationBuffer->bind();
@@ -705,7 +705,7 @@ void kit::Renderer::forwardPass()
   // If we have a skybox
   if (this->m_skybox)
   {
-    kit::GL::disable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);
     // Render the skybox
     this->m_skybox->render(shared_from_this());
   }
@@ -721,13 +721,13 @@ void kit::Renderer::forwardPass()
       if (currRenderable->requestAccumulationCopy())
       {
        // std::cout << "Handle " << this->m_accumulationBuffer->getHandle() << ": " << this->m_accumulationBuffer->getResolution().x << "x" << this->m_accumulationBuffer->getResolution().y << " to " << this->m_depthCopyBuffer->getHandle() << ": " << this->m_depthCopyBuffer->getResolution().x << "x" << this->m_depthCopyBuffer->getResolution().y << std::endl;
-        KIT_GL(glBlitNamedFramebuffer(
+        glBlitNamedFramebuffer(
           this->m_accumulationBuffer->getHandle(), 
           this->m_accumulationCopy->getHandle(), 
           0, 0, this->m_accumulationBuffer->getResolution().x, this->m_accumulationBuffer->getResolution().y,
           0, 0, this->m_accumulationCopy->getResolution().x, this->m_accumulationCopy->getResolution().y,
           GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT, GL_NEAREST
-        ));
+        );
       }
 
       // Render current renderable in forward mode
@@ -739,10 +739,10 @@ void kit::Renderer::forwardPass()
 void kit::Renderer::hdrPass()
 {
   
-  kit::GL::disable(GL_BLEND);
-  kit::GL::disable(GL_DEPTH_TEST);
-  kit::GL::depthMask(GL_FALSE);
-  kit::GL::disable(GL_CULL_FACE);
+  glDisable(GL_BLEND);
+  glDisable(GL_DEPTH_TEST);
+  glDepthMask(GL_FALSE);
+  glDisable(GL_CULL_FACE);
 
 
   // If we have bloom enabled
@@ -928,10 +928,10 @@ void kit::Renderer::hdrPass()
 void kit::Renderer::postFXPass()
 {
   
-  kit::GL::disable(GL_BLEND);
-  kit::GL::disable(GL_DEPTH_TEST);
-  kit::GL::depthMask(GL_FALSE);
-  kit::GL::disable(GL_CULL_FACE);
+  glDisable(GL_BLEND);
+  glDisable(GL_DEPTH_TEST);
+  glDepthMask(GL_FALSE);
+  glDisable(GL_CULL_FACE);
 
   if (this->m_fringeEnabled)
   {

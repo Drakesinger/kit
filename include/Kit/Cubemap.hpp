@@ -78,7 +78,6 @@ namespace kit{
       Cubemap();
       Cubemap(GLuint handle);
 		private:
-      kit::GL m_glSingleton;
       
 			GLuint	                       m_glHandle;
 			kit::Cubemap::FilteringMode    m_filteringMode;

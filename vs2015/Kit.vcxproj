@@ -173,7 +173,6 @@
     <ClCompile Include="..\src\Kit\Exception.cpp" />
     <ClCompile Include="..\src\Kit\Font.cpp" />
     <ClCompile Include="..\src\Kit\Frustum.cpp" />
-    <ClCompile Include="..\src\Kit\GL.cpp" />
     <ClCompile Include="..\src\Kit\GLTimer.cpp" />
     <ClCompile Include="..\src\Kit\GL\gl3w.cpp" />
     <ClCompile Include="..\src\Kit\GridFloor.cpp" />
@@ -222,7 +221,6 @@
     <ClInclude Include="..\include\Kit\Export.hpp" />
     <ClInclude Include="..\include\Kit\Font.hpp" />
     <ClInclude Include="..\include\Kit\Frustum.hpp" />
-    <ClInclude Include="..\include\Kit\GL.hpp" />
     <ClInclude Include="..\include\Kit\GLTimer.hpp" />
     <ClInclude Include="..\include\Kit\GL\gl3w.h" />
     <ClInclude Include="..\include\Kit\GL\glcorearb.h" />

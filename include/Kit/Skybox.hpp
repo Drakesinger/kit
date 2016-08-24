@@ -46,7 +46,6 @@ namespace kit
 
     private:
 
-      kit::GL m_glSingleton;
       
       static void allocateShared();
       static void releaseShared();

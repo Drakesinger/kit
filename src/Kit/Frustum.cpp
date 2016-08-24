@@ -132,22 +132,22 @@ kit::Frustum::Frustum(float fov, float ratio, glm::vec2 cliprange)
   this->m_indexCount = (uint32_t)indices.size();
 
   // Upload cone geometry to the gpu
-  kit::GL::bindVertexArray(this->m_glVertexArray);
+  glBindVertexArray(this->m_glVertexArray);
 
   // Upload indices
-  kit::GL::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_glVertexIndices);
-  KIT_GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), &indices[0], GL_STATIC_DRAW));
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_glVertexIndices);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), &indices[0], GL_STATIC_DRAW);
 
   // Upload vertices 
-  kit::GL::bindBuffer(GL_ARRAY_BUFFER, this->m_glVertexBuffer);
-  KIT_GL(glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), &vertices[0], GL_STATIC_DRAW));
+  glBindBuffer(GL_ARRAY_BUFFER, this->m_glVertexBuffer);
+  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), &vertices[0], GL_STATIC_DRAW);
 
   // Total size
   uint32_t attributeSize = (sizeof(GLfloat)* 3);
 
   // Positions
-  KIT_GL(glEnableVertexAttribArray(0));
-  KIT_GL(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*)0));
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*)0);
 }
 
 kit::Frustum::~Frustum()
@@ -158,8 +158,8 @@ kit::Frustum::~Frustum()
 void kit::Frustum::renderGeometry()
 {
   
-  kit::GL::bindVertexArray(this->m_glVertexArray);
-  KIT_GL(glDrawElements(GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0));
+  glBindVertexArray(this->m_glVertexArray);
+  glDrawElements(GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0);
 }
 
 kit::Frustum::Ptr kit::Frustum::create(float fov, float ratio, glm::vec2 cliprange)
@@ -171,15 +171,15 @@ kit::Frustum::Ptr kit::Frustum::create(float fov, float ratio, glm::vec2 clipran
 void kit::Frustum::allocateBuffers()
 {
   
-  KIT_GL(glGenVertexArrays(1, &this->m_glVertexArray));
-  KIT_GL(glGenBuffers(1, &this->m_glVertexIndices));
-  KIT_GL(glGenBuffers(1, &this->m_glVertexBuffer));
+  glGenVertexArrays(1, &this->m_glVertexArray);
+  glGenBuffers(1, &this->m_glVertexIndices);
+  glGenBuffers(1, &this->m_glVertexBuffer);
 }
 
 void kit::Frustum::releaseBuffers()
 {
   
-  KIT_GL(glDeleteBuffers(1, &this->m_glVertexIndices));
-  KIT_GL(glDeleteBuffers(1, &this->m_glVertexBuffer));
-  KIT_GL(glDeleteVertexArrays(1, &this->m_glVertexArray));
+  glDeleteBuffers(1, &this->m_glVertexIndices);
+  glDeleteBuffers(1, &this->m_glVertexBuffer);
+  glDeleteVertexArrays(1, &this->m_glVertexArray);
 }

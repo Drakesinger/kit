@@ -76,7 +76,6 @@ namespace kit
       virtual int32_t getRenderPriority() override;
 
     private:
-      kit::GL m_glSingleton;
       void                  updateGpuProgram();   //< Compiles a new program for the GPU
 
       bool                  m_valid;              //< True if loaded

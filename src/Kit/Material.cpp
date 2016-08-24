@@ -606,9 +606,9 @@ void kit::Material::renderARCache()
     kit::Material::m_cacheProgram->setUniform1i("uniform_usemapA", 0);
   }
 
-  kit::GL::disable(GL_BLEND);
-  kit::GL::disable(GL_DEPTH_TEST);
-  kit::GL::depthMask(GL_FALSE);
+  glDisable(GL_BLEND);
+  glDisable(GL_DEPTH_TEST);
+  glDepthMask(GL_FALSE);
   
   kit::Quad::renderGeometry();
   
@@ -650,9 +650,9 @@ void kit::Material::renderNMCache()
     kit::Material::m_cacheProgram->setUniform1i("uniform_usemapA", 0);
   }
 
-  kit::GL::disable(GL_BLEND);
-  kit::GL::disable(GL_DEPTH_TEST);
-  kit::GL::depthMask(GL_FALSE);
+  glDisable(GL_BLEND);
+  glDisable(GL_DEPTH_TEST);
+  glDepthMask(GL_FALSE);
 
   kit::Quad::renderGeometry();
   
@@ -693,9 +693,9 @@ void kit::Material::renderNDCache()
     kit::Material::m_cacheProgram->setUniform1i("uniform_usemapA", 0);
   }
 
-  kit::GL::disable(GL_BLEND);
-  kit::GL::disable(GL_DEPTH_TEST);
-  kit::GL::depthMask(GL_FALSE);
+  glDisable(GL_BLEND);
+  glDisable(GL_DEPTH_TEST);
+  glDepthMask(GL_FALSE);
   
   kit::Quad::renderGeometry();
 
@@ -737,9 +737,9 @@ void kit::Material::renderEOCache()
     kit::Material::m_cacheProgram->setUniform1i("uniform_usemapA", 0);
   }
 
-  kit::GL::disable(GL_BLEND);
-  kit::GL::disable(GL_DEPTH_TEST);
-  kit::GL::depthMask(GL_FALSE);
+  glDisable(GL_BLEND);
+  glDisable(GL_DEPTH_TEST);
+  glDepthMask(GL_FALSE);
 
   kit::Quad::renderGeometry();
   
@@ -1411,38 +1411,38 @@ void kit::Material::use(kit::Camera::Ptr cam, const glm::mat4 & modelMatrix, con
 
   if (this->m_depthRead)
   {
-    kit::GL::enable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
   }
   else
   {
-    kit::GL::disable(GL_DEPTH_TEST);
+    glDisable(GL_DEPTH_TEST);
   }
-  kit::GL::depthMask( this->m_depthWrite ? GL_TRUE : GL_FALSE );
+  glDepthMask( this->m_depthWrite ? GL_TRUE : GL_FALSE );
 
   if (this->m_doubleSided)
   {
-    kit::GL::disable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);
   }
   else
   {
-    kit::GL::enable(GL_CULL_FACE);
-    kit::GL::cullFace(GL_BACK);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
   }
 
   if (this->m_blendMode == None)
   {
-    kit::GL::disable(GL_BLEND);
+    glDisable(GL_BLEND);
   }
   else
   {
-    kit::GL::enable(GL_BLEND);
+    glEnable(GL_BLEND);
     if (this->m_blendMode == Add)
     {
-      kit::GL::blendFunc(GL_ONE, GL_ONE);
+      glBlendFunc(GL_ONE, GL_ONE);
     }
     else
     {
-      kit::GL::blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
   }
 }

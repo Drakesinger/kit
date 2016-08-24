@@ -321,7 +321,6 @@ namespace kit
       static void                          __infunc_char(GLFWwindow*, unsigned int codepoint);
 
       kit::GLFWSingleton                   m_glfwSingleton;
-      kit::GL                              m_glSingleton;
 
       GLFWwindow                           * m_glfwHandle;
       std::queue<kit::WindowEvent>         m_eventList;

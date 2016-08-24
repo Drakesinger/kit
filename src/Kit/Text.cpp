@@ -37,11 +37,11 @@ void kit::Text::renderShadowed(glm::ivec2 resolution, glm::vec2 shadowOffset, gl
 
 void kit::Text::render(glm::ivec2 resolution)
 {
-  kit::GL::disable(GL_DEPTH_TEST);
-  kit::GL::disable(GL_CULL_FACE);
-  kit::GL::depthMask(GL_FALSE);
-  kit::GL::enable(GL_BLEND);
-  kit::GL::blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_CULL_FACE);
+  glDepthMask(GL_FALSE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   kit::Text::m_renderProgram->use();
   kit::Text::m_renderProgram->setUniform2f("uniform_resolution", glm::vec2(float(resolution.x), float(resolution.y)));
   
@@ -72,8 +72,8 @@ void kit::Text::render(glm::ivec2 resolution)
   kit::Text::m_renderProgram->setUniform4f("uniform_color", kit::srgbDec(this->m_color));
   kit::Text::m_renderProgram->setUniformTexture("uniform_glyphmap", this->m_font->getGlyphMap(this->m_fontSize)->getTexture());
   
-  kit::GL::bindVertexArray(this->m_glVertexArray);
-  KIT_GL(glDrawElements(GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0));
+  glBindVertexArray(this->m_glVertexArray);
+  glDrawElements(GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0);
   kit::Program::useFixed();
 }
 
@@ -127,9 +127,9 @@ glm::vec2 const & kit::Text::getPosition()
 kit::Text::Text()
 {
   
-  KIT_GL(glGenVertexArrays(1, &this->m_glVertexArray));
-  KIT_GL(glGenBuffers(1, &this->m_glVertexIndices));
-  KIT_GL(glGenBuffers(1, &this->m_glVertexBuffer));
+  glGenVertexArrays(1, &this->m_glVertexArray);
+  glGenBuffers(1, &this->m_glVertexIndices);
+  glGenBuffers(1, &this->m_glVertexBuffer);
 
   this->m_indexCount = 0;
   this->m_width = 0.0;
@@ -146,9 +146,9 @@ kit::Text::Text()
 kit::Text::~Text()
 {
   
-  KIT_GL(glDeleteBuffers(1, &this->m_glVertexIndices));
-  KIT_GL(glDeleteBuffers(1, &this->m_glVertexBuffer));
-  KIT_GL(glDeleteVertexArrays(1, &this->m_glVertexArray));
+  glDeleteBuffers(1, &this->m_glVertexIndices);
+  glDeleteBuffers(1, &this->m_glVertexBuffer);
+  glDeleteVertexArrays(1, &this->m_glVertexArray);
   
   kit::Text::m_instanceCount--;
   if(kit::Text::m_instanceCount == 0)
@@ -289,28 +289,28 @@ void kit::Text::updateBuffers()
   
   this->m_indexCount = uint32_t(indices.size());
 
-  kit::GL::bindVertexArray(this->m_glVertexArray);
+  glBindVertexArray(this->m_glVertexArray);
 
   // Upload indices
-  kit::GL::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_glVertexIndices);
-  KIT_GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), &indices[0], GL_STATIC_DRAW));
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_glVertexIndices);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), &indices[0], GL_STATIC_DRAW);
 
   // Upload vertices 
-  kit::GL::bindBuffer(GL_ARRAY_BUFFER, this->m_glVertexBuffer);
-  KIT_GL(glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), &vertices[0], GL_STATIC_DRAW));
+  glBindBuffer(GL_ARRAY_BUFFER, this->m_glVertexBuffer);
+  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), &vertices[0], GL_STATIC_DRAW);
 
   // Total size
   uint32_t attributeSize = (sizeof(GLfloat)* 4);
 
   // Positions
-  KIT_GL(glEnableVertexAttribArray(0));
-  KIT_GL(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, attributeSize, (void*)0)); 
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, attributeSize, (void*)0); 
   
   // UV
-  KIT_GL(glEnableVertexAttribArray(1));
-  KIT_GL(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(GLfloat) * 2))); 
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(GLfloat) * 2)); 
   
-  kit::GL::bindVertexArray(0);
+  glBindVertexArray(0);
   
   // Set the width to the current pen X
   if (pen.x > maxWidth)
