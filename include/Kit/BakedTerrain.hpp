@@ -3,7 +3,7 @@
 
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
-#include "Kit/GL.hpp"
+
 #include "Kit/Renderable.hpp"
 
 #include <memory>
@@ -80,9 +80,9 @@ namespace kit
 
       bool                  m_valid;              //< True if loaded
       uint32_t           m_indexCount;         //< Index count
-      GLuint                m_glVertexArray;      //< VAO
-      GLuint                m_glVertexIndices;    //< VBO for elements/indices
-      GLuint                m_glVertexBuffer;     //< VBO for vertex data
+      uint32_t                m_glVertexArray;      //< VAO
+      uint32_t                m_glVertexIndices;    //< VBO for elements/indices
+      uint32_t                m_glVertexBuffer;     //< VBO for vertex data
 
       kit::ProgramPtr       m_program;            //< GPU program
 

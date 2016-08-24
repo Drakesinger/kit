@@ -3,7 +3,7 @@
 
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
-#include "Kit/GL.hpp"
+
 #include "Kit/Renderable.hpp"
 
 #include <memory>
@@ -150,9 +150,9 @@ namespace kit
 
       // GPU data
       uint32_t                     m_indexCount;         //< Index count
-      GLuint                          m_glVertexArray;      //< VAO
-      GLuint                          m_glVertexIndices;    //< VBO for elements/indices
-      GLuint                          m_glVertexBuffer;     //< VBO for vertex data
+      uint32_t                          m_glVertexArray;      //< VAO
+      uint32_t                          m_glVertexIndices;    //< VBO for elements/indices
+      uint32_t                          m_glVertexBuffer;     //< VBO for vertex data
 
       kit::DoubleBufferPtr            m_materialMask;       //< Material mask, paintable
       kit::ProgramPtr                 m_materialPaintProgram;            //< GPU program

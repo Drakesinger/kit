@@ -3,7 +3,7 @@
 
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
-#include "Kit/GL.hpp"
+
 
 #include <glm/gtx/transform.hpp>
 #include <memory>

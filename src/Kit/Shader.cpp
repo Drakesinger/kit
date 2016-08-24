@@ -1,4 +1,5 @@
 #include "Kit/Shader.hpp"
+#include "Kit/IncOpenGL.hpp"
 #include "Kit/Exception.hpp"
 
 #include <fstream>
@@ -83,13 +84,13 @@ bool kit::Shader::compile()
   glCompileShader(this->m_glHandle);
 
   // Retrieve the compilation status
-  GLint status;
+  int32_t status;
   glGetShaderiv(this->m_glHandle, GL_COMPILE_STATUS, &status);
 
   // If compilation failed, dump source and return false
   if (!status)
   {
-    GLint blen = 0;
+    int32_t blen = 0;
     GLsizei slen = 0;
     glGetShaderiv(this->m_glHandle, GL_INFO_LOG_LENGTH , &blen);
     if (blen > 1)
@@ -123,7 +124,7 @@ bool kit::Shader::compile()
   return true;
 }
 
-GLuint kit::Shader::getHandle()
+uint32_t kit::Shader::getHandle()
 {
   return this->m_glHandle;
 }

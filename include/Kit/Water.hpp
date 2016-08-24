@@ -3,7 +3,7 @@
 
 #include "Kit/Renderable.hpp"
 #include "Kit/Types.hpp"
-#include "Kit/GL.hpp"
+
 #include <memory>
 
 namespace kit 
@@ -49,9 +49,9 @@ namespace kit
     private:
 
 
-      GLuint m_glVertexBuffer; // VBO to hold vertex data
-      GLuint m_glIndexBuffer; // VBO to hold index data
-      GLuint m_glVao; // VAO for our VBO and program
+      uint32_t m_glVertexBuffer; // VBO to hold vertex data
+      uint32_t m_glIndexBuffer; // VBO to hold index data
+      uint32_t m_glVao; // VAO for our VBO and program
       kit::ProgramPtr m_program;
 
       kit::TexturePtr m_brdf;

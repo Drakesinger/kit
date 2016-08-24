@@ -1,4 +1,6 @@
 #include "Kit/Window.hpp"
+
+#include "Kit/IncOpenGL.hpp"
 #include "Kit/Monitor.hpp"
 #include "Kit/Exception.hpp"
 #include "Kit/Submesh.hpp"

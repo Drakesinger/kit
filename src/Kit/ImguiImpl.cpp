@@ -1,4 +1,6 @@
 #include "Kit/ImguiImpl.hpp"
+
+#include "Kit/IncOpenGL.hpp"
 #include "Kit/Window.hpp"
 #include "Kit/Texture.hpp"
 #include "Kit/imgui/imgui.h"

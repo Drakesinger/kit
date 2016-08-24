@@ -1,5 +1,7 @@
 #include "Kit/BakedTerrain.hpp"
 
+#include "Kit/IncOpenGL.hpp"
+
 #include "Kit/Program.hpp"
 #include "Kit/Material.hpp"
 #include "Kit/Texture.hpp"
@@ -7,12 +9,12 @@
 #include "Kit/Renderer.hpp"
 #include "Kit/Shader.hpp"
 #include "Kit/Types.hpp"
+#include "Kit/Model.hpp"
 
 #include <string>
 #include <fstream>
 #include <cstdlib>
 #include <sstream>
-#include <Kit/Model.hpp>
 
 const char componentIndex[4] = {'r', 'g', 'b', 'a'};
 

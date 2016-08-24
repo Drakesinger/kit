@@ -1,4 +1,5 @@
-#include <Kit/PixelBuffer.hpp>
+#include "Kit/PixelBuffer.hpp"
+#include "Kit/IncOpenGL.hpp"
 
 kit::PixelBuffer::AttachmentInfo::AttachmentInfo(kit::Texture::Ptr texture)
 {
@@ -306,7 +307,7 @@ void kit::PixelBuffer::clearAttachment(uint32_t attachment, glm::vec4 clearcolor
     KIT_THROW("Cant clear attachment, index out of range.");
   }
 
-  GLfloat color[4] = { clearcolor.x, clearcolor.y, clearcolor.z, clearcolor.w };
+  float color[4] = { clearcolor.x, clearcolor.y, clearcolor.z, clearcolor.w };
   glClearBufferfv(GL_COLOR, attachment, &color[0]);
 }
 
@@ -318,7 +319,7 @@ void kit::PixelBuffer::clearAttachment(uint32_t attachment, glm::uvec4 clearcolo
     KIT_THROW("Cant clear attachment, index out of range.");
   }
 
-  GLuint color[4] = { clearcolor.x, clearcolor.y, clearcolor.z, clearcolor.w };
+  uint32_t color[4] = { clearcolor.x, clearcolor.y, clearcolor.z, clearcolor.w };
   glClearBufferuiv(GL_COLOR, attachment, &color[0]);
 }
 
@@ -330,7 +331,7 @@ void kit::PixelBuffer::clearAttachment(uint32_t attachment, glm::ivec4 clearcolo
     KIT_THROW("Cant clear attachment, index out of range.");
   }
 
-  GLint color[4] = { clearcolor.x, clearcolor.y, clearcolor.z, clearcolor.w };
+  int32_t color[4] = { clearcolor.x, clearcolor.y, clearcolor.z, clearcolor.w };
   glClearBufferiv(GL_COLOR, attachment, &color[0]);
 }
 
@@ -381,7 +382,7 @@ kit::Texture::Ptr kit::PixelBuffer::getDepthAttachment()
   return this->m_depthAttachment;
 }
 
-GLuint kit::PixelBuffer::getHandle()
+uint32_t kit::PixelBuffer::getHandle()
 {
   return this->m_glHandle;
 }
@@ -395,7 +396,7 @@ glm::vec4 kit::PixelBuffer::readPixel(uint32_t index, uint32_t x, uint32_t y)
 {
   this->bind();
   glReadBuffer(GL_COLOR_ATTACHMENT0 + index);
-  GLfloat data[4];
+  float data[4];
   glReadPixels(x, y, 1, 1, GL_RGBA, GL_FLOAT, &data[0]);
   kit::PixelBuffer::unbind();
   glFinish();
@@ -409,7 +410,7 @@ std::vector<float> kit::PixelBuffer::readPixels(uint32_t index)
 {
   std::vector<float> returner;
   uint32_t numPixels = this->m_resolution.x * this->m_resolution.y;
-  GLfloat * data = new GLfloat[numPixels];
+  float * data = new float[numPixels];
   returner.reserve(numPixels);
   
   this->bind();

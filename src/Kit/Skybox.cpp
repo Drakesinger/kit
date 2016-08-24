@@ -1,4 +1,6 @@
 #include "Kit/Skybox.hpp"
+
+#include "Kit/IncOpenGL.hpp"
 #include "Kit/Shader.hpp"
 #include "Kit/Camera.hpp"
 #include "Kit/Program.hpp"
@@ -81,9 +83,9 @@ void main()\n\
 uint32_t kit::Skybox::m_instanceCount = 0;
 kit::Program::Ptr kit::Skybox::m_program = nullptr;
 kit::Program::Ptr kit::Skybox::m_programNoTexture = nullptr;
-GLuint kit::Skybox::m_glVertexArray = 0;
-GLuint kit::Skybox::m_glVertexIndices = 0;
-GLuint kit::Skybox::m_glVertexBuffer = 0;
+uint32_t kit::Skybox::m_glVertexArray = 0;
+uint32_t kit::Skybox::m_glVertexIndices = 0;
+uint32_t kit::Skybox::m_glVertexBuffer = 0;
 
 kit::Skybox::Skybox(kit::Cubemap::Ptr cubemap)
 {
@@ -166,7 +168,7 @@ void kit::Skybox::allocateShared()
 
   // Positions
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
 
   kit::Skybox::m_program = kit::Program::create();
   kit::Skybox::m_programNoTexture = kit::Program::create();

@@ -1,5 +1,7 @@
 #include "Kit/Frustum.hpp"
 
+#include "Kit/IncOpenGL.hpp"
+
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <vector>
@@ -37,7 +39,7 @@ kit::Frustum::Frustum(float fov, float ratio, glm::vec2 cliprange)
   glm::vec3 nbr = nc - (up * Hnear/2.0f) + (right * Wnear/2.0f);
   
   
-  std::vector<GLfloat> vertices;
+  std::vector<float> vertices;
   std::vector<uint32_t> indices;
 
   // Near plane
@@ -140,10 +142,10 @@ kit::Frustum::Frustum(float fov, float ratio, glm::vec2 cliprange)
 
   // Upload vertices 
   glBindBuffer(GL_ARRAY_BUFFER, this->m_glVertexBuffer);
-  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), &vertices[0], GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
 
   // Total size
-  uint32_t attributeSize = (sizeof(GLfloat)* 3);
+  uint32_t attributeSize = (sizeof(float)* 3);
 
   // Positions
   glEnableVertexAttribArray(0);

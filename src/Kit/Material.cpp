@@ -1,4 +1,6 @@
 #include "Kit/Material.hpp"
+
+#include "Kit/IncOpenGL.hpp"
 #include "Kit/Exception.hpp"
 #include "Kit/Shader.hpp"
 #include "Kit/Texture.hpp"

@@ -3,7 +3,7 @@
 
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
-#include "Kit/GL.hpp"
+
 #include "Kit/PixelBuffer.hpp"
 
 namespace kit {

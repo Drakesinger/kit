@@ -1,4 +1,6 @@
 #include "Kit/Program.hpp"
+
+#include "Kit/IncOpenGL.hpp"
 #include "Kit/Exception.hpp"
 #include "Kit/Texture.hpp"
 #include "Kit/Cubemap.hpp"
@@ -162,12 +164,12 @@ bool kit::Program::link()
   glLinkProgram(this->m_glHandle);  
 
   // Retrieve the link status
-  GLint status;
+  int32_t status;
   glGetProgramiv(this->m_glHandle, GL_LINK_STATUS, &status);
 
   if(!status)
   {
-    GLint blen = 0;
+    int32_t blen = 0;
     GLsizei slen = 0;
     glGetProgramiv(this->m_glHandle, GL_INFO_LOG_LENGTH , &blen);
 
@@ -199,7 +201,7 @@ void kit::Program::useFixed()
   glUseProgram(0);
 }
 
-GLuint kit::Program::getHandle()
+uint32_t kit::Program::getHandle()
 {
   return this->m_glHandle;
 }

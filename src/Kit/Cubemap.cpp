@@ -1,5 +1,7 @@
 #include "Kit/Cubemap.hpp"
+
 #include "Kit/Exception.hpp"
+#include "Kit/IncOpenGL.hpp"
 
 #include "Kit/stb/stb_image.h"
 
@@ -14,7 +16,7 @@ kit::Cubemap::Cubemap()
   this->m_resolution = glm::uvec2(0,0);
 }
 
-kit::Cubemap::Cubemap(GLuint handle){
+kit::Cubemap::Cubemap(uint32_t handle){
     this->m_glHandle = handle;
 }
 
@@ -306,7 +308,7 @@ void kit::Cubemap::unbind()
         glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
 
-GLuint kit::Cubemap::getHandle(){
+uint32_t kit::Cubemap::getHandle(){
     return this->m_glHandle;
 }
 

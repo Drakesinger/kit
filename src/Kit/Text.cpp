@@ -1,4 +1,6 @@
 #include "Kit/Text.hpp"
+
+#include "Kit/IncOpenGL.hpp"
 #include "Kit/Texture.hpp"
 #include "Kit/Font.hpp"
 #include "Kit/Program.hpp"
@@ -221,8 +223,8 @@ void kit::Text::updateBuffers()
   uint32_t numIndices = uint32_t(this->m_text.size() * 6);
   uint32_t numVertices = uint32_t(this->m_text.size() * 4) * 4;
   
-  std::vector<GLfloat> vertices(numVertices , 0.0);
-  std::vector<GLuint> indices(numIndices, 0);
+  std::vector<float> vertices(numVertices , 0.0);
+  std::vector<uint32_t> indices(numIndices, 0);
 
   uint32_t vi = 0;
   glm::vec2 pen(0.0, 0.0);
@@ -297,10 +299,10 @@ void kit::Text::updateBuffers()
 
   // Upload vertices 
   glBindBuffer(GL_ARRAY_BUFFER, this->m_glVertexBuffer);
-  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), &vertices[0], GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
 
   // Total size
-  uint32_t attributeSize = (sizeof(GLfloat)* 4);
+  uint32_t attributeSize = (sizeof(float)* 4);
 
   // Positions
   glEnableVertexAttribArray(0);
@@ -308,7 +310,7 @@ void kit::Text::updateBuffers()
   
   // UV
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(GLfloat) * 2)); 
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(float) * 2)); 
   
   glBindVertexArray(0);
   

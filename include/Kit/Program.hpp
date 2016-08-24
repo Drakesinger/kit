@@ -3,7 +3,7 @@
 
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
-#include "Kit/GL.hpp"
+
 #include "Kit/Shader.hpp"
 
 #include <map>
@@ -146,7 +146,7 @@ namespace kit {
       /// \brief Retrieve the internal OpenGL name for this program object
       /// \returns The internal OpenGL name for this program object
       ///
-      GLuint          getHandle();
+      uint32_t          getHandle();
 
       ///
       /// \brief Query OpenGL for the max. number of allowed texture units
@@ -249,7 +249,7 @@ namespace kit {
       static void addShaders(kit::Program::Ptr program, kit::Shader::Type type, std::vector<std::string> const & sources, std::vector<kit::Shader::Ptr> & outShaders, char const * dataDirectory = "./data/");
       
       std::string                               m_fileIdentifier;
-      GLuint			                m_glHandle;
+      uint32_t			                m_glHandle;
       std::map<std::string, uint32_t>           m_locationCache;
       std::map<uint32_t, kit::TextureWPtr>      m_textures;
       std::map<uint32_t, kit::CubemapWPtr>      m_cubemaps;

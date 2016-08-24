@@ -1,4 +1,6 @@
 #include "Kit/Model.hpp"
+
+#include "Kit/IncOpenGL.hpp"
 #include "Kit/Mesh.hpp"
 #include "Kit/Camera.hpp"
 #include "Kit/Material.hpp"

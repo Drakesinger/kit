@@ -2,7 +2,7 @@
 #define KIT_RENDERTEXTURE_HPP
 
 #include "Kit/Export.hpp"
-#include "Kit/GL.hpp"
+
 #include "Kit/Types.hpp"
 #include "Kit/Texture.hpp"
 
@@ -185,7 +185,7 @@ namespace kit {
       ///
       /// \returns The internal OpenGL name for this Framebuffer Object
       ///
-      GLuint getHandle();
+      uint32_t getHandle();
 
       ///
       /// \returns The resolution
@@ -231,7 +231,7 @@ namespace kit {
       void blitFrom(kit::PixelBuffer::Ptr source, bool colorMask, std::vector<std::array<bool, 4>> componentMask, bool depthMask, bool stencilMask);
 
     private:
-      GLuint                         m_glHandle;
+      uint32_t                         m_glHandle;
       kit::Texture::Ptr              m_depthAttachment;
       std::vector<kit::Texture::Ptr> m_colorAttachments;
       glm::uvec2                   m_resolution;

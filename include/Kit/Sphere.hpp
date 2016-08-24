@@ -1,7 +1,7 @@
 #ifndef KIT_SPHERE_HPP
 #define KIT_SPHERE_HPP
 
-#include "Kit/GL.hpp"
+
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
 
@@ -28,9 +28,9 @@ namespace kit
     void allocateBuffers();
     void releaseBuffers();
 
-    GLuint m_glVertexArray;
-    GLuint m_glVertexIndices;
-    GLuint m_glVertexBuffer;
+    uint32_t m_glVertexArray;
+    uint32_t m_glVertexIndices;
+    uint32_t m_glVertexBuffer;
 
     uint32_t m_indexCount;
 

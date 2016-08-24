@@ -1,5 +1,7 @@
 #include "Kit/Sphere.hpp"
 
+#include "Kit/IncOpenGL.hpp"
+
 #include <glm/gtc/constants.hpp>
 #include <vector>
 
@@ -13,7 +15,7 @@ kit::Sphere::Sphere(uint32_t rings, uint32_t sectors)
   float const R = 1.0f / float(rings - 1);
   float const S = 1.0f / float(sectors - 1);
 
-  std::vector<GLfloat> vertices;
+  std::vector<float> vertices;
   std::vector<uint32_t> indices;
 
   // First generate per-vertex data
@@ -60,10 +62,10 @@ kit::Sphere::Sphere(uint32_t rings, uint32_t sectors)
 
   // Upload vertices 
   glBindBuffer(GL_ARRAY_BUFFER, this->m_glVertexBuffer);
-  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), &vertices[0], GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
 
   // Total size
-  uint32_t attributeSize = (sizeof(GLfloat)* 5);
+  uint32_t attributeSize = (sizeof(float)* 5);
 
   // Positions
   glEnableVertexAttribArray(0);
@@ -71,7 +73,7 @@ kit::Sphere::Sphere(uint32_t rings, uint32_t sectors)
 
   // Texture coordinates
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, attributeSize, (void*)(sizeof(GLfloat)* 3));
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, attributeSize, (void*)(sizeof(float)* 3));
 
   // Normals
   glEnableVertexAttribArray(2);

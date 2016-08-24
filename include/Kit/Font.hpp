@@ -2,7 +2,6 @@
 #define KIT_FONT_HPP
 
 #include "Kit/Export.hpp"
-#include "Kit/GL.hpp"
 
 #ifdef _WIN32
   #include <ft2build.h>
@@ -11,6 +10,9 @@
 //#include <freetype2/ft2build.h>
 #endif
 #include FT_FREETYPE_H
+
+#include <glm/glm.hpp>
+
 #include <memory>
 #include <map>
 

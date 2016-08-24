@@ -1,5 +1,7 @@
 #include "Kit/GLTimer.hpp"
 
+#include "Kit/IncOpenGL.hpp"
+
 kit::GLTimer::GLTimer()
 {
   
@@ -28,7 +30,7 @@ uint64_t kit::GLTimer::end()
 {
   
   glEndQuery(GL_TIME_ELAPSED);
-  GLuint64 timenano = 0;
+  uint64_t timenano = 0;
   glGetQueryObjectui64v(this->m_glHandle, GL_QUERY_RESULT, &timenano);
   return timenano;// / 1,000,000.0;
 }

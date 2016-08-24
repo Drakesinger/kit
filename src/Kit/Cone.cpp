@@ -1,5 +1,7 @@
 #include "Kit/Cone.hpp"
 
+#include "Kit/IncOpenGL.hpp"
+
 #include <glm/gtc/constants.hpp>
 #include <vector>
 
@@ -8,7 +10,7 @@ kit::Cone::Cone(float radius, float depth, uint32_t sectors)
   this->allocateBuffers();
   this->m_indexCount = 0;
   
-  std::vector<GLfloat> vertices;
+  std::vector<float> vertices;
   std::vector<uint32_t> indices;
 
   // Create root (head)
@@ -55,10 +57,10 @@ kit::Cone::Cone(float radius, float depth, uint32_t sectors)
 
   // Upload vertices 
   glBindBuffer(GL_ARRAY_BUFFER, this->m_glVertexBuffer);
-  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), &vertices[0], GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
 
   // Total size
-  uint32_t attributeSize = (sizeof(GLfloat)* 3);
+  uint32_t attributeSize = (sizeof(float)* 3);
 
   // Positions
   glEnableVertexAttribArray(0);

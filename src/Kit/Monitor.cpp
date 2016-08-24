@@ -1,7 +1,5 @@
 #include "Kit/Monitor.hpp"
 
-#include "Kit/IncOpenGL.hpp"
-
 #include <GLFW/glfw3.h>
 
 std::vector<kit::Monitor::Ptr> kit::Monitor::m_monitors = std::vector<kit::Monitor::Ptr>();

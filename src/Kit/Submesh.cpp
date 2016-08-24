@@ -1,4 +1,5 @@
 #include "Kit/Submesh.hpp"
+#include "Kit/IncOpenGL.hpp"
 
 std::map<std::string, kit::Submesh::Ptr> kit::Submesh::m_cache = std::map<std::string, kit::Submesh::Ptr>();
 
@@ -84,7 +85,7 @@ void kit::Submesh::loadGeometry(const std::string&filename)
   glBufferData(GL_ARRAY_BUFFER, data.m_vertices.size() * 19 * sizeof(float) , &data.m_vertices[0], GL_STATIC_DRAW);
   
   // Total size
-  uint32_t attributeSize = (sizeof(GLfloat) * 15) + (sizeof(GLint) * 4);
+  uint32_t attributeSize = (sizeof(float) * 15) + (sizeof(int32_t) * 4);
   
   // Positions
   glEnableVertexAttribArray(0);
@@ -92,21 +93,21 @@ void kit::Submesh::loadGeometry(const std::string&filename)
   
   // Texture coordinates
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(GLfloat) * 3) );
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(float) * 3) );
 
   // Normals
   glEnableVertexAttribArray(2);
-  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(GLfloat) * 5) );
+  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(float) * 5) );
   
   // Tangents
   glEnableVertexAttribArray(3);
-  glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(GLfloat) * 8) );
+  glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(float) * 8) );
   
   // Bone ID's
   glEnableVertexAttribArray(4);
-  glVertexAttribIPointer(4, 4, GL_INT, attributeSize, (void*) (sizeof(GLfloat) * 11)  );
+  glVertexAttribIPointer(4, 4, GL_INT, attributeSize, (void*) (sizeof(float) * 11)  );
   
   // Bone weights
   glEnableVertexAttribArray(5);
-  glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, attributeSize, (void*)((sizeof(GLfloat) * 11) + (sizeof(GLint) * 4)) );
+  glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, attributeSize, (void*)((sizeof(float) * 11) + (sizeof(int32_t) * 4)) );
 }

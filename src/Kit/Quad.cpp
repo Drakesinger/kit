@@ -1,18 +1,20 @@
 #include "Kit/Quad.hpp"
+
+#include "Kit/IncOpenGL.hpp"
 #include "Kit/Shader.hpp"
 #include "Kit/Program.hpp"
 
 unsigned int kit::Quad::m_instanceCount = 0;
-GLuint kit::Quad::m_glVertexIndices = 0;
-GLuint kit::Quad::m_glVertexArray = 0;
-GLuint kit::Quad::m_glVertexBuffer = 0;
+uint32_t kit::Quad::m_glVertexIndices = 0;
+uint32_t kit::Quad::m_glVertexArray = 0;
+uint32_t kit::Quad::m_glVertexBuffer = 0;
 kit::Program::Ptr kit::Quad::m_program = nullptr;
 kit::Program::Ptr kit::Quad::m_ProgramTextured = nullptr;
 
 
 static const std::vector<GLushort> indexData { 0, 3, 2, 0, 2, 1 };
 
-static const std::vector<GLfloat> vertexData {
+static const std::vector<float> vertexData {
   0.0,  0.0,  0.0,  0.0,  1.0, // Bottomleft
   1.0,  0.0,  0.0,  1.0,  1.0, // Bottomright
   1.0,  1.0,  0.0,  1.0,  0.0, // Topright
@@ -213,11 +215,11 @@ void kit::Quad::allocateShared()
   // Generate our Vertex Buffer Object
   glGenBuffers(1, &kit::Quad::m_glVertexBuffer);
   glBindBuffer(GL_ARRAY_BUFFER, kit::Quad::m_glVertexBuffer);
-  glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), &vertexData[0], GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), &vertexData[0], GL_STATIC_DRAW);
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 5, (void*)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void*)0);
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 5, (void*) (sizeof(GLfloat) * 3));
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void*) (sizeof(float) * 3));
   
   // allocate our programs!
   auto vertexShader = kit::Shader::create(Shader::Type::Vertex);

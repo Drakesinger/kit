@@ -1,5 +1,6 @@
 #include "Kit/Mesh.hpp"
 
+#include "Kit/IncOpenGL.hpp"
 #include "Kit/Submesh.hpp"
 #include "Kit/Camera.hpp"
 #include "Kit/Material.hpp"

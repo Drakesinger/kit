@@ -2,7 +2,7 @@
 #define KIT_SHADER_HEADER
 
 #include "Kit/Export.hpp"
-#include "Kit/GL.hpp"
+#include "Kit/Types.hpp"
 
 #include <string>
 #include <memory>
@@ -21,12 +21,12 @@ namespace kit{
       ///
       enum class Type : uint32_t
       {
-        Vertex = GL_VERTEX_SHADER,
-        Fragment = GL_FRAGMENT_SHADER,
-        Geometry = GL_GEOMETRY_SHADER,
-        TessControl = GL_TESS_CONTROL_SHADER,
-        TessEvaluation = GL_TESS_EVALUATION_SHADER,
-        Compute = GL_COMPUTE_SHADER
+        Vertex = GLK_VERTEX_SHADER,
+        Fragment = GLK_FRAGMENT_SHADER,
+        Geometry = GLK_GEOMETRY_SHADER,
+        TessControl = GLK_TESS_CONTROL_SHADER,
+        TessEvaluation = GLK_TESS_EVALUATION_SHADER,
+        Compute = GLK_COMPUTE_SHADER
       };
       
       typedef std::shared_ptr<kit::Shader> Ptr;
@@ -82,10 +82,10 @@ namespace kit{
       /// \brief Retrieve the internal OpenGL name for this shader object
       /// \returns the internal OpenGL name
       ///
-      GLuint getHandle();
+      uint32_t getHandle();
 
     private:
-      GLuint            m_glHandle;
+      uint32_t            m_glHandle;
       std::string       m_source;
       Shader::Type      m_type;
   };

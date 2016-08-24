@@ -2,7 +2,7 @@
 #define KIT_IMGUIIMPL_HPP
 
 #include "Kit/WindowEvent.hpp"
-#include "Kit/GL.hpp"
+
 
 #include <memory>
 
@@ -58,7 +58,7 @@ namespace kit
 
       static bool imgui_mousePressed[3];
       static float imgui_mouseWheel;
-      static GLuint imgui_fontTexture;
+      static uint32_t imgui_fontTexture;
       static int imgui_shaderHandle;
       static int imgui_vertHandle;
       static int imgui_fragHandle;

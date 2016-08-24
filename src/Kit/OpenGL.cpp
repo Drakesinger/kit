@@ -1,4 +1,5 @@
 #include "Kit/OpenGL.hpp"
+
 #include "Kit/Exception.hpp"
 #include "Kit/IncOpenGL.hpp"
 

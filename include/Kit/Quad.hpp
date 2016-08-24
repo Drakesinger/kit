@@ -3,7 +3,7 @@
 
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
-#include "Kit/GL.hpp"
+
 #include "Kit/Texture.hpp"
 
 #include <memory>
@@ -60,9 +60,9 @@ namespace kit
       static void allocateShared();
       static void releaseShared();
       static unsigned int m_instanceCount;
-      static GLuint m_glVertexArray;
-      static GLuint m_glVertexIndices;
-      static GLuint m_glVertexBuffer;
+      static uint32_t m_glVertexArray;
+      static uint32_t m_glVertexIndices;
+      static uint32_t m_glVertexBuffer;
       
       static kit::ProgramPtr m_program;
       static kit::ProgramPtr m_ProgramTextured;

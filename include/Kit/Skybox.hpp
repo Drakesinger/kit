@@ -2,7 +2,7 @@
 #define KIT_SKYBOX_HPP
 
 #include "Kit/Types.hpp"
-#include "Kit/GL.hpp"
+
 
 #include <memory>
 #include <map>
@@ -53,9 +53,9 @@ namespace kit
       static kit::ProgramPtr m_program;
       static kit::ProgramPtr m_programNoTexture;
 
-      static GLuint m_glVertexArray;
-      static GLuint m_glVertexIndices;
-      static GLuint m_glVertexBuffer;
+      static uint32_t m_glVertexArray;
+      static uint32_t m_glVertexIndices;
+      static uint32_t m_glVertexBuffer;
       
       glm::vec3        m_color;
       float             m_strength;

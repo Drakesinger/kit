@@ -1,4 +1,6 @@
 #include "Kit/Texture.hpp"
+
+#include "Kit/IncOpenGL.hpp"
 #include "Kit/Exception.hpp"
 #include "Kit/Types.hpp"
 
@@ -462,7 +464,7 @@ void kit::Texture::setAnisotropicLevel(float l)
 #endif
 }
 
-GLuint kit::Texture::getHandle(){
+uint32_t kit::Texture::getHandle(){
   return this->m_glHandle;
 }
 

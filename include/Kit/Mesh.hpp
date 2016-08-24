@@ -2,8 +2,11 @@
 #define KIT_MESH_HPP
 
 #include "Kit/Export.hpp"
-#include "Kit/GL.hpp"
 
+#include <glm/glm.hpp>
+
+#include <string>
+#include <vector>
 #include <memory>
 #include <map>
 

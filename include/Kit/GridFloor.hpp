@@ -1,7 +1,7 @@
 #ifndef KIT_GRIDFLOOR_HPP
 #define KIT_GRIDFLOOR_HPP
 
-#include "Kit/GL.hpp"
+
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
 #include "Kit/Renderable.hpp"
@@ -46,9 +46,9 @@ namespace kit
     static void allocateShared();
     static void releaseShared();
 
-    static GLuint m_glVertexArray;
-    static GLuint m_glVertexIndices;
-    static GLuint m_glVertexBuffer;
+    static uint32_t m_glVertexArray;
+    static uint32_t m_glVertexIndices;
+    static uint32_t m_glVertexBuffer;
 
     static kit::ProgramPtr m_program;
     

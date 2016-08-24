@@ -1,5 +1,6 @@
 #include "Kit/Water.hpp"
 
+#include "Kit/IncOpenGL.hpp"
 #include "Kit/Camera.hpp"
 #include "Kit/Renderer.hpp"
 #include "Kit/Program.hpp"
@@ -35,7 +36,7 @@ kit::Water::Water(glm::uvec2 resolution)
   uint32_t componentCount = 2; 
 
   // Create a list of floats for our vertex data
-  std::vector<GLfloat> vertexData(resolution.x * resolution.y * componentCount, 0.0f);
+  std::vector<float> vertexData(resolution.x * resolution.y * componentCount, 0.0f);
 
   // Keep tab of vertex indices for our index generation
   std::map<xyPair, uint32_t> idIndex;
@@ -64,7 +65,7 @@ kit::Water::Water(glm::uvec2 resolution)
 
   // Iterate each cell in the grid, and fill the index data
   currIndex = 0;
-  std::vector<GLuint> indexData(resolution.x * resolution.y * 6, 0);
+  std::vector<uint32_t> indexData(resolution.x * resolution.y * 6, 0);
   for (uint32_t x = 0; x < this->m_resolution.x-2; x++)
   {
     for (uint32_t y = 0; y < this->m_resolution.y-2; y++)
@@ -96,15 +97,15 @@ kit::Water::Water(glm::uvec2 resolution)
 
   // Upload indices
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_glIndexBuffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GLuint), &indexData[0], GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(uint32_t), &indexData[0], GL_STATIC_DRAW);
   this->m_indexCount = (uint32_t)indexData.size();
 
   // Upload vertices 
   glBindBuffer(GL_ARRAY_BUFFER, this->m_glVertexBuffer);
-  glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), &vertexData[0], GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), &vertexData[0], GL_STATIC_DRAW);
 
   // Set the vertex data layout in our VAO
-  uint32_t attributeSize = (sizeof(GLfloat) * 2);
+  uint32_t attributeSize = (sizeof(float) * 2);
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*)0);
 

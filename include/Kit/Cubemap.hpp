@@ -3,7 +3,7 @@
 
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
-#include "Kit/GL.hpp"
+
 
 #include <memory>
 #include <map>
@@ -73,13 +73,13 @@ namespace kit{
 			void SetAnisotropicLevel(float level);
       static float GetMaxAnisotropicLevel();*/
       
-			GLuint getHandle();
+			uint32_t getHandle();
 
       Cubemap();
-      Cubemap(GLuint handle);
+      Cubemap(uint32_t handle);
 		private:
       
-			GLuint	                       m_glHandle;
+			uint32_t	                       m_glHandle;
 			kit::Cubemap::FilteringMode    m_filteringMode;
       kit::Cubemap::EdgeSamplingMode m_edgeSamplingMode;
       glm::uvec2                   m_resolution;

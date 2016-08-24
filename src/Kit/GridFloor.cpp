@@ -1,13 +1,15 @@
 #include "Kit/GridFloor.hpp"
+
+#include "Kit/IncOpenGL.hpp"
 #include "Kit/Program.hpp"
 #include "Kit/Camera.hpp"
 #include "Kit/Texture.hpp"
 #include "Kit/Renderer.hpp"
 
 uint32_t kit::GridFloor::m_instanceCount = 0;
-GLuint kit::GridFloor::m_glVertexArray = 0;
-GLuint kit::GridFloor::m_glVertexIndices = 0;
-GLuint kit::GridFloor::m_glVertexBuffer = 0;
+uint32_t kit::GridFloor::m_glVertexArray = 0;
+uint32_t kit::GridFloor::m_glVertexIndices = 0;
+uint32_t kit::GridFloor::m_glVertexBuffer = 0;
 kit::Program::Ptr kit::GridFloor::m_program = nullptr;
 uint32_t kit::GridFloor::m_indexCount = 0;
 
@@ -37,9 +39,9 @@ kit::GridFloor::Ptr kit::GridFloor::create()
 void kit::GridFloor::allocateShared()
 {
   
-  std::vector<GLfloat> vertexData;
-  std::vector<GLuint> indexData;
-  GLuint currIndex = 0;
+  std::vector<float> vertexData;
+  std::vector<uint32_t> indexData;
+  uint32_t currIndex = 0;
   
   float majorAlpha = 0.40f;
   float minorAlpha = 0.10f;
@@ -51,7 +53,7 @@ void kit::GridFloor::allocateShared()
     
     vertexData.push_back(currPos);  // X
     vertexData.push_back(0.0f);     // Y
-    vertexData.push_back((GLfloat)-size);    // Z
+    vertexData.push_back((float)-size);    // Z
     vertexData.push_back(1.0f);     // R
     vertexData.push_back(1.0f);     // G
     vertexData.push_back(1.0f);     // B
@@ -59,7 +61,7 @@ void kit::GridFloor::allocateShared()
     
     vertexData.push_back(currPos);  // X
     vertexData.push_back(0.0f);     // Y
-    vertexData.push_back((GLfloat)size);     // Z
+    vertexData.push_back((float)size);     // Z
     vertexData.push_back(1.0f);     // R
     vertexData.push_back(1.0f);     // G
     vertexData.push_back(1.0f);     // B
@@ -68,7 +70,7 @@ void kit::GridFloor::allocateShared()
     indexData.push_back(currIndex++);
     indexData.push_back(currIndex++);
     
-    vertexData.push_back((GLfloat)-size);    // X
+    vertexData.push_back((float)-size);    // X
     vertexData.push_back(0.0f);     // Y
     vertexData.push_back(currPos);  // Z
     vertexData.push_back(1.0f);     // R
@@ -76,7 +78,7 @@ void kit::GridFloor::allocateShared()
     vertexData.push_back(1.0f);     // B
     vertexData.push_back(majorAlpha);    // A
     
-    vertexData.push_back((GLfloat)size);     // X
+    vertexData.push_back((float)size);     // X
     vertexData.push_back(0.0f);     // Y
     vertexData.push_back(currPos);  // Z
     vertexData.push_back(1.0f);     // R
@@ -91,7 +93,7 @@ void kit::GridFloor::allocateShared()
     {
       vertexData.push_back(currPos+0.5f);  // X
       vertexData.push_back(0.0f);     // Y
-      vertexData.push_back((GLfloat)-size);    // Z
+      vertexData.push_back((float)-size);    // Z
       vertexData.push_back(1.0f);     // R
       vertexData.push_back(1.0f);     // G
       vertexData.push_back(1.0f);     // B
@@ -99,7 +101,7 @@ void kit::GridFloor::allocateShared()
       
       vertexData.push_back(currPos+0.5f);  // X
       vertexData.push_back(0.0f);     // Y
-      vertexData.push_back((GLfloat)size);     // Z
+      vertexData.push_back((float)size);     // Z
       vertexData.push_back(1.0f);     // R
       vertexData.push_back(1.0f);     // G
       vertexData.push_back(1.0f);     // B
@@ -108,7 +110,7 @@ void kit::GridFloor::allocateShared()
       indexData.push_back(currIndex++);
       indexData.push_back(currIndex++);
       
-      vertexData.push_back((GLfloat)-size);    // X
+      vertexData.push_back((float)-size);    // X
       vertexData.push_back(0.0f);     // Y
       vertexData.push_back(currPos+0.5f);  // Z
       vertexData.push_back(1.0f);     // R
@@ -116,7 +118,7 @@ void kit::GridFloor::allocateShared()
       vertexData.push_back(1.0f);     // B
       vertexData.push_back(minorAlpha);    // A
       
-      vertexData.push_back((GLfloat)size);     // X
+      vertexData.push_back((float)size);     // X
       vertexData.push_back(0.0f);     // Y
       vertexData.push_back(currPos+0.5f);  // Z
       vertexData.push_back(1.0f);     // R
@@ -138,7 +140,7 @@ void kit::GridFloor::allocateShared()
   vertexData.push_back(0.0f);     // B
   vertexData.push_back(1.0f);     // A
   
-  vertexData.push_back((GLfloat)size);     // X
+  vertexData.push_back((float)size);     // X
   vertexData.push_back(0.05f);    // Y
   vertexData.push_back(0.0f);     // Z
   vertexData.push_back(1.0f);     // R
@@ -159,7 +161,7 @@ void kit::GridFloor::allocateShared()
   vertexData.push_back(1.0f);     // A
   
   vertexData.push_back(0.0f);     // X
-  vertexData.push_back((GLfloat)size);    // Y
+  vertexData.push_back((float)size);    // Y
   vertexData.push_back(0.0f);     // Z
   vertexData.push_back(0.0f);     // R
   vertexData.push_back(1.0f);     // G
@@ -180,7 +182,7 @@ void kit::GridFloor::allocateShared()
   
   vertexData.push_back(0.0f);     // X
   vertexData.push_back(0.05f);    // Y
-  vertexData.push_back((GLfloat)size);     // Z
+  vertexData.push_back((float)size);     // Z
   vertexData.push_back(0.0f);     // R
   vertexData.push_back(0.0f);     // G
   vertexData.push_back(1.0f);     // B
@@ -198,20 +200,20 @@ void kit::GridFloor::allocateShared()
   // Generate our Vertex Index Buffer Object
   glGenBuffers(1, &kit::GridFloor::m_glVertexIndices);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, kit::GridFloor::m_glVertexIndices);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GLuint), &indexData[0], GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(uint32_t), &indexData[0], GL_STATIC_DRAW);
 
   // Generate our Vertex Buffer Object
   glGenBuffers(1, &kit::GridFloor::m_glVertexBuffer);
   glBindBuffer(GL_ARRAY_BUFFER, kit::GridFloor::m_glVertexBuffer);
-  glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), &vertexData[0], GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), &vertexData[0], GL_STATIC_DRAW);
   
   // XYZ
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 7, (void*)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 7, (void*)0);
   
   // RGBA
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 7, (void*) (sizeof(GLfloat) * 3));
+  glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 7, (void*) (sizeof(float) * 3));
   
   kit::GridFloor::m_program = kit::Program::load({"gridfloor.vert"}, {}, {"gridfloor.frag"});
 }

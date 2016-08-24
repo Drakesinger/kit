@@ -1,5 +1,6 @@
 #include "Kit/Light.hpp"
 
+#include "Kit/IncOpenGL.hpp"
 #include "Kit/PixelBuffer.hpp"
 #include "Kit/Cubemap.hpp"
 #include "Kit/Cone.hpp"

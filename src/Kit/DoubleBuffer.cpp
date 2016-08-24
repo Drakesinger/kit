@@ -1,4 +1,6 @@
 #include "Kit/DoubleBuffer.hpp"
+
+#include "Kit/IncOpenGL.hpp"
 #include "Kit/Texture.hpp"
 
 kit::DoubleBuffer::DoubleBuffer(glm::uvec2 resolution, kit::PixelBuffer::AttachmentList colorattachments, kit::PixelBuffer::AttachmentInfo depthattachment)
@@ -94,16 +96,16 @@ glm::uvec2 kit::DoubleBuffer::getResolution()
 }
 
 /*
- void glBlitNamedFramebuffer( GLuint readFramebuffer,
-  GLuint drawFramebuffer,
-  GLint srcX0,
-  GLint srcY0,
-  GLint srcX1,
-  GLint srcY1,
-  GLint dstX0,
-  GLint dstY0,
-  GLint dstX1,
-  GLint dstY1,
+ void glBlitNamedFramebuffer( uint32_t readFramebuffer,
+  uint32_t drawFramebuffer,
+  int32_t srcX0,
+  int32_t srcY0,
+  int32_t srcX1,
+  int32_t srcY1,
+  int32_t dstX0,
+  int32_t dstY0,
+  int32_t dstX1,
+  int32_t dstY1,
   GLbitfield mask,
   GLenum filter);
  */

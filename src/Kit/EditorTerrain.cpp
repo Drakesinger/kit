@@ -1,5 +1,6 @@
 #include "Kit/EditorTerrain.hpp"
 
+#include "Kit/IncOpenGL.hpp"
 #include "Kit/Program.hpp"
 #include "Kit/Material.hpp"
 #include "Kit/Texture.hpp"
@@ -88,7 +89,7 @@ kit::EditorTerrain::EditorTerrain() : kit::Renderable()
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_glVertexIndices);
   glBindBuffer(GL_ARRAY_BUFFER, this->m_glVertexBuffer);
   
-  static const uint32_t attributeSize = sizeof(GLfloat) * 4;
+  static const uint32_t attributeSize = sizeof(float) * 4;
 
   // Positions
   glEnableVertexAttribArray(0);
@@ -96,7 +97,7 @@ kit::EditorTerrain::EditorTerrain() : kit::Renderable()
 
   // Texture coordinates
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(GLfloat) * 2) );
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, attributeSize, (void*) (sizeof(float) * 2) );
   
   // Compile static programs
   {
@@ -232,7 +233,7 @@ void kit::EditorTerrain::generateCache()
   
   // Upload data 
   // Create indices
-  std::vector<GLuint> indexData;
+  std::vector<uint32_t> indexData;
   for(Triangle* currTriangle : this->m_triangles)
   {
     indexData.push_back(currTriangle->m_c->m_id);
@@ -243,7 +244,7 @@ void kit::EditorTerrain::generateCache()
   this->m_indexCount = (uint32_t)this->m_triangles.size() * 3;
 
   // Create vertices
-  std::vector<GLfloat> vertexData;
+  std::vector<float> vertexData;
   for(Vertex* currVertex : this->m_vertices)
   {
     vertexData.push_back(currVertex->m_position.x);
@@ -256,11 +257,11 @@ void kit::EditorTerrain::generateCache()
 
   // Upload indices
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_glVertexIndices);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GLuint), &indexData[0], GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(uint32_t), &indexData[0], GL_STATIC_DRAW);
 
   // Upload vertices 
   glBindBuffer(GL_ARRAY_BUFFER, this->m_glVertexBuffer);
-  glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat) , &vertexData[0], GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float) , &vertexData[0], GL_STATIC_DRAW);
   
   // Create buffers etc
   glm::vec2 mapResolutionf = glm::vec2(this->m_resolution.x, this->m_resolution.y) * this->m_xzScale * 8.0f;// 8 fragments per meter, gives us 1.25dm  precision

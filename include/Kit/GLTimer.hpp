@@ -1,8 +1,9 @@
 #ifndef KIT_GLTIMER_HPP
 #define KIT_GLTIMER_HPP
 
+#include "Kit/Export.hpp"
+
 #include <memory>
-#include "Kit/GL.hpp"
 
 namespace kit 
 {
@@ -20,7 +21,7 @@ namespace kit
     uint64_t end(); // Returns nanoseconds taken since start
     
   private:
-    GLuint m_glHandle;
+    uint32_t m_glHandle;
   };
 }
 

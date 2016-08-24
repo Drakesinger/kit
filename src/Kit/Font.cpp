@@ -1,4 +1,6 @@
 #include "Kit/Font.hpp"
+
+#include "Kit/IncOpenGL.hpp"
 #include "Kit/Types.hpp"
 #include "Kit/Texture.hpp"
 

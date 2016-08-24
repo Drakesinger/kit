@@ -4,7 +4,7 @@
 #include "Kit/WindowEvent.hpp"
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
-#include "Kit/GL.hpp"
+
 #include "Kit/Input.hpp"
 #include "Kit/Monitor.hpp"
 

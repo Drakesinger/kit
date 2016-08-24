@@ -3,7 +3,7 @@
 
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
-#include "Kit/GL.hpp"
+
 
 #include <memory>
 #include <map>
@@ -23,16 +23,16 @@ namespace kit{
       ///
       enum Type
       {
-        Texture1D = GL_TEXTURE_1D,
-        Texture1DArray = GL_TEXTURE_1D_ARRAY,
-        TextureBuffer = GL_TEXTURE_BUFFER,
-        Texture2D = GL_TEXTURE_2D,
-        Texture2DMultisample = GL_TEXTURE_2D_MULTISAMPLE,
-        Texture2DArray = GL_TEXTURE_2D_ARRAY,
-        Texture2DMultiSampleArray =  GL_TEXTURE_2D_MULTISAMPLE_ARRAY,
-        Texture3D = GL_TEXTURE_3D,
-        Cubemap = GL_TEXTURE_CUBE_MAP,
-        CubemapArray = GL_TEXTURE_CUBE_MAP_ARRAY
+        Texture1D = GLK_TEXTURE_1D,
+        Texture1DArray = GLK_TEXTURE_1D_ARRAY,
+        TextureBuffer = GLK_TEXTURE_BUFFER,
+        Texture2D = GLK_TEXTURE_2D,
+        Texture2DMultisample = GLK_TEXTURE_2D_MULTISAMPLE,
+        Texture2DArray = GLK_TEXTURE_2D_ARRAY,
+        Texture2DMultiSampleArray =  GLK_TEXTURE_2D_MULTISAMPLE_ARRAY,
+        Texture3D = GLK_TEXTURE_3D,
+        Cubemap = GLK_TEXTURE_CUBE_MAP,
+        CubemapArray = GLK_TEXTURE_CUBE_MAP_ARRAY
       };
 
       ///
@@ -40,12 +40,12 @@ namespace kit{
       ///
       enum FilteringMode
       {
-        Nearest = GL_NEAREST,
-        Linear = GL_LINEAR,
-        NearestMipmapNearest = GL_NEAREST_MIPMAP_NEAREST,
-        LinearMipmapNearest = GL_LINEAR_MIPMAP_NEAREST,
-        NearestMipmapLinear = GL_NEAREST_MIPMAP_LINEAR,
-        LinearMipmapLinear = GL_LINEAR_MIPMAP_LINEAR
+        Nearest = GLK_NEAREST,
+        Linear = GLK_LINEAR,
+        NearestMipmapNearest = GLK_NEAREST_MIPMAP_NEAREST,
+        LinearMipmapNearest = GLK_LINEAR_MIPMAP_NEAREST,
+        NearestMipmapLinear = GLK_NEAREST_MIPMAP_LINEAR,
+        LinearMipmapLinear = GLK_LINEAR_MIPMAP_LINEAR
       };
 
       ///
@@ -54,9 +54,9 @@ namespace kit{
       enum EdgeSamplingAxis
       {
         All,
-        S = GL_TEXTURE_WRAP_S,
-        T = GL_TEXTURE_WRAP_T,
-        R = GL_TEXTURE_WRAP_R
+        S = GLK_TEXTURE_WRAP_S,
+        T = GLK_TEXTURE_WRAP_T,
+        R = GLK_TEXTURE_WRAP_R
       };
 
       ///
@@ -64,9 +64,9 @@ namespace kit{
       ///
       enum EdgeSamplingMode
       {
-        Repeat = GL_REPEAT,
-        MirroredRepeat = GL_MIRRORED_REPEAT,
-        ClampToEdge = GL_CLAMP_TO_EDGE
+        Repeat = GLK_REPEAT,
+        MirroredRepeat = GLK_MIRRORED_REPEAT,
+        ClampToEdge = GLK_CLAMP_TO_EDGE
       };
 
       ///
@@ -74,14 +74,14 @@ namespace kit{
       ///
       enum Format
       {
-        Red = GL_RED,
-        RG = GL_RG,
-        RGB = GL_RGB,
-        RGBA = GL_RGBA,
-        BGR = GL_BGR,
-        BGRA = GL_BGRA,
-        DepthComponent = GL_DEPTH_COMPONENT,
-        StencilIndex = GL_STENCIL_INDEX
+        Red = GLK_RED,
+        RG = GLK_RG,
+        RGB = GLK_RGB,
+        RGBA = GLK_RGBA,
+        BGR = GLK_BGR,
+        BGRA = GLK_BGRA,
+        DepthComponent = GLK_DEPTH_COMPONENT,
+        StencilIndex = GLK_STENCIL_INDEX
       };
 
       ///
@@ -89,73 +89,73 @@ namespace kit{
       ///
       enum InternalFormat 
       {
-        R8 = GL_R8,
-        R8SNorm = GL_R8_SNORM,
-        R16 = GL_R16,
-        R16SNorm = GL_R16_SNORM,
-        RG8 = GL_RG8,
-        RG8SNorm = GL_RG8_SNORM,
-        RG16 = GL_RG16,
-        RG16SNorm = GL_RG16_SNORM,
-        R3G3B2 = GL_R3_G3_B2,
-        RGB4 = GL_RGB4,
-        RGB5 = GL_RGB5,
-        RGB8 = GL_RGB8,
-        RGB8SNorm = GL_RGB8_SNORM,
-        RGB10 = GL_RGB10,
-        RGB12 = GL_RGB12,
-        RGB16SNorm = GL_RGB16_SNORM,
-        RGBA2 = GL_RGBA2,
-        RGBA4 = GL_RGBA4,
-        RGB5A1 = GL_RGB5_A1,
-        RGBA8 = GL_RGBA8,
-        RGBA8SNorm = GL_RGBA8_SNORM,
-        RGB10A2 = GL_RGB10_A2,
-        RGB10A2UI = GL_RGB10_A2UI,
-        RGBA12 = GL_RGBA12,
-        RGBA16 = GL_RGBA16,
-        SRGB8 = GL_SRGB8,
-        SRGB8Alpha8 = GL_SRGB8_ALPHA8,
-        R16F = GL_R16F,
-        RG16F = GL_RG16F,
-        RGB16F = GL_RGB16F,
-        RGBA16F = GL_RGBA16F,
-        R32F = GL_R32F,
-        RG32F = GL_RG32F,
-        RGB32F = GL_RGB32F,
-        RGBA32F = GL_RGBA32F,
-        R11FG11FB10F = GL_R11F_G11F_B10F,
-        RGB9E5 = GL_RGB9_E5,
-        R8I = GL_R8I,
-        R8UI = GL_R8I,
-        R16I = GL_R16I,
-        R16UI = GL_R16UI,
-        R32I = GL_R32I,
-        R32UI = GL_R32UI,
-        RG8I = GL_RG8I,
-        RG8UI = GL_RG8UI,
-        RG16I = GL_RG16I,
-        RG16UI = GL_RG16UI,
-        RG32I = GL_RG32I,
-        RG32UI = GL_RG32UI,
-        RGB8I = GL_RGB8I,
-        RGB8UI = GL_RGB8UI,
-        RGB16I = GL_RGB16I,
-        RGB16UI = GL_RGB16UI,
-        RGB32I = GL_RGB32I,
-        RGB32UI = GL_RGB32UI,
-        RGBA8I = GL_RGBA8I,
-        RGBA8UI = GL_RGBA8UI,
-        RGBA16I = GL_RGBA16I,
-        RGBA16UI = GL_RGBA16UI,
-        RGBA32I = GL_RGBA32I,
-        RGBA32UI = GL_RGBA32UI,
-        DepthComponent32F = GL_DEPTH_COMPONENT32F, 
-        DepthComponent24 = GL_DEPTH_COMPONENT24, 
-        DepthComponent16 = GL_DEPTH_COMPONENT16, 
-        Depth32FStencil8 = GL_DEPTH32F_STENCIL8, 
-        Depth24Stencil8 = GL_DEPTH24_STENCIL8, 
-        StencilIndex8 = GL_STENCIL_INDEX8
+        R8 = GLK_R8,
+        R8SNorm = GLK_R8_SNORM,
+        R16 = GLK_R16,
+        R16SNorm = GLK_R16_SNORM,
+        RG8 = GLK_RG8,
+        RG8SNorm = GLK_RG8_SNORM,
+        RG16 = GLK_RG16,
+        RG16SNorm = GLK_RG16_SNORM,
+        R3G3B2 = GLK_R3_G3_B2,
+        RGB4 = GLK_RGB4,
+        RGB5 = GLK_RGB5,
+        RGB8 = GLK_RGB8,
+        RGB8SNorm = GLK_RGB8_SNORM,
+        RGB10 = GLK_RGB10,
+        RGB12 = GLK_RGB12,
+        RGB16SNorm = GLK_RGB16_SNORM,
+        RGBA2 = GLK_RGBA2,
+        RGBA4 = GLK_RGBA4,
+        RGB5A1 = GLK_RGB5_A1,
+        RGBA8 = GLK_RGBA8,
+        RGBA8SNorm = GLK_RGBA8_SNORM,
+        RGB10A2 = GLK_RGB10_A2,
+        RGB10A2UI = GLK_RGB10_A2UI,
+        RGBA12 = GLK_RGBA12,
+        RGBA16 = GLK_RGBA16,
+        SRGB8 = GLK_SRGB8,
+        SRGB8Alpha8 = GLK_SRGB8_ALPHA8,
+        R16F = GLK_R16F,
+        RG16F = GLK_RG16F,
+        RGB16F = GLK_RGB16F,
+        RGBA16F = GLK_RGBA16F,
+        R32F = GLK_R32F,
+        RG32F = GLK_RG32F,
+        RGB32F = GLK_RGB32F,
+        RGBA32F = GLK_RGBA32F,
+        R11FG11FB10F = GLK_R11F_G11F_B10F,
+        RGB9E5 = GLK_RGB9_E5,
+        R8I = GLK_R8I,
+        R8UI = GLK_R8I,
+        R16I = GLK_R16I,
+        R16UI = GLK_R16UI,
+        R32I = GLK_R32I,
+        R32UI = GLK_R32UI,
+        RG8I = GLK_RG8I,
+        RG8UI = GLK_RG8UI,
+        RG16I = GLK_RG16I,
+        RG16UI = GLK_RG16UI,
+        RG32I = GLK_RG32I,
+        RG32UI = GLK_RG32UI,
+        RGB8I = GLK_RGB8I,
+        RGB8UI = GLK_RGB8UI,
+        RGB16I = GLK_RGB16I,
+        RGB16UI = GLK_RGB16UI,
+        RGB32I = GLK_RGB32I,
+        RGB32UI = GLK_RGB32UI,
+        RGBA8I = GLK_RGBA8I,
+        RGBA8UI = GLK_RGBA8UI,
+        RGBA16I = GLK_RGBA16I,
+        RGBA16UI = GLK_RGBA16UI,
+        RGBA32I = GLK_RGBA32I,
+        RGBA32UI = GLK_RGBA32UI,
+        DepthComponent32F = GLK_DEPTH_COMPONENT32F, 
+        DepthComponent24 = GLK_DEPTH_COMPONENT24, 
+        DepthComponent16 = GLK_DEPTH_COMPONENT16, 
+        Depth32FStencil8 = GLK_DEPTH32F_STENCIL8, 
+        Depth24Stencil8 = GLK_DEPTH24_STENCIL8, 
+        StencilIndex8 = GLK_STENCIL_INDEX8
       };
 
       ///
@@ -163,25 +163,25 @@ namespace kit{
       ///
       enum DataType
       {
-        Byte = GL_BYTE,
-        UnsignedByte = GL_UNSIGNED_BYTE,
-        Short = GL_SHORT,
-        UnsignedShort = GL_UNSIGNED_SHORT,
-        Int = GL_INT,
-        UnsignedInt = GL_UNSIGNED_INT,
-        Float = GL_FLOAT,
-        UnsignedByte332 = GL_UNSIGNED_BYTE_3_3_2,
-        UnsignedByte233Rev = GL_UNSIGNED_BYTE_2_3_3_REV,
-        UnsignedShort565 = GL_UNSIGNED_SHORT_5_6_5,
-        UnsignedShort565Rev = GL_UNSIGNED_SHORT_5_6_5_REV,
-        UnsignedShort4444 = GL_UNSIGNED_SHORT_4_4_4_4,
-        UnsignedShort4444Rev = GL_UNSIGNED_SHORT_4_4_4_4_REV,
-        UnsignedShort5551 = GL_UNSIGNED_SHORT_5_5_5_1,
-        UnsignedShort1555Rev = GL_UNSIGNED_SHORT_1_5_5_5_REV,
-        UnsignedInt8888 = GL_UNSIGNED_INT_8_8_8_8,
-        UnsignedInt8888Rev = GL_UNSIGNED_INT_8_8_8_8_REV,
-        UnsignedInt1010102 = GL_UNSIGNED_INT_10_10_10_2,
-        UnsignedInt2101010Rev = GL_UNSIGNED_INT_2_10_10_10_REV
+        Byte = GLK_BYTE,
+        UnsignedByte = GLK_UNSIGNED_BYTE,
+        Short = GLK_SHORT,
+        UnsignedShort = GLK_UNSIGNED_SHORT,
+        Int = GLK_INT,
+        UnsignedInt = GLK_UNSIGNED_INT,
+        Float = GLK_FLOAT,
+        UnsignedByte332 = GLK_UNSIGNED_BYTE_3_3_2,
+        UnsignedByte233Rev = GLK_UNSIGNED_BYTE_2_3_3_REV,
+        UnsignedShort565 = GLK_UNSIGNED_SHORT_5_6_5,
+        UnsignedShort565Rev = GLK_UNSIGNED_SHORT_5_6_5_REV,
+        UnsignedShort4444 = GLK_UNSIGNED_SHORT_4_4_4_4,
+        UnsignedShort4444Rev = GLK_UNSIGNED_SHORT_4_4_4_4_REV,
+        UnsignedShort5551 = GLK_UNSIGNED_SHORT_5_5_5_1,
+        UnsignedShort1555Rev = GLK_UNSIGNED_SHORT_1_5_5_5_REV,
+        UnsignedInt8888 = GLK_UNSIGNED_INT_8_8_8_8,
+        UnsignedInt8888Rev = GLK_UNSIGNED_INT_8_8_8_8_REV,
+        UnsignedInt1010102 = GLK_UNSIGNED_INT_10_10_10_2,
+        UnsignedInt2101010Rev = GLK_UNSIGNED_INT_2_10_10_10_REV
       };
 
       typedef std::shared_ptr<kit::Texture> Ptr;
@@ -416,7 +416,7 @@ namespace kit{
       /// \brief Get the internal handle for this texture
       /// \returns the internal handle for this texture
       ///
-      GLuint getHandle();
+      uint32_t getHandle();
 
       ///
       /// \brief Gets the filename of this texture, if applicable
@@ -428,7 +428,7 @@ namespace kit{
 
       std::string         m_filename = "";
 
-      GLuint              m_glHandle = 0;
+      uint32_t              m_glHandle = 0;
       Type                m_type = Type::Texture2D;
 
       InternalFormat      m_internalFormat = InternalFormat::RGBA8;

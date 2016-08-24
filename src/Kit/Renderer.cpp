@@ -1,5 +1,6 @@
 #include "Kit/Renderer.hpp"
 
+#include "Kit/IncOpenGL.hpp"
 #include "Kit/Light.hpp"
 #include "Kit/Cubemap.hpp"
 #include "Kit/Texture.hpp"
