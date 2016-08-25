@@ -204,7 +204,9 @@ void kit::Application::initialize()
 
   this->fillKeyIndex();
 
+#ifdef KIT_EXPERIMENTAL_CONTROLLERS
   kit::Controller::refreshControllers();
+#endif
 
   this->onInitialize();
 }

@@ -1,6 +1,7 @@
 #include "Kit/Input.hpp"
 #include <GLFW/glfw3.h>
 
+#ifdef KIT_EXPERIMENTAL_CONTROLLER
 std::array<kit::Controller, 16> kit::Controller::m_controllerCache;
 
 kit::Controller::Controller()
@@ -133,3 +134,4 @@ uint32_t kit::Controller::getNumAxis()
 {
   return this->m_axisStates.size();
 }
+#endif

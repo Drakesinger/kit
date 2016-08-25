@@ -156,6 +156,7 @@ enum KITAPI ModifierKey{
         ModSuper = 0x0008
 };
 
+#ifdef KIT_EXPERIMENTAL_CONTROLLER
 class KITAPI Controller
 {
   public:
@@ -203,7 +204,7 @@ class KITAPI Controller
     std::vector<bool> m_buttonStates;
 
 };
-
+#endif
 }
 
 #endif // KIT_INPUT_HEADER
