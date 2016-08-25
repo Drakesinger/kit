@@ -24,17 +24,17 @@
 
 uint32_t kit::Renderer::m_instanceCount = 0;
 
-std::vector<kit::Light::Ptr> & kit::Renderer::Payload::getLights()
+std::vector<kit::Light::Ptr> & kit::RenderPayload::getLights()
 {
   return this->m_lights;
 }
 
-std::vector<kit::Renderable::Ptr> & kit::Renderer::Payload::getRenderables()
+std::vector<kit::Renderable::Ptr> & kit::RenderPayload::getRenderables()
 {
   return this->m_renderables;
 }
 
-void kit::Renderer::Payload::addRenderable(kit::Renderable::Ptr renderable)
+void kit::RenderPayload::addRenderable(kit::Renderable::Ptr renderable)
 {
   if(renderable == nullptr)
   {
@@ -54,7 +54,7 @@ void kit::Renderer::Payload::addRenderable(kit::Renderable::Ptr renderable)
   this->m_isSorted = false;
 }
 
-void kit::Renderer::Payload::removeRenderable(kit::Renderable::Ptr renderable)
+void kit::RenderPayload::removeRenderable(kit::Renderable::Ptr renderable)
 {
   if(renderable == nullptr)
   {
@@ -65,7 +65,7 @@ void kit::Renderer::Payload::removeRenderable(kit::Renderable::Ptr renderable)
   this->m_renderables.erase(std::remove(this->m_renderables.begin(), this->m_renderables.end(), renderable), this->m_renderables.end());
 }
 
-void kit::Renderer::Payload::addLight(kit::Light::Ptr lightptr)
+void kit::RenderPayload::addLight(kit::Light::Ptr lightptr)
 {
   if(lightptr == nullptr)
   {
@@ -84,7 +84,7 @@ void kit::Renderer::Payload::addLight(kit::Light::Ptr lightptr)
   this->m_lights.push_back(lightptr);
 }
 
-void kit::Renderer::Payload::removeLight(kit::Light::Ptr lightptr)
+void kit::RenderPayload::removeLight(kit::Light::Ptr lightptr)
 {
   if(lightptr == nullptr)
   {
@@ -356,14 +356,14 @@ void kit::Renderer::setSkybox(kit::Skybox::Ptr skybox)
   this->m_skybox = skybox;
 }
 
-kit::Renderer::Payload::Ptr kit::Renderer::Payload::create()
+kit::RenderPayload::Ptr kit::RenderPayload::create()
 {
-  auto returner = std::make_shared<kit::Renderer::Payload>();
+  auto returner = std::make_shared<kit::RenderPayload>();
   returner->m_isSorted = false;
   return returner;
 }
 
-void kit::Renderer::Payload::assertSorted()
+void kit::RenderPayload::assertSorted()
 {
   if (!this->m_isSorted)
   {
@@ -373,7 +373,7 @@ void kit::Renderer::Payload::assertSorted()
   }
 }
 
-void kit::Renderer::registerPayload(kit::Renderer::Payload::Ptr payload)
+void kit::Renderer::registerPayload(kit::RenderPayload::Ptr payload)
 {
   if(payload == nullptr)
   {
@@ -393,7 +393,7 @@ void kit::Renderer::registerPayload(kit::Renderer::Payload::Ptr payload)
   this->m_payload.push_back(payload);
 }
 
-void kit::Renderer::unregisterPayload(kit::Renderer::Payload::Ptr payload)
+void kit::Renderer::unregisterPayload(kit::RenderPayload::Ptr payload)
 {
   if(payload == nullptr)
   {
@@ -599,7 +599,7 @@ void kit::Renderer::shadowPass()
 
   // For each payload ...
   // (note that all payloads are isolated from each other in terms of shadows)
-  for (kit::Renderer::Payload::Ptr & currPayload : this->m_payload)
+  for (kit::RenderPayload::Ptr & currPayload : this->m_payload)
   {
     // For each light in current payload ...
     for (kit::Light::Ptr & currLight : currPayload->getLights())
@@ -1228,6 +1228,7 @@ void kit::Renderer::updateBuffers()
       kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB16F)
     }
   );
+  this->m_compositionBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
 
   this->m_geometryBuffer = kit::PixelBuffer::create(
     effectiveResolution,
@@ -1238,6 +1239,7 @@ void kit::Renderer::updateBuffers()
     },
     kit::PixelBuffer::AttachmentInfo(Texture::DepthComponent24)
     );
+  this->m_geometryBuffer->clear({ glm::vec4(0.0, 0.0, 0.0, 0.0), glm::vec4(0.0, 0.0, 0.0, 0.0), glm::vec4(0.0, 0.0, 0.0, 0.0) }, 1.0f);
 
   this->m_accumulationBuffer = kit::PixelBuffer::create(
     effectiveResolution,
@@ -1246,6 +1248,7 @@ void kit::Renderer::updateBuffers()
     },
     kit::PixelBuffer::AttachmentInfo(this->m_geometryBuffer->getDepthAttachment())
     );
+  this->m_accumulationBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) }, 1.0f);
 
   this->m_accumulationCopy = kit::PixelBuffer::create(
     effectiveResolution,
@@ -1254,19 +1257,30 @@ void kit::Renderer::updateBuffers()
     },
     kit::PixelBuffer::AttachmentInfo(kit::Texture::DepthComponent24)
   );
+  this->m_accumulationCopy->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) }, 1.0f);
 
   this->m_bloomBrightBuffer = kit::DoubleBuffer::create(effectiveResolution, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
+  this->m_bloomBrightBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
 
   glm::uvec2 bloom2Res(uint32_t(float(effectiveResolution.x) * (1.0f / 2.0f)), uint32_t(float(effectiveResolution.y) * (1.0f / 2.0f)));
   this->m_bloomBlurBuffer2 = kit::DoubleBuffer::create(bloom2Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
+  this->m_bloomBlurBuffer2->clear({glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)});
+
   glm::uvec2 bloom4Res(uint32_t(float(effectiveResolution.x) * (1.0f / 4.0f)), uint32_t(float(effectiveResolution.y) * (1.0f / 4.0f)));
   this->m_bloomBlurBuffer4 = kit::DoubleBuffer::create(bloom4Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
+  this->m_bloomBlurBuffer4->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+
   glm::uvec2 bloom8Res(uint32_t(float(effectiveResolution.x) * (1.0f / 8.0f)), uint32_t(float(effectiveResolution.y) * (1.0f / 8.0f)));
   this->m_bloomBlurBuffer8 = kit::DoubleBuffer::create(bloom8Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
+  this->m_bloomBlurBuffer8->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+
   glm::uvec2 bloom16Res(uint32_t(float(effectiveResolution.x) * (1.0f / 16.0f)), uint32_t(float(effectiveResolution.y) * (1.0f / 16.0f)));
   this->m_bloomBlurBuffer16 = kit::DoubleBuffer::create(bloom16Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
+  this->m_bloomBlurBuffer16->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+
   glm::uvec2 bloom32Res(uint32_t(float(effectiveResolution.x) * (1.0f / 32.0f)), uint32_t(float(effectiveResolution.y) * (1.0f / 32.0f)));
   this->m_bloomBlurBuffer32 = kit::DoubleBuffer::create(bloom32Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
+  this->m_bloomBlurBuffer32->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
 
   this->m_programDirectional->setUniformTexture("uniform_textureA", this->m_geometryBuffer->getColorAttachment(0));
   this->m_programDirectional->setUniformTexture("uniform_textureB", this->m_geometryBuffer->getColorAttachment(1));
@@ -1297,7 +1311,6 @@ void kit::Renderer::updateBuffers()
   this->m_programIBL->setUniformTexture("uniform_textureC", this->m_geometryBuffer->getColorAttachment(2));
   this->m_programIBL->setUniformTexture("uniform_textureDepth", this->m_geometryBuffer->getDepthAttachment());
   this->m_programEmissive->setUniformTexture("uniform_textureB", this->m_geometryBuffer->getColorAttachment(1));
-
 }
 
 kit::Skybox::Ptr kit::Renderer::getSkybox()

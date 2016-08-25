@@ -47,6 +47,30 @@ namespace kit
   class Quad;
   typedef std::shared_ptr<Quad> QuadPtr;
 
+  class KITAPI RenderPayload
+  {
+  public:
+    typedef std::shared_ptr<kit::RenderPayload> Ptr;
+
+    static Ptr create();
+
+    void assertSorted();
+
+    std::vector<kit::RenderablePtr> & getRenderables();
+    void addRenderable(kit::RenderablePtr renderable);
+    void removeRenderable(kit::RenderablePtr renderable);
+
+    std::vector<kit::LightPtr> & getLights();
+
+    void addLight(kit::LightPtr lightptr);
+    void removeLight(kit::LightPtr lightptr);
+
+  private:
+    std::vector<kit::LightPtr> m_lights;
+    std::vector<kit::RenderablePtr> m_renderables;
+    bool m_isSorted;
+  };
+
   class KITAPI Renderer : public std::enable_shared_from_this<Renderer>
   {
   public:
@@ -57,30 +81,6 @@ namespace kit
     {
       Low,
       High
-    };
-    
-    class KITAPI Payload
-    {
-    public:
-      typedef std::shared_ptr<kit::Renderer::Payload> Ptr;
-
-      static Ptr create();
-
-      void assertSorted();
-
-      std::vector<kit::RenderablePtr> & getRenderables();
-      void addRenderable(kit::RenderablePtr renderable);
-      void removeRenderable(kit::RenderablePtr renderable);
-      
-      std::vector<kit::LightPtr> & getLights();
-      
-      void addLight(kit::LightPtr lightptr);
-      void removeLight(kit::LightPtr lightptr);
-      
-    private:
-      std::vector<kit::LightPtr> m_lights;
-      std::vector<kit::RenderablePtr> m_renderables;
-      bool m_isSorted;
     };
 
     void setSkybox(kit::SkyboxPtr skybox);
@@ -165,10 +165,10 @@ namespace kit
     float  const & getSceneFringeScale();
 
     /// Adds a payload to renderer
-    void registerPayload(kit::Renderer::Payload::Ptr payload);
+    void registerPayload(kit::RenderPayload::Ptr payload);
 
     /// Removes payload from the renderer
-    void unregisterPayload(kit::Renderer::Payload::Ptr payload);
+    void unregisterPayload(kit::RenderPayload::Ptr payload);
 
     /// Set resolution
     void setResolution(glm::uvec2 resolution);
@@ -278,7 +278,7 @@ namespace kit
 
     // Render payload (renderables, lights, camera)
     kit::CameraPtr            m_activeCamera = nullptr;
-    std::vector<Payload::Ptr> m_payload;
+    std::vector<RenderPayload::Ptr> m_payload;
     kit::SkyboxPtr            m_skybox = nullptr;
 
     // Shadow stuff
