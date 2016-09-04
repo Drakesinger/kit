@@ -31,6 +31,14 @@
   #endif
 #endif
 
+#ifndef KIT_DATA
+  #define KIT_DATA "./data/"
+#endif
+
+#ifndef KIT_EDITOR_DATA
+  #define KIT_EDITOR_DATA "./data/editor/"
+#endif 
+
 // A bunch of header-only kit defines for opengl.
 // This is so that we can use GL constants in header files, and still preserve GL interoperability
 
@@ -171,6 +179,15 @@
  */
 
 namespace kit{
+
+  enum class DataSource : uint8_t
+  {
+    Static,
+    Data,
+    Editor
+  };
+
+  KITAPI std::string getDataDirectory(kit::DataSource source = kit::DataSource::Data);
 
   struct FileInfo
   {

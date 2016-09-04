@@ -110,7 +110,7 @@ kit::Water::Water(glm::uvec2 resolution)
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*)0);
 
   // Lets also create a shader program  and load some textures we need
-  this->m_program = kit::Program::load({ "water.vert" }, {}, {"lighting/cooktorrance.glsl", "water.frag" });
+  this->m_program = kit::Program::load({ "water.vert" }, {"lighting/cooktorrance.glsl", "water.frag" });
   this->m_heightmapA = kit::Texture::load("waterheight.tga", false);
   this->m_normalmapA = kit::Texture::load("waternormal.tga", false);
   this->m_heightmapB = kit::Texture::load("waterheight2.tga", false);

@@ -17,16 +17,28 @@
 
 #endif
 
-#ifdef _WIN32
-
-#else
-
-#endif
-
 #include <fstream>
 #include <algorithm>
 #include <random>
 #include <glm/gtc/quaternion.hpp>
+
+std::string kit::getDataDirectory(kit::DataSource source)
+{
+  switch (source)
+  {
+    case kit::DataSource::Data:
+      return KIT_DATA;
+      break;
+    case kit::DataSource::Static:
+      return KIT_STATIC_DATA;
+      break;
+    case kit::DataSource::Editor:
+      return KIT_EDITOR_DATA;
+      break;
+  }
+
+  KIT_THROW("Invalid datasource");
+}
 
 bool kit::isDirectory(const std::string& directory)
 {

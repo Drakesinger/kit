@@ -7,9 +7,8 @@ kit::Submesh::Submesh(const std::string&filename)
 {
   this->allocateBuffers();
   this->m_indexCount = 0;
-  
-  std::string fullpath = std::string("./data/geometry/") + filename;
-  this->loadGeometry(fullpath);
+
+  this->loadGeometry(filename);
 }
 
 kit::Submesh::~Submesh()
@@ -29,17 +28,19 @@ void kit::Submesh::renderGeometryInstanced(uint32_t numInstances)
   glDrawElementsInstanced( GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0, numInstances);
 }
 
-kit::Submesh::Ptr kit::Submesh::load(const std::string& name)
+kit::Submesh::Ptr kit::Submesh::load(const std::string& name, kit::DataSource source)
 {
-  auto finder = kit::Submesh::m_cache.find(name);
+  std::string full = kit::getDataDirectory(source) + std::string ("geometry/") + name;
+
+  auto finder = kit::Submesh::m_cache.find(full);
   if(finder != kit::Submesh::m_cache.end())
   {
     return finder->second;
   }
   
-  kit::Submesh::m_cache[name] = std::make_shared<kit::Submesh>(name);
+  kit::Submesh::m_cache[full] = std::make_shared<kit::Submesh>(full);
   
-  return kit::Submesh::m_cache[name];
+  return kit::Submesh::m_cache[full];
 }
 
 void kit::Submesh::flushCache()

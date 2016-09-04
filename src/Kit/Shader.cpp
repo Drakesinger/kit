@@ -39,6 +39,8 @@ bool kit::Shader::sourceFromFile(std::string const & filename)
   std::string line;
   std::string source = "";
 
+  std::cout << "Loading " << typeToName[this->m_type] << " shader from file \"" << filename.c_str() << "\"" << std::endl;
+
   std::ifstream handle(filename);
 
   if(!handle.is_open())

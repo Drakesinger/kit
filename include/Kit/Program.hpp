@@ -57,7 +57,7 @@ namespace kit {
       ///
       /// \returns A shared pointer pointing to the newly created program
       ///
-      static kit::Program::Ptr load(SourceList c, char const * dataDirectory = "./data/");
+      static kit::Program::Ptr load(SourceList c, kit::DataSource source = kit::DataSource::Data);
       
       /// 
       /// \brief Creates, loads, compiles and links a program directly from lists of sourcefiles.
@@ -69,7 +69,7 @@ namespace kit {
       ///
       /// \returns A shared pointer pointing to the newly created program
       ///
-      static kit::Program::Ptr load(SourceList v, SourceList f, char const * dataDirectory = "./data/");
+      static kit::Program::Ptr load(SourceList v, SourceList f, kit::DataSource source = kit::DataSource::Data);
     
       /// 
       /// \brief Creates, loads, compiles and links a program directly from lists of sourcefiles.
@@ -82,7 +82,7 @@ namespace kit {
       ///
       /// \returns A shared pointer pointing to the newly created program
       ///
-      static kit::Program::Ptr load(SourceList v, SourceList g, SourceList f, char const * dataDirectory = "./data/");
+      static kit::Program::Ptr load(SourceList v, SourceList g, SourceList f, kit::DataSource source = kit::DataSource::Data);
       
       /// 
       /// \brief Creates, loads, compiles and links a program directly from lists of sourcefiles.
@@ -96,7 +96,7 @@ namespace kit {
       ///
       /// \returns A shared pointer pointing to the newly created program
       ///
-      static kit::Program::Ptr load(SourceList v, SourceList tc, SourceList te, SourceList f, char const * dataDirectory = "./data/");
+      static kit::Program::Ptr load(SourceList v, SourceList tc, SourceList te, SourceList f, kit::DataSource source = kit::DataSource::Data);
       
       
       /// 
@@ -112,7 +112,7 @@ namespace kit {
       ///
       /// \returns A shared pointer pointing to the newly created program
       ///
-      static kit::Program::Ptr load(SourceList v, SourceList tc, SourceList te, SourceList g, SourceList f, char const * dataDirectory = "./data/");
+      static kit::Program::Ptr load(SourceList v, SourceList tc, SourceList te, SourceList g, SourceList f, kit::DataSource source = kit::DataSource::Data);
       
       ///
       /// \brief Attaches a compiled shader object to this program
@@ -246,10 +246,10 @@ namespace kit {
       void prepareTextures();
 
     private:
-      static void addShaders(kit::Program::Ptr program, kit::Shader::Type type, std::vector<std::string> const & sources, std::vector<kit::Shader::Ptr> & outShaders, char const * dataDirectory = "./data/");
+      static void addShaders(kit::Program::Ptr program, kit::Shader::Type type, std::vector<std::string> const & sources, std::vector<kit::Shader::Ptr> & outShaders, kit::DataSource source = kit::DataSource::Data);
       
       std::string                               m_fileIdentifier;
-      uint32_t			                m_glHandle;
+      uint32_t			                        m_glHandle;
       std::map<std::string, uint32_t>           m_locationCache;
       std::map<uint32_t, kit::TextureWPtr>      m_textures;
       std::map<uint32_t, kit::CubemapWPtr>      m_cubemaps;

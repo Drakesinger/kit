@@ -215,7 +215,7 @@ void kit::GridFloor::allocateShared()
   glEnableVertexAttribArray(1);
   glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 7, (void*) (sizeof(float) * 3));
   
-  kit::GridFloor::m_program = kit::Program::load({"gridfloor.vert"}, {}, {"gridfloor.frag"});
+  kit::GridFloor::m_program = kit::Program::load({"gridfloor.vert"}, {"gridfloor.frag"});
 }
 
 void kit::GridFloor::releaseShared()

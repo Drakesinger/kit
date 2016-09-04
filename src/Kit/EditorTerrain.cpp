@@ -101,8 +101,8 @@ kit::EditorTerrain::EditorTerrain() : kit::Renderable()
   
   // Compile static programs
   {
-    this->m_materialPaintProgram = kit::Program::load({"editor/terrain-material-paint.vert"}, {}, {"editor/terrain-material-paint.frag"});
-    this->m_heightPaintProgram = kit::Program::load({"editor/terrain-height-paint.vert"}, {}, {"editor/terrain-height-paint.frag"});
+    this->m_materialPaintProgram = kit::Program::load({"editor/terrain-material-paint.vert"}, {"editor/terrain-material-paint.frag"});
+    this->m_heightPaintProgram = kit::Program::load({"editor/terrain-height-paint.vert"}, {"editor/terrain-height-paint.frag"});
   }
 }
 

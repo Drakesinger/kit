@@ -6,6 +6,8 @@ int main(int argc, char* argv[])
 {
   try 
   {
+    // 
+
     std::cout << "Initializing material designer.." << std::endl;
     kmd::Application app;
     

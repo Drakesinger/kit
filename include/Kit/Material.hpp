@@ -97,7 +97,8 @@ namespace kit
       static kit::Material::Ptr load(const std::string& filename, bool reload = false);
       bool save(const std::string& filename);
 
-      static void clearCache();
+      static void clearCache(std::string entry = "");
+
       static std::map<std::string, kit::Material::Ptr> getCacheList();
 
       std::string getName();

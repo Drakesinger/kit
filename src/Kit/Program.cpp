@@ -37,9 +37,9 @@ kit::Program::Ptr kit::Program::create()
   return std::make_shared<kit::Program>();
 }
 
-void kit::Program::addShaders(kit::Program::Ptr program, kit::Shader::Type type, std::vector<std::string> const & sources, std::vector<kit::Shader::Ptr> & outShaders, char const * dataDirectory)
+void kit::Program::addShaders(kit::Program::Ptr program, kit::Shader::Type type, std::vector<std::string> const & sources, std::vector<kit::Shader::Ptr> & outShaders, kit::DataSource source)
 {
-  static const std::string dataDir = dataDirectory + std::string("/shaders/");
+  static const std::string dataDir = kit::getDataDirectory(source) + std::string("shaders/");
   
   for(auto & currSource : sources)
   {
@@ -52,13 +52,13 @@ void kit::Program::addShaders(kit::Program::Ptr program, kit::Shader::Type type,
   }
 }
 
-kit::Program::Ptr kit::Program::load(SourceList c, char const * dataDirectory)
+kit::Program::Ptr kit::Program::load(SourceList c, kit::DataSource source)
 {
   kit::Program::Ptr returner = kit::Program::create();
   std::vector<kit::Shader::Ptr> shaders;
   returner->m_fileIdentifier = "";
 
-  kit::Program::addShaders(returner, kit::Shader::Type::Compute, c, shaders, dataDirectory);
+  kit::Program::addShaders(returner, kit::Shader::Type::Compute, c, shaders, source);
 
   returner->link();
 
@@ -71,14 +71,14 @@ kit::Program::Ptr kit::Program::load(SourceList c, char const * dataDirectory)
   return returner;
 }
 
-kit::Program::Ptr kit::Program::load(SourceList v, SourceList f, char const * dataDirectory)
+kit::Program::Ptr kit::Program::load(SourceList v, SourceList f, kit::DataSource source)
 {
   kit::Program::Ptr returner = kit::Program::create();
   std::vector<kit::Shader::Ptr> shaders;
   returner->m_fileIdentifier = "";
 
-  kit::Program::addShaders(returner, kit::Shader::Type::Vertex, v, shaders, dataDirectory);
-  kit::Program::addShaders(returner, kit::Shader::Type::Fragment, f, shaders, dataDirectory);
+  kit::Program::addShaders(returner, kit::Shader::Type::Vertex, v, shaders, source);
+  kit::Program::addShaders(returner, kit::Shader::Type::Fragment, f, shaders, source);
 
   returner->link();
 
@@ -91,15 +91,15 @@ kit::Program::Ptr kit::Program::load(SourceList v, SourceList f, char const * da
   return returner;
 }
 
-kit::Program::Ptr kit::Program::load(SourceList v, SourceList g, SourceList f, char const * dataDirectory)
+kit::Program::Ptr kit::Program::load(SourceList v, SourceList g, SourceList f, kit::DataSource source)
 {
   kit::Program::Ptr returner = kit::Program::create();
   std::vector<kit::Shader::Ptr> shaders;
   returner->m_fileIdentifier = "";
 
-  kit::Program::addShaders(returner, kit::Shader::Type::Vertex, v, shaders, dataDirectory);
-  kit::Program::addShaders(returner, kit::Shader::Type::Geometry, g, shaders, dataDirectory);
-  kit::Program::addShaders(returner, kit::Shader::Type::Fragment, f, shaders, dataDirectory);
+  kit::Program::addShaders(returner, kit::Shader::Type::Vertex, v, shaders, source);
+  kit::Program::addShaders(returner, kit::Shader::Type::Geometry, g, shaders, source);
+  kit::Program::addShaders(returner, kit::Shader::Type::Fragment, f, shaders, source);
 
   returner->link();
 
@@ -112,16 +112,16 @@ kit::Program::Ptr kit::Program::load(SourceList v, SourceList g, SourceList f, c
   return returner;
 }
 
-kit::Program::Ptr kit::Program::load(SourceList v, SourceList tc, SourceList te, SourceList f, char const * dataDirectory)
+kit::Program::Ptr kit::Program::load(SourceList v, SourceList tc, SourceList te, SourceList f, kit::DataSource source)
 {
   kit::Program::Ptr returner = kit::Program::create();
   std::vector<kit::Shader::Ptr> shaders;
   returner->m_fileIdentifier = "";
 
-  kit::Program::addShaders(returner, kit::Shader::Type::Vertex, v, shaders, dataDirectory);
-  kit::Program::addShaders(returner, kit::Shader::Type::TessControl, tc, shaders, dataDirectory);
-  kit::Program::addShaders(returner, kit::Shader::Type::TessEvaluation, te, shaders, dataDirectory);
-  kit::Program::addShaders(returner, kit::Shader::Type::Fragment, f, shaders, dataDirectory);
+  kit::Program::addShaders(returner, kit::Shader::Type::Vertex, v, shaders, source);
+  kit::Program::addShaders(returner, kit::Shader::Type::TessControl, tc, shaders, source);
+  kit::Program::addShaders(returner, kit::Shader::Type::TessEvaluation, te, shaders, source);
+  kit::Program::addShaders(returner, kit::Shader::Type::Fragment, f, shaders, source);
 
   returner->link();
 
@@ -134,17 +134,17 @@ kit::Program::Ptr kit::Program::load(SourceList v, SourceList tc, SourceList te,
   return returner;
 }
 
-kit::Program::Ptr kit::Program::load(SourceList v, SourceList tc, SourceList te, SourceList g, SourceList f, char const * dataDirectory)
+kit::Program::Ptr kit::Program::load(SourceList v, SourceList tc, SourceList te, SourceList g, SourceList f, kit::DataSource source)
 {
   kit::Program::Ptr returner = kit::Program::create();
   std::vector<kit::Shader::Ptr> shaders;
   returner->m_fileIdentifier = "";
 
-  kit::Program::addShaders(returner, kit::Shader::Type::Vertex, v, shaders, dataDirectory);
-  kit::Program::addShaders(returner, kit::Shader::Type::TessControl, tc, shaders, dataDirectory);
-  kit::Program::addShaders(returner, kit::Shader::Type::TessEvaluation, te, shaders, dataDirectory);
-  kit::Program::addShaders(returner, kit::Shader::Type::Geometry, g, shaders, dataDirectory);
-  kit::Program::addShaders(returner, kit::Shader::Type::Fragment, f, shaders, dataDirectory);
+  kit::Program::addShaders(returner, kit::Shader::Type::Vertex, v, shaders, source);
+  kit::Program::addShaders(returner, kit::Shader::Type::TessControl, tc, shaders, source);
+  kit::Program::addShaders(returner, kit::Shader::Type::TessEvaluation, te, shaders, source);
+  kit::Program::addShaders(returner, kit::Shader::Type::Geometry, g, shaders, source);
+  kit::Program::addShaders(returner, kit::Shader::Type::Fragment, f, shaders, source);
 
   returner->link();
 

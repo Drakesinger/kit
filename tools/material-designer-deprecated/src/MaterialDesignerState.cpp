@@ -1,6 +1,8 @@
 #include "MaterialDesignerState.hpp"
 #include "Application.hpp"
 
+#include <GL/GL.h>
+
 #include <Kit/Application.hpp>
 #include <Kit/Camera.hpp>
 #include <Kit/Window.hpp>
@@ -32,7 +34,7 @@ kmd::MaterialDesignerState::Ptr kmd::MaterialDesignerState::create()
 
 void kmd::MaterialDesignerState::allocate()
 {
-  std::string env = "yokohama";
+  std::string env = "fortpoint";
 
   auto fbSize = this->m_application->getWindow()->getFramebufferSize();
   glm::uvec2 ufbSize(fbSize.x, fbSize.y);
@@ -46,7 +48,7 @@ void kmd::MaterialDesignerState::allocate()
 
   this->m_lastMousePosition = glm::vec2(0.0, 0.0);
   
-  this->m_renderPayload = kit::Renderer::Payload::create();
+  this->m_renderPayload = kit::RenderPayload::create();
 
   this->m_envLight = kit::Light::create(kit::Light::IBL);
   this->m_envLight->setEnvironment(env);
@@ -68,7 +70,7 @@ void kmd::MaterialDesignerState::allocate()
   this->m_UISystem.setWindow(this->m_application->getWindow());
 
   this->m_pickBuffer = kit::PixelBuffer::create(ufbSize, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA16UI), kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA32F) }, kit::PixelBuffer::AttachmentInfo(kit::Texture::DepthComponent24));
-  this->m_pickProgram = kit::Program::load({ "editor/pick.vert" }, {}, { "editor/pick.frag" });
+  this->m_pickProgram = kit::Program::load({ "pick.vert" }, { "pick.frag" }, kit::DataSource::Editor);
   this->m_fullscreenQuad = kit::Quad::create();
 
   kit::Model::Ptr test = kit::Model::create("Sphere.mesh");
@@ -80,16 +82,18 @@ void kmd::MaterialDesignerState::allocate()
     this->m_renderPayload->addLight(currLight);
   }
 
-  this->m_gizmoProgram = kit::Program::load({ "editor/gizmo.vert" }, {}, { "editor/gizmo.frag" });
-  this->m_gizmoTranslateX = kit::Submesh::load("TranslateX.X.geometry");
-  this->m_gizmoTranslateY = kit::Submesh::load("TranslateY.Y.geometry");
-  this->m_gizmoTranslateZ = kit::Submesh::load("TranslateZ.Z.geometry");
-  this->m_gizmoRotateX = kit::Submesh::load("RotateX.X.geometry");
-  this->m_gizmoRotateY = kit::Submesh::load("RotateY.Y.geometry");
-  this->m_gizmoRotateZ = kit::Submesh::load("RotateZ.Z.geometry");
-  this->m_gizmoScaleX = kit::Submesh::load("ScaleX.X.geometry");
-  this->m_gizmoScaleY = kit::Submesh::load("ScaleY.Y.geometry");
-  this->m_gizmoScaleZ = kit::Submesh::load("ScaleZ.Z.geometry");
+
+
+  this->m_gizmoProgram = kit::Program::load({ "gizmo.vert" }, { "gizmo.frag" }, kit::DataSource::Editor);
+  this->m_gizmoTranslateX = kit::Submesh::load("TranslateX.X.geometry", kit::DataSource::Editor);
+  this->m_gizmoTranslateY = kit::Submesh::load("TranslateY.Y.geometry", kit::DataSource::Editor);
+  this->m_gizmoTranslateZ = kit::Submesh::load("TranslateZ.Z.geometry", kit::DataSource::Editor);
+  this->m_gizmoRotateX = kit::Submesh::load("RotateX.X.geometry", kit::DataSource::Editor);
+  this->m_gizmoRotateY = kit::Submesh::load("RotateY.Y.geometry", kit::DataSource::Editor);
+  this->m_gizmoRotateZ = kit::Submesh::load("RotateZ.Z.geometry", kit::DataSource::Editor);
+  this->m_gizmoScaleX = kit::Submesh::load("ScaleX.X.geometry", kit::DataSource::Editor);
+  this->m_gizmoScaleY = kit::Submesh::load("ScaleY.Y.geometry", kit::DataSource::Editor);
+  this->m_gizmoScaleZ = kit::Submesh::load("ScaleZ.Z.geometry", kit::DataSource::Editor);
   this->m_selectedMode = None;
   this->m_transformMode = Translate;
   this->m_isTransforming = false;
@@ -590,11 +594,11 @@ void kmd::MaterialDesignerState::renderGizmo()
     return;
   }
 
-  kit::GL::depthMask(GL_TRUE);
-  kit::GL::enable(GL_DEPTH_TEST);
-  kit::GL::disable(GL_BLEND);
-  kit::GL::enable(GL_CULL_FACE);
-  kit::GL::cullFace(GL_BACK);
+  glDepthMask(GL_TRUE);
+  glEnable(GL_DEPTH_TEST);
+  glDisable(GL_BLEND);
+  glEnable(GL_CULL_FACE);
+  glCullFace(GL_BACK);
   this->m_application->getWindow()->bind();
 
   this->m_gizmoProgram->use();
@@ -760,11 +764,11 @@ void kmd::MaterialDesignerState::renderPickBuffer()
 {
   // Render pick buffer
   //kit::GL::disable(GL_FRAMEBUFFER_SRGB);
-  kit::GL::disable(GL_BLEND);
+  glDisable(GL_BLEND);
 
-  kit::GL::depthMask(GL_TRUE);
-  kit::GL::enable(GL_DEPTH_TEST);
-  kit::GL::disable(GL_CULL_FACE);
+  glDepthMask(GL_TRUE);
+  glEnable(GL_DEPTH_TEST);
+  glDisable(GL_CULL_FACE);
   this->m_pickBuffer->clearDepth(1.0f);
   this->m_pickBuffer->clearAttachment(0, glm::uvec4(0, 0, 0, 0));
   this->m_pickBuffer->clearAttachment(1, glm::vec4(0.0, 0.0, 0.0, 0.0));
@@ -774,9 +778,9 @@ void kmd::MaterialDesignerState::renderPickBuffer()
   glm::mat4 projectionMatrix = this->m_camera->getProjectionMatrix();
 
   // Render models
-  kit::GL::depthMask(GL_TRUE);
-  kit::GL::enable(GL_DEPTH_TEST);
-  kit::GL::disable(GL_CULL_FACE);
+  glDepthMask(GL_TRUE);
+  glEnable(GL_DEPTH_TEST);
+  glDisable(GL_CULL_FACE);
   uint32_t modelId = 0;
   this->m_pickProgram->setUniform1ui("uniform_targetId", 12);
   this->m_pickProgram->setUniform1i("uniform_doScale", 0);
@@ -799,10 +803,10 @@ void kmd::MaterialDesignerState::renderPickBuffer()
   }
 
   // Render gizmo
-  kit::GL::depthMask(GL_FALSE);
-  kit::GL::disable(GL_DEPTH_TEST);
-  kit::GL::enable(GL_CULL_FACE);
-  kit::GL::cullFace(GL_BACK);
+  glDepthMask(GL_FALSE);
+  glDisable(GL_DEPTH_TEST);
+  glEnable(GL_CULL_FACE);
+  glCullFace(GL_BACK);
   this->m_pickProgram->setUniform1i("uniform_doScale", 1);
   this->m_pickProgram->setUniform1f("uniform_scaleCoeff", 2.0f * 48.0f / float(this->m_application->getWindow()->getFramebufferSize().x));
   if (this->m_selectedMode == Model)
@@ -2162,19 +2166,19 @@ void kmd::MaterialDesignerState::prepareMaterialProperties(double const & ms)
 
 void kmd::MaterialDesignerState::generateMaterialThumbs()
 {
-  std::cout << "Generathing thumbs!" << std::endl;
+  std::cout << "Generating thumbs..." << std::endl;
   auto materialFiles = kit::listFilesystemEntries("./data/materials", true, false);
   auto thumbsFiles = kit::listFilesystemEntries("./data/materials/thumbs", true, false);
   
   kit::Renderer::Ptr thumbRenderer = kit::Renderer::create(glm::uvec2(256, 256));
   thumbRenderer->setFXAA(false);
   
-  kit::Renderer::Payload::Ptr renderPayload = kit::Renderer::Payload::create();
+  kit::RenderPayload::Ptr renderPayload = kit::RenderPayload::create();
   thumbRenderer->registerPayload(renderPayload);
   
   auto envLight = kit::Light::create(kit::Light::IBL);
-  envLight->setIrradianceMap(kit::Cubemap::loadIrradianceMap("meadow"));
-  envLight->setRadianceMap(kit::Cubemap::loadRadianceMap("meadow"));
+  envLight->setIrradianceMap(kit::Cubemap::loadIrradianceMap("fortpoint"));
+  envLight->setRadianceMap(kit::Cubemap::loadRadianceMap("fortpoint"));
   renderPayload->addLight(envLight);
   
   auto sunLight = kit::Light::create(kit::Light::Directional);

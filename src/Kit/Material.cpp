@@ -127,9 +127,16 @@ kit::Material::Ptr kit::Material::create()
   return std::make_shared<kit::Material>();
 }
 
-void kit::Material::clearCache()
+void kit::Material::clearCache(std::string entry)
 {
-  kit::Material::m_cache.clear();
+  if (entry == "")
+  {
+    kit::Material::m_cache.clear();
+  }
+  else
+  {
+    kit::Material::m_cache.erase(entry);
+  }
 }
 
 std::map<std::string, kit::Material::Ptr> kit::Material::getCacheList()

@@ -115,19 +115,19 @@ kit::Renderer::Renderer(glm::uvec2 resolution)
   this->m_screenQuad = kit::Quad::create();
   
   // Setup light programs
-  this->m_programEmissive = kit::Program::load({"screenquad.vert"}, {"lighting/emissive-light.frag"}, KIT_STATIC_DATA);
-  this->m_programIBL = kit::Program::load({"lighting/directional-light.vert"}, {"normals.glsl", "lighting/ibl-light.frag"}, KIT_STATIC_DATA);
-  this->m_integratedBRDF = kit::Texture::create2DFromFile(std::string(KIT_STATIC_DATA) + "/textures/brdf.tga", kit::Texture::RGBA8, kit::Texture::ClampToEdge, kit::Texture::Linear, kit::Texture::Linear);
+  this->m_programEmissive = kit::Program::load({"screenquad.vert"}, {"lighting/emissive-light.frag"}, kit::DataSource::Static);
+  this->m_programIBL = kit::Program::load({"lighting/directional-light.vert"}, {"normals.glsl", "lighting/ibl-light.frag"}, kit::DataSource::Static);
+  this->m_integratedBRDF = kit::Texture::create2DFromFile(kit::getDataDirectory(kit::DataSource::Static) + "/textures/brdf.tga", kit::Texture::RGBA8, kit::Texture::ClampToEdge, kit::Texture::Linear, kit::Texture::Linear);
   this->m_integratedBRDF->generateMipmap();
   
-  this->m_programDirectional = kit::Program::load({"lighting/directional-light.vert"}, {"lighting/cooktorrance.glsl", "normals.glsl", "lighting/directional-light.frag"}, KIT_STATIC_DATA);
-  this->m_programDirectionalNS = kit::Program::load({"lighting/directional-light.vert"}, {"lighting/cooktorrance.glsl", "normals.glsl", "lighting/directional-light-ns.frag"}, KIT_STATIC_DATA);
+  this->m_programDirectional = kit::Program::load({"lighting/directional-light.vert"}, {"lighting/cooktorrance.glsl", "normals.glsl", "lighting/directional-light.frag"}, kit::DataSource::Static);
+  this->m_programDirectionalNS = kit::Program::load({"lighting/directional-light.vert"}, {"lighting/cooktorrance.glsl", "normals.glsl", "lighting/directional-light-ns.frag"}, kit::DataSource::Static);
   
-  this->m_programSpot = kit::Program::load({"lighting/spot-light.vert"}, {"lighting/attenuation.glsl", "lighting/spotattenuation.glsl", "normals.glsl", "lighting/cooktorrance.glsl", "lighting/spot-light.frag"}, KIT_STATIC_DATA);
-  this->m_programSpotNS = kit::Program::load({"lighting/spot-light.vert"}, {"lighting/attenuation.glsl", "lighting/spotattenuation.glsl", "normals.glsl", "lighting/cooktorrance.glsl", "lighting/spot-light-ns.frag"}, KIT_STATIC_DATA);
+  this->m_programSpot = kit::Program::load({"lighting/spot-light.vert"}, {"lighting/attenuation.glsl", "lighting/spotattenuation.glsl", "normals.glsl", "lighting/cooktorrance.glsl", "lighting/spot-light.frag"}, kit::DataSource::Static);
+  this->m_programSpotNS = kit::Program::load({"lighting/spot-light.vert"}, {"lighting/attenuation.glsl", "lighting/spotattenuation.glsl", "normals.glsl", "lighting/cooktorrance.glsl", "lighting/spot-light-ns.frag"}, kit::DataSource::Static);
   
-  this->m_programPoint = kit::Program::load({"lighting/point-light.vert"}, {"lighting/attenuation.glsl", "lighting/spotattenuation.glsl",  "normals.glsl", "lighting/cooktorrance.glsl", "lighting/point-light.frag"}, KIT_STATIC_DATA);
-  this->m_programPointNS = kit::Program::load({"lighting/point-light.vert"}, {"lighting/attenuation.glsl", "lighting/spotattenuation.glsl",  "normals.glsl", "lighting/cooktorrance.glsl", "lighting/point-light-ns.frag"}, KIT_STATIC_DATA);
+  this->m_programPoint = kit::Program::load({"lighting/point-light.vert"}, {"lighting/attenuation.glsl", "lighting/spotattenuation.glsl",  "normals.glsl", "lighting/cooktorrance.glsl", "lighting/point-light.frag"}, kit::DataSource::Static);
+  this->m_programPointNS = kit::Program::load({"lighting/point-light.vert"}, {"lighting/attenuation.glsl", "lighting/spotattenuation.glsl",  "normals.glsl", "lighting/cooktorrance.glsl", "lighting/point-light-ns.frag"}, kit::DataSource::Static);
   this->m_pointGeometry = kit::Sphere::create(32, 24);
  
   this->m_programIBL->setUniformTexture("uniform_brdf", this->m_integratedBRDF);
@@ -150,13 +150,13 @@ kit::Renderer::Renderer(glm::uvec2 resolution)
   this->m_bloomDirtTexture = nullptr;
     
   // Load and set programs
-  this->m_hdrTonemap         = kit::Program::load({"screenquad.vert"}, {"hdr-tonemap.frag"}, KIT_STATIC_DATA);
-  this->m_hdrTonemapBloomHigh    = kit::Program::load({"screenquad.vert"}, {"hdr-tonemapBloom.frag"}, KIT_STATIC_DATA);
-  this->m_hdrTonemapBloomHighDirt= kit::Program::load({"screenquad.vert"}, {"hdr-tonemapBloomDirt.frag"}, KIT_STATIC_DATA);
-  this->m_hdrTonemapBloomLow    = kit::Program::load({"screenquad.vert"}, {"hdr-tonemapBloomLow.frag"}, KIT_STATIC_DATA);
-  this->m_hdrTonemapBloomLowDirt= kit::Program::load({"screenquad.vert"}, {"hdr-tonemapBloomLowDirt.frag"}, KIT_STATIC_DATA);
-  this->m_bloomBrightProgram = kit::Program::load({"screenquad.vert"}, {"hdr-brightpass.frag"}, KIT_STATIC_DATA);
-  this->m_bloomBlurProgram   = kit::Program::load({"screenquad.vert"}, {"hdr-blur.frag"}, KIT_STATIC_DATA);
+  this->m_hdrTonemap         = kit::Program::load({"screenquad.vert"}, {"hdr-tonemap.frag"}, kit::DataSource::Static);
+  this->m_hdrTonemapBloomHigh    = kit::Program::load({"screenquad.vert"}, {"hdr-tonemapBloom.frag"}, kit::DataSource::Static);
+  this->m_hdrTonemapBloomHighDirt= kit::Program::load({"screenquad.vert"}, {"hdr-tonemapBloomDirt.frag"}, kit::DataSource::Static);
+  this->m_hdrTonemapBloomLow    = kit::Program::load({"screenquad.vert"}, {"hdr-tonemapBloomLow.frag"}, kit::DataSource::Static);
+  this->m_hdrTonemapBloomLowDirt= kit::Program::load({"screenquad.vert"}, {"hdr-tonemapBloomLowDirt.frag"}, kit::DataSource::Static);
+  this->m_bloomBrightProgram = kit::Program::load({"screenquad.vert"}, {"hdr-brightpass.frag"}, kit::DataSource::Static);
+  this->m_bloomBlurProgram   = kit::Program::load({"screenquad.vert"}, {"hdr-blur.frag"}, kit::DataSource::Static);
   
   this->m_bloomBlurProgram->setUniform1f("uniform_radius", 1.0f);
   this->m_bloomBrightProgram->setUniform1f("uniform_exposure", 1.0f);
@@ -179,15 +179,15 @@ kit::Renderer::Renderer(glm::uvec2 resolution)
   
   // --- Setup FXAA
   this->m_fxaaEnabled = true;
-  this->m_fxaaProgram = kit::Program::load({"screenquad.vert"}, {"fxaa.frag"}, KIT_STATIC_DATA);
+  this->m_fxaaProgram = kit::Program::load({"screenquad.vert"}, {"fxaa.frag"}, kit::DataSource::Static);
   
   // --- Setup color correction
   this->m_ccEnabled = false;
-  this->m_ccProgram = kit::Program::load({ "screenquad.vert" }, { "cc.frag" }, KIT_STATIC_DATA);
+  this->m_ccProgram = kit::Program::load({ "screenquad.vert" }, { "cc.frag" }, kit::DataSource::Static);
   this->m_ccLookupTable = nullptr; // kit::Texture::create3DFromFile("./data/luts/test.tga", kit::Texture::RGB8);
 
   // --- Setup sRGB correction
-  this->m_srgbProgram = kit::Program::load({ "screenquad.vert" }, { "srgb.frag" }, KIT_STATIC_DATA);
+  this->m_srgbProgram = kit::Program::load({ "screenquad.vert" }, { "srgb.frag" }, kit::DataSource::Static);
   this->m_srgbEnabled = true;
 
   // --- Setup shadows
@@ -197,7 +197,7 @@ kit::Renderer::Renderer(glm::uvec2 resolution)
   this->m_fringeEnabled = false;
   this->m_fringeExponential = 1.5f;
   this->m_fringeScale = 0.01f;
-  this->m_fringeProgram = kit::Program::load({"screenquad.vert"}, {"fringe.frag"}, KIT_STATIC_DATA);
+  this->m_fringeProgram = kit::Program::load({"screenquad.vert"}, {"fringe.frag"}, kit::DataSource::Static);
   this->m_fringeProgram->setUniform1f("uniform_exponential", this->m_fringeExponential);
   this->m_fringeProgram->setUniform1f("uniform_scale",       this->m_fringeScale);
   

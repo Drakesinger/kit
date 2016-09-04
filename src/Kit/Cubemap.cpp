@@ -27,6 +27,7 @@ kit::Cubemap::~Cubemap()
 
 kit::Cubemap::Ptr kit::Cubemap::loadRadianceMap(const std::string& name)
 {
+  std::cout << "Loading radiance map " << name << std::endl;
   kit::Cubemap::Ptr returner = std::make_shared<kit::Cubemap>();
   std::stringstream namer;
   unsigned char* bufferdata;
@@ -103,7 +104,7 @@ kit::Cubemap::Ptr kit::Cubemap::loadRadianceMap(const std::string& name)
 
 kit::Cubemap::Ptr kit::Cubemap::loadIrradianceMap(const std::string& name)
 {
-  
+  std::cout << "Loading irradiance map " << name << std::endl;
   kit::Cubemap::Ptr returner = std::make_shared<kit::Cubemap>();
   unsigned char* bufferdata;
   int x, y, n;
@@ -162,7 +163,7 @@ kit::Cubemap::Ptr kit::Cubemap::loadIrradianceMap(const std::string& name)
 
 kit::Cubemap::Ptr kit::Cubemap::loadSkybox(const std::string& name)
 {
-  
+  std::cout << "Loading skybox " << name << std::endl;
   kit::Cubemap::Ptr returner = std::make_shared<kit::Cubemap>();
   unsigned char* bufferdata;
   int x, y, n;
@@ -222,7 +223,6 @@ kit::Cubemap::Ptr kit::Cubemap::loadSkybox(const std::string& name)
 
 kit::Cubemap::Ptr kit::Cubemap::load(const std::string& zpos, const std::string& zneg, const std::string& xpos, const std::string& xneg, const std::string& ypos, const std::string& yneg)
 {
-  
   kit::Cubemap::Ptr returner = std::make_shared<kit::Cubemap>();
 
   // Load our images

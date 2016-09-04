@@ -4,7 +4,6 @@
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
 
-
 #include <memory>
 
 namespace kit 
@@ -16,7 +15,7 @@ namespace kit
       
       ~Submesh();
       
-      static kit::Submesh::Ptr load(const std::string& geometry);
+      static kit::Submesh::Ptr load(const std::string& geometry, kit::DataSource source = kit::DataSource::Data);
       static void flushCache();
       
       void renderGeometry();

@@ -100,7 +100,7 @@ namespace kmd
 
     // Picking & rendering
     kit::QuadPtr                  m_fullscreenQuad;
-    kit::Renderer::Payload::Ptr   m_renderPayload;
+    kit::RenderPayload::Ptr       m_renderPayload;
 
     void                          renderPickBuffer();
     kit::ProgramPtr               m_pickProgram;
