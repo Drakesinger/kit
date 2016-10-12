@@ -33,7 +33,7 @@ int main(int argc, char **argv)
   auto renderer = kit::Renderer::create(glm::uvec2(1280, 720));
 
   // Create a render payload, anything we add to this will get rendered in our renderer
-  auto payload = kit::Renderer::Payload::create();
+  auto payload = kit::RenderPayload::create();
   renderer->registerPayload(payload);
 
   // Create a fullscreen quad, so we can blit what the renderer produce to the screen

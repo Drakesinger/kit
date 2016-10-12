@@ -72,13 +72,13 @@ kit::PixelBuffer::Ptr kit::DoubleBuffer::getBackBuffer(){
 void kit::DoubleBuffer::blitFrom(kit::DoubleBuffer::Ptr source)
 {
 #ifndef KIT_SHITTY_INTEL
-  KIT_GL(glBlitNamedFramebuffer(
+  glBlitNamedFramebuffer(
     source->getFrontBuffer()->getHandle(),
     this->getBackBuffer()->getHandle(),
     0, 0, source->getResolution().x, source->getResolution().y,
     0, 0, this->getResolution().x, this->getResolution().y,
     GL_COLOR_BUFFER_BIT, GL_LINEAR
-  ));
+  );
 #else 
   source->getFrontBuffer()->bind(kit::PixelBuffer::Read);
   this->getFrontBuffer()->bind(kit::PixelBuffer::Draw);
