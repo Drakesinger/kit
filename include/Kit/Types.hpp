@@ -36,7 +36,7 @@
 #endif
 
 #ifndef KIT_EDITOR_DATA
-  #define KIT_EDITOR_DATA "./data/editor/"
+  #define KIT_EDITOR_DATA "/usr/share/kit/static/editor/"
 #endif 
 
 // A bunch of header-only kit defines for opengl.
@@ -304,6 +304,10 @@ namespace kit{
 
   KITAPI glm::vec2   readVec2(std::istream & s);
   KITAPI void        writeVec2(std::ostream & s, glm::vec2 v);
+  
+  KITAPI glm::uvec2   readVec2u(std::istream & s);
+  KITAPI void        writeVec2u(std::ostream & s, glm::uvec2 v);
+
 
   KITAPI glm::vec3   readVec3(std::istream & s);
   KITAPI void        writeVec3(std::ostream & s, glm::vec3 v);

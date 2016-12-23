@@ -12,16 +12,14 @@
 FT_Library kit::Font::m_ftLibrary = FT_Library();
 uint32_t kit::Font::m_instanceCount = 0;
 
-kit::Font::Ptr kit::Font::m_systemFont = nullptr;
+kit::Font * kit::Font::m_systemFont = nullptr;
 
 // What characters to cache glyphs for. Any character not in this string will not be renderable using Kit
 // Currently contains every visible character on a standard swedish qwerty-keyboard
 const std::wstring glyphData = L" –ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖabcdefghijklmnopqrstuvwxyzåäö0123456789§½¶!¡\"@#£¤$%€&¥/{([)]=}?\\+`´±¨~^'´*-_.:·,;¸µ€<>|";
 
-kit::Font::GlyphMap::GlyphMap(kit::Font::WPtr wfont, float size)
+kit::Font::GlyphMap::GlyphMap(kit::Font * font, float size)
 {
-  
-  kit::Font::Ptr font = wfont.lock();
   if(!font)
   {
     KIT_THROW("Invalid font passed");
@@ -58,8 +56,8 @@ kit::Font::GlyphMap::GlyphMap(kit::Font::WPtr wfont, float size)
   float gridsizepx = glm::ceil(float(gridsize) * float(cellsize));
   
   // Create a texture to hold our glyphs, and initialize it to be fully black
-  this->m_texture = kit::Texture::create2D(glm::uvec2((uint32_t)gridsizepx, (uint32_t)gridsizepx), kit::Texture::R8, Texture::ClampToEdge, Texture::Nearest, Texture::Nearest);
-  this->m_texture->bind();
+  m_texture = new kit::Texture(glm::uvec2((uint32_t)gridsizepx, (uint32_t)gridsizepx), kit::Texture::R8, Texture::ClampToEdge, Texture::Nearest, Texture::Nearest);
+  m_texture->bind();
   
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   glPixelStorei(GL_PACK_ALIGNMENT, 1);
@@ -69,7 +67,7 @@ kit::Font::GlyphMap::GlyphMap(kit::Font::WPtr wfont, float size)
   glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)gridsizepx, (GLsizei)gridsizepx, GL_RED, GL_UNSIGNED_BYTE, &data[0]);
   
   //std::vector<GLubyte> data(uint32_t(gridsizepx*gridsizepx), 0);
-  //glTextureSubImage2D(this->m_texture->getHandle(), 0, 0, 0, (GLsizei)gridsizepx, (GLsizei)gridsizepx, GL_RED, GL_UNSIGNED_BYTE, &data[0]);
+  //glTextureSubImage2D(m_texture->getHandle(), 0, 0, 0, (GLsizei)gridsizepx, (GLsizei)gridsizepx, GL_RED, GL_UNSIGNED_BYTE, &data[0]);
   
   glm::vec2 currTexPos(0.0f, 0.0f);
   currTexPos.y = gridsizepx - cellsize;
@@ -112,7 +110,7 @@ kit::Font::GlyphMap::GlyphMap(kit::Font::WPtr wfont, float size)
       glTexSubImage2D(GL_TEXTURE_2D, 0, uint32_t(currTexPos.x), uint32_t(currTexPos.y), adder.m_size.x, adder.m_size.y, GL_RED, GL_UNSIGNED_BYTE, &glyphdata[0]);
       
       // DSA bug no.2 -- AMD Linux still bugged
-      //glTextureSubImage2D(this->m_texture->getHandle(), 0, uint32_t(currTexPos.x), uint32_t(currTexPos.y), adder.m_size.x, adder.m_size.y, GL_RED, GL_UNSIGNED_BYTE, &glyphdata[0]);
+      //glTextureSubImage2D(m_texture->getHandle(), 0, uint32_t(currTexPos.x), uint32_t(currTexPos.y), adder.m_size.x, adder.m_size.y, GL_RED, GL_UNSIGNED_BYTE, &glyphdata[0]);
       //glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
       //glPixelStorei(GL_PACK_ALIGNMENT, 4);
 
@@ -131,7 +129,7 @@ kit::Font::GlyphMap::GlyphMap(kit::Font::WPtr wfont, float size)
       adder.m_uv.w = 0;
     }
 
-    this->m_glyphIndex[currChar] = adder;
+    m_glyphIndex[currChar] = adder;
 
   }
 
@@ -139,88 +137,89 @@ kit::Font::GlyphMap::GlyphMap(kit::Font::WPtr wfont, float size)
   glPixelStorei(GL_PACK_ALIGNMENT, 4);
   
   // AMD DSA texture bug no.1 (reported to AMD, repro here: https://gist.github.com/haikarainen/97959adfe4e3ca10968a)
-  this->m_texture->setMinFilteringMode(kit::Texture::Nearest);
-  this->m_texture->setMagFilteringMode(kit::Texture::Nearest);
+  m_texture->setMinFilteringMode(kit::Texture::Nearest);
+  m_texture->setMagFilteringMode(kit::Texture::Nearest);
 
-  this->m_lineHeight = float(font->getFTFace()->height) / 64.0f;
-  //this->m_height = font->getFTFace()->size->metrics.height / 64.0f;
-  this->m_height = (float)this->m_glyphIndex['X'].m_size.y;
+  m_lineHeight = float(font->getFTFace()->height) / 64.0f;
+  //m_height = font->getFTFace()->size->metrics.height / 64.0f;
+  m_height = (float)m_glyphIndex['X'].m_size.y;
   
+}
+
+kit::Font::GlyphMap::~GlyphMap()
+{
+  if(m_texture)
+    delete m_texture;
 }
 
 const float & kit::Font::GlyphMap::getLineHeight()
 {
-  return this->m_lineHeight; 
+  return m_lineHeight; 
 }
 
 const float & kit::Font::GlyphMap::getHeight()
 {
-  return this->m_height; 
+  return m_height; 
 }
 
 float kit::Font::GlyphMap::getLineAdvance()
 {
-  return this->m_lineHeight;// + this->m_height;
+  return m_lineHeight;// + m_height;
 }
 
 kit::Font::Glyph const & kit::Font::GlyphMap::getGlyph(wchar_t character)
 {
-  if(this->m_glyphIndex.find(character) == this->m_glyphIndex.end())
+  if(m_glyphIndex.find(character) == m_glyphIndex.end())
   {
-    return this->m_glyphIndex[wchar_t('?')];
+    return m_glyphIndex[wchar_t('?')];
   }
   
-  return this->m_glyphIndex[character];
+  return m_glyphIndex[character];
 }
 
-kit::Texture::WPtr kit::Font::GlyphMap::getTexture()
+kit::Texture * kit::Font::GlyphMap::getTexture()
 {
-  return this->m_texture;
+  return m_texture;
 }
 
-kit::Font::Ptr kit::Font::load(const std::string& filename, char const * dataDirectory)
+kit::Font::Font(const std::string& filename, char const * dataDirectory) : kit::Font()
 {
-  kit::Font::Ptr returner = std::make_shared<kit::Font>();
-
   std::string path = std::string(dataDirectory + std::string("/fonts/") + filename);
-  std::cout << "Loading font from file " << path << std::endl;
   
-  if(FT_New_Face(kit::Font::m_ftLibrary, path.c_str(), 0, &returner->m_ftFace) != 0)
+  if(FT_New_Face(m_ftLibrary, path.c_str(), 0, &m_ftFace) != 0)
   {
     KIT_THROW("Failed to load font from file");
   }
   
-  if(FT_Select_Charmap(returner->m_ftFace,  FT_ENCODING_UNICODE))
+  if(FT_Select_Charmap(m_ftFace,  FT_ENCODING_UNICODE))
   {
     KIT_THROW("Failed to set encoding");
   }
-    
-  
-  returner->m_ftLoaded = true;
-  return returner;
+
+  m_ftLoaded = true;
 }
 
 void kit::Font::precacheSize(float size)
 {
-  if(this->m_glyphCache.size() == 0 || this->m_glyphCache.find(size) == this->m_glyphCache.end())
+  if(m_glyphCache.size() == 0 || m_glyphCache.find(size) == m_glyphCache.end())
   {
-    this->m_glyphCache[size] = new kit::Font::GlyphMap(this->shared_from_this(), size);
+    m_glyphCache[size] = new kit::Font::GlyphMap(this, size);
   }
 }
 
 kit::Font::GlyphMap * kit::Font::getGlyphMap(float size)
 {
-  this->precacheSize(size);
-  return this->m_glyphCache[size];
+  precacheSize(size);
+  return m_glyphCache[size];
 }
 
 kit::Font::Font()
 {
-  this->m_instanceCount++;
+  m_instanceCount++;
   
-  this->m_ftLoaded = false;
+  m_ftLoaded = false;
   
-  if(this->m_instanceCount == 1)
+  if(m_instanceCount == 1)
   {
     if(FT_Init_FreeType(&kit::Font::m_ftLibrary)) {
       KIT_THROW("Could not initialize Freetype");
@@ -230,22 +229,22 @@ kit::Font::Font()
 
 kit::Font::~Font()
 {
-  this->m_instanceCount--;
+  m_instanceCount--;
   
-  if(this->m_ftLoaded)
+  if(m_ftLoaded)
   {
-    if(FT_Done_Face(this->m_ftFace))
+    if(FT_Done_Face(m_ftFace))
     {
       KIT_ERR("Failed to release font");
     }
   }
   
-  for (auto &currCacheEntry : this->m_glyphCache)
+  for (auto &currCacheEntry : m_glyphCache)
   {
     delete currCacheEntry.second;
   }
 
-  if(this->m_instanceCount == 0)
+  if(m_instanceCount == 0)
   {
     if(FT_Done_FreeType(kit::Font::m_ftLibrary)) {
       KIT_ERR("Could not destroy Freetype");
@@ -258,11 +257,11 @@ FT_Face & kit::Font::getFTFace()
   return m_ftFace;
 }
 
-kit::Font::Ptr kit::Font::getSystemFont()
+kit::Font * kit::Font::getSystemFont()
 {
   if(kit::Font::m_systemFont == nullptr)
   {
-    kit::Font::m_systemFont = kit::Font::load("Inconsolata.otf", KIT_STATIC_DATA);
+    kit::Font::m_systemFont = new kit::Font("Inconsolata.otf", KIT_STATIC_DATA);
   }
   return kit::Font::m_systemFont;
 }

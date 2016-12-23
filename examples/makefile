@@ -8,7 +8,7 @@ DEPFLAGS     := $(shell pkg-config --cflags kit)
 ifeq ($(DEBUG), 1)
 	CXXFLAGS += -DKIT_DEBUG -g
 else
-	CXXFLAGS += -O2
+	CXXFLAGS += -O2 -g
 endif
 
 
@@ -25,6 +25,6 @@ renderer:
 dynamic-materials:
 	@echo 'Building Dynamic Materials example ...'
 	$(CXX) $(CXXFLAGS) $(DEPFLAGS) $(LDFLAGS)  src/dynamic-materials.cpp -o dynamic-materials-example $(LIBS)
-
+	
 clean:
 	$(shell rm window-example renderer-example dynamic-materials-example)

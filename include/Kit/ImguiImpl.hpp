@@ -1,20 +1,15 @@
-#ifndef KIT_IMGUIIMPL_HPP
-#define KIT_IMGUIIMPL_HPP
+#pragma once
 
 #include "Kit/WindowEvent.hpp"
-
-
-#include <memory>
 
 struct ImDrawData;
 
 namespace kit
 {
   class Window;
-  typedef std::weak_ptr<Window> WindowWPtr;
+  
 
   class Texture;
-  typedef std::shared_ptr<Texture> TexturePtr;
   
   class KITAPI UISystem
   {
@@ -22,10 +17,10 @@ namespace kit
       UISystem();
       ~UISystem();
       
-      typedef std::vector<std::pair<std::string, kit::TexturePtr>> SelectionList;
+      typedef std::vector<std::pair<std::string, kit::Texture*>> SelectionList;
       typedef SelectionList::iterator SelectionIterator;
 
-      static void setWindow(kit::WindowWPtr);
+      static void setWindow(kit::Window*);
 
       static void handleEvent(kit::WindowEvent const & evt);
       static void prepareFrame(double const & ms);
@@ -35,7 +30,7 @@ namespace kit
       static bool usesKeyboard();
       static bool usesTextInput();
 
-      static kit::TexturePtr selectTexture(const std::string& name, kit::TexturePtr currentTexture, bool srgb = true, bool reload = false, const std::string& prefix = "");
+      static kit::Texture * selectTexture(const std::string& name, kit::Texture * currentTexture, bool srgb = true, bool reload = false, const std::string& prefix = "");
       
       static SelectionIterator select(const std::string& title, SelectionIterator currIndex, SelectionList & list);
       
@@ -51,7 +46,7 @@ namespace kit
       static void imgui_setClipboardText(const char* text);
 
       static uint32_t m_instanceCount;
-      static kit::WindowWPtr m_window;
+      static kit::Window * m_window;
       static bool m_usesKeyboard;
       static bool m_usesMouse;
       static bool m_usesTextInput;
@@ -72,5 +67,3 @@ namespace kit
       static unsigned int imgui_elementsHandle;
   };
 }
-
-#endif

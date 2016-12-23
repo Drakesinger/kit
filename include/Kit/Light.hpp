@@ -1,21 +1,16 @@
-#ifndef KIT_LIGHT_HPP
-#define KIT_LIGHT_HPP
+#pragma once
 
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
 #include "Kit/Transformable.hpp"
 #include "Kit/Cubemap.hpp"
-#include <memory>
 
 namespace kit 
 {
   class Cone;
-  typedef std::shared_ptr<Cone> ConePtr;
-
+  
   class PixelBuffer;
-  typedef std::shared_ptr<PixelBuffer> PixelBufferPtr;
-
-
+  
   class KITAPI Light : public kit::Transformable
   {
     public:
@@ -27,10 +22,6 @@ namespace kit
         Point,
         IBL
       };
-      
-      typedef std::shared_ptr<Light> Ptr;
-      
-      static kit::Light::Ptr create(kit::Light::Type t, glm::uvec2 shadowmapsize = glm::uvec2(0, 0));
       
       Light(kit::Light::Type t, glm::uvec2 shadowmapsize = glm::uvec2(0, 0));
       ~Light();
@@ -48,18 +39,12 @@ namespace kit
 
       void setEnvironment(const std::string& name);
       
-      void setIrradianceMap(kit::Cubemap::Ptr irradiance);
-      kit::Cubemap::Ptr getIrradianceMap();
-      
-      void setRadianceMap(kit::Cubemap::Ptr radiance);
-      kit::Cubemap::Ptr getRadianceMap();
+      kit::Cubemap* getIrradianceMap();
+      kit::Cubemap* getRadianceMap();
 
-      void setReflectionMap(kit::Cubemap::Ptr reflection);
-      kit::Cubemap::Ptr getReflectionMap();
-      
       bool isShadowMapped();
       
-      kit::PixelBufferPtr getShadowBuffer();
+      kit::PixelBuffer* getShadowBuffer();
       glm::mat4 getDirectionalProjectionMatrix();
       glm::mat4 getDirectionalViewMatrix();
       glm::mat4 getDirectionalModelMatrix(glm::vec3 pos, glm::vec3 forward);
@@ -68,7 +53,7 @@ namespace kit
       
       glm::mat4 getSpotProjectionMatrix();
       glm::mat4 getSpotViewMatrix();
-      kit::ConePtr getSpotGeometry();
+      kit::Cone* getSpotGeometry();
       
       //kit::CubemapBuffer::Ptr getPointShadowBuffer();
       glm::mat4 getPointProjectionMatrix();
@@ -83,21 +68,18 @@ namespace kit
       bool                      m_shadowMapped;
       
       float                     m_maxShadowDistance;
-      kit::PixelBufferPtr       m_shadowBuffer;
+      kit::PixelBuffer*       m_shadowBuffer = nullptr;
       
       //kit::CubemapBuffer::Ptr    m_pointShadowMap;
-      kit::ConePtr              m_spotGeometry;
+      kit::Cone*              m_spotGeometry = nullptr;
       kit::Light::Type          m_type;
       glm::vec3                m_color;
       float                     m_radius;           // Used by pointlights & spotlights
       float                     m_coneInner;        // Used by spotlights
       float                     m_coneOuter;        // Used by spotlights
       glm::vec4                m_attenuation;
-      kit::Cubemap::Ptr           m_irradianceMap;
-      kit::Cubemap::Ptr           m_radianceMap;
-      kit::Cubemap::Ptr           m_reflectionMap;
+      kit::Cubemap*           m_irradianceMap = nullptr;
+      kit::Cubemap*           m_radianceMap = nullptr;
   };
   
 }
-
-#endif

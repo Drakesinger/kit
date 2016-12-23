@@ -35,47 +35,12 @@ static std::string getMaskSuffix(int layer)
   return returner;
 }
 
-kit::BakedTerrain::BakedTerrain()
+kit::BakedTerrain::BakedTerrain(std::string const & name)
 {
-  // Initialize the layerinfo array with some sane defaults
-  for(auto & currLayer : this->m_layerInfo)
-  {
-    currLayer.arCache = nullptr;
-    currLayer.ndCache = nullptr;
-    currLayer.used    = false;
-    currLayer.uvScale = 1.0f;
-  }
-
-  this->m_arCache = nullptr;
-  this->m_nxCache = nullptr;
-  this->m_materialMask[0] = nullptr;
-  this->m_materialMask[1] = nullptr;
-
-  this->m_indexCount = 0;
-  this->m_numLayers = 0;
-  this->m_program = nullptr;
-  this->m_size = glm::uvec2(0, 0);
-  this->m_valid = false;
+  glGenVertexArrays(1, &m_glVertexArray);
+  glGenBuffers(1, &m_glVertexIndices);
+  glGenBuffers(1, &m_glVertexBuffer);
   
-  this->m_xzScale = 1.0f;
-  this->m_yScale = 1.0f;
-
-  glGenVertexArrays(1, &this->m_glVertexArray);
-  glGenBuffers(1, &this->m_glVertexIndices);
-  glGenBuffers(1, &this->m_glVertexBuffer);
-}
-
-kit::BakedTerrain::~BakedTerrain()
-{
-  glDeleteBuffers(1, &this->m_glVertexIndices);
-  glDeleteBuffers(1, &this->m_glVertexBuffer);
-  glDeleteVertexArrays(1, &this->m_glVertexArray);
-}
-
-kit::BakedTerrain::Ptr kit::BakedTerrain::load(const std::string&name)
-{
-  std::cout << "Loading baked terrain \"" << name.c_str() << "\"" << std::endl;
-  auto returner = std::make_shared<kit::BakedTerrain>();
   uint32_t vertexDataLen = 0;
   float * vertexData = nullptr;
   uint32_t * indexData = nullptr;
@@ -88,16 +53,15 @@ kit::BakedTerrain::Ptr kit::BakedTerrain::load(const std::string&name)
     std::ifstream f(dataDirectory + "vertexdata", std::ios_base::in | std::ios_base::binary);
     if(!f)
     {
-      KIT_ERR("Failed to load terrain \"" + name + "\": could not load vertexdata.");
-      return returner;
+      KIT_THROW("Failed to load terrain \"" + name + "\": could not load vertexdata.");
     }
 
     // Read index-data length (in ints)
-    returner->m_indexCount = kit::readUint32(f);
+    m_indexCount = kit::readUint32(f);
 
     // Read index data
-    indexData = new uint32_t[returner->m_indexCount];
-    for (uint32_t i = 0; i < returner->m_indexCount; i++)
+    indexData = new uint32_t[m_indexCount];
+    for (uint32_t i = 0; i < m_indexCount; i++)
     {
       indexData[i] = kit::readUint32(f);
     }
@@ -118,16 +82,16 @@ kit::BakedTerrain::Ptr kit::BakedTerrain::load(const std::string&name)
   {
     std::cout << "Uploading data to GPU" << std::endl;
 
-    glBindVertexArray(returner->m_glVertexArray);
+    glBindVertexArray(m_glVertexArray);
 
     // Upload indices
-    std::cout << "Uploading indices (" << (returner->m_indexCount * sizeof(uint32_t)) << " bytes)" << std::endl;
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, returner->m_glVertexIndices);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, returner->m_indexCount * sizeof(uint32_t), &indexData[0], GL_STATIC_DRAW);
+    std::cout << "Uploading indices (" << (m_indexCount * sizeof(uint32_t)) << " bytes)" << std::endl;
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glVertexIndices);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indexCount * sizeof(uint32_t), &indexData[0], GL_STATIC_DRAW);
 
     // Upload vertices 
     std::cout << "Uploading vertices (" << (vertexDataLen * sizeof(float)) << " bytes)" << std::endl;
-    glBindBuffer(GL_ARRAY_BUFFER, returner->m_glVertexBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, vertexDataLen * sizeof(float) , &vertexData[0], GL_STATIC_DRAW);
   }
 
@@ -166,12 +130,12 @@ kit::BakedTerrain::Ptr kit::BakedTerrain::load(const std::string&name)
   // Load maps
   {
     std::cout << "Loading maps" << std::endl;
-    returner->m_arCache = kit::Texture::create2DFromFile(dataDirectory + "arcache.tga", kit::Texture::RGBA8, kit::Texture::Repeat, kit::Texture::LinearMipmapLinear, kit::Texture::Linear);
-    returner->m_nxCache = kit::Texture::create2DFromFile(dataDirectory + "nxcache.tga", kit::Texture::RGBA8, kit::Texture::Repeat, kit::Texture::LinearMipmapLinear, kit::Texture::Linear);
+    m_arCache = new kit::Texture(dataDirectory + "arcache.tga", kit::Texture::RGBA8, kit::Texture::Repeat, kit::Texture::LinearMipmapLinear, kit::Texture::Linear);
+    m_nxCache = new kit::Texture(dataDirectory + "nxcache.tga", kit::Texture::RGBA8, kit::Texture::Repeat, kit::Texture::LinearMipmapLinear, kit::Texture::Linear);
     try
     {
-      returner->m_materialMask[0] = kit::Texture::create2DFromFile(dataDirectory + "materialmask0.tga", kit::Texture::RGBA8, kit::Texture::ClampToEdge, kit::Texture::LinearMipmapLinear, kit::Texture::Linear);
-      returner->m_materialMask[1] = kit::Texture::create2DFromFile(dataDirectory + "materialmask1.tga", kit::Texture::RGBA8, kit::Texture::ClampToEdge, kit::Texture::LinearMipmapLinear, kit::Texture::Linear);
+      m_materialMask[0] = new kit::Texture(dataDirectory + "materialmask0.tga", kit::Texture::RGBA8, kit::Texture::ClampToEdge, kit::Texture::LinearMipmapLinear, kit::Texture::Linear);
+      m_materialMask[1] = new kit::Texture(dataDirectory + "materialmask1.tga", kit::Texture::RGBA8, kit::Texture::ClampToEdge, kit::Texture::LinearMipmapLinear, kit::Texture::Linear);
     }
     catch (...)
     {
@@ -187,8 +151,7 @@ kit::BakedTerrain::Ptr kit::BakedTerrain::load(const std::string&name)
     std::ifstream f(dataDirectory + "header", std::ios_base::in);
     if(!f)
     {
-      KIT_ERR("Failed to load terrain \"" + name + "\": could not load header.");
-      return returner;
+      KIT_THROW("Failed to load terrain \"" + name + "\": could not load header.");
     }
 
     while(std::getline(f, currLine))
@@ -202,50 +165,48 @@ kit::BakedTerrain::Ptr kit::BakedTerrain::load(const std::string&name)
 
       if(args[0] == "xzscale" && args.size() == 2)
       {
-        returner->m_xzScale = (float)std::atof(args[1].c_str());
+        m_xzScale = (float)std::atof(args[1].c_str());
       }
 
       if (args[0] == "yscale" && args.size() == 2)
       {
-        returner->m_yScale = (float)std::atof(args[1].c_str());
+        m_yScale = (float)std::atof(args[1].c_str());
       }
 
       if(args[0] == "numlayers" && args.size() == 2)
       {
-        returner->m_numLayers = std::atoi(args[1].c_str());
-        if(returner->m_numLayers > 8)
+        m_numLayers = std::atoi(args[1].c_str());
+        if(m_numLayers > 8)
         {
-          KIT_ERR("Too many layers in terrain");
-          return returner;
+          KIT_THROW("Too many layers in terrain");
         }
       }
 
       if(args[0] == "size" && args.size() == 3)
       {
-        returner->m_size.x = std::atoi(args[1].c_str());
-        returner->m_size.y = std::atoi(args[2].c_str());
+        m_size.x = std::atoi(args[1].c_str());
+        m_size.y = std::atoi(args[2].c_str());
       }
 
       if(args[0] == "layer" && args.size() == 3)
       {
         int currLayer = std::atoi(args[1].c_str());
-        if(currLayer >= 0 && currLayer <= 7 && currLayer < returner->m_numLayers)
+        if(currLayer >= 0 && currLayer <= 7 && currLayer < m_numLayers)
         {
-          returner->m_layerInfo[currLayer].uvScale = (float)std::atof(args[2].c_str());
-          returner->m_layerInfo[currLayer].used = true;
+          m_layerInfo[currLayer].uvScale = (float)std::atof(args[2].c_str());
+          m_layerInfo[currLayer].used = true;
 
           std::stringstream currAr;
           currAr << dataDirectory << "arlayer" << currLayer << ".tga";
-          returner->m_layerInfo[currLayer].arCache = kit::Texture::create2DFromFile(currAr.str(), kit::Texture::RGBA8, kit::Texture::Repeat, kit::Texture::LinearMipmapLinear, kit::Texture::Linear);
+          m_layerInfo[currLayer].arCache = new kit::Texture(currAr.str(), kit::Texture::RGBA8, kit::Texture::Repeat, kit::Texture::LinearMipmapLinear, kit::Texture::Linear);
 
           std::stringstream currNm;
           currNm << dataDirectory << "ndlayer" << currLayer << ".tga";
-          returner->m_layerInfo[currLayer].ndCache = kit::Texture::create2DFromFile(currNm.str(), kit::Texture::RGBA8, kit::Texture::Repeat, kit::Texture::LinearMipmapLinear, kit::Texture::Linear);
+          m_layerInfo[currLayer].ndCache = new kit::Texture(currNm.str(), kit::Texture::RGBA8, kit::Texture::Repeat, kit::Texture::LinearMipmapLinear, kit::Texture::Linear);
         }
         else
         {
-          KIT_ERR("Invalid layer id");
-          return returner;
+          KIT_THROW("Invalid layer id");
         }
       }
     }
@@ -258,72 +219,94 @@ kit::BakedTerrain::Ptr kit::BakedTerrain::load(const std::string&name)
     std::ifstream f(dataDirectory + "heightdata", std::ios_base::in | std::ios_base::binary);
     if (!f)
     {
-      KIT_ERR("Failed to load terrain \"" + name + "\": could not load heightdata.");
-      return returner;
+      KIT_THROW("Failed to load terrain \"" + name + "\": could not load heightdata.");
     }
 
     // Reserve and load height data
-    returner->m_heightData.reserve(returner->m_size.x * returner->m_size.y);
-    for (unsigned int i = 0; i < returner->m_size.y * returner->m_size.x; i++)
+    m_heightData.reserve(m_size.x * m_size.y);
+    for (unsigned int i = 0; i < m_size.y * m_size.x; i++)
     {
       kit::BakedTerrain::Vertex adder;
       adder.m_height = kit::readFloat(f);
       adder.m_normal = kit::readVec3(f);
-      returner->m_heightData.push_back(adder);
+      m_heightData.push_back(adder);
     }
 
   }
 
-  returner->m_valid = true;
+  m_valid = true;
   std::cout << "Generating GPU program and verifying cache" << std::endl;
-  returner->updateGpuProgram();
-  std::cout << "Done!" << std::endl;
-  return returner;
+  updateGpuProgram();
 }
 
-void kit::BakedTerrain::renderDeferred(kit::Renderer::Ptr renderer)
+kit::BakedTerrain::~BakedTerrain()
 {
-  if(!this->m_valid)
+  glDeleteBuffers(1, &m_glVertexIndices);
+  glDeleteBuffers(1, &m_glVertexBuffer);
+  glDeleteVertexArrays(1, &m_glVertexArray);
+  
+  if(m_program)
+    delete m_program;
+  
+  if(m_arCache)
+    delete m_arCache;
+  
+  if(m_nxCache)
+    delete m_nxCache;
+  
+  for(auto c : m_layerInfo)
+  {
+    if(c.arCache)
+      delete c.arCache;
+    
+    if(c.ndCache)
+      delete c.ndCache;
+  }
+}
+
+void kit::BakedTerrain::renderDeferred(kit::Renderer * renderer)
+{
+  if(!m_valid)
   {
     return;
   }
 
-  glm::mat4 modelViewMatrix = renderer->getActiveCamera()->getViewMatrix() * this->getTransformMatrix();
-  glm::mat4 modelViewProjectionMatrix = renderer->getActiveCamera()->getProjectionMatrix() * renderer->getActiveCamera()->getViewMatrix() * this->getTransformMatrix();
+  glm::mat4 modelViewMatrix = renderer->getActiveCamera()->getViewMatrix() * getTransformMatrix();
+  glm::mat4 modelViewProjectionMatrix = renderer->getActiveCamera()->getProjectionMatrix() * renderer->getActiveCamera()->getViewMatrix() * getTransformMatrix();
 
   glDisable(GL_BLEND);
   glDisable(GL_CULL_FACE);
   //glCullFace(GL_BACK);
 
-  this->m_program->use();
-  this->m_program->setUniformMat4("uniform_mvMatrix", modelViewMatrix);
-  this->m_program->setUniformMat4("uniform_mvpMatrix", modelViewProjectionMatrix);
+  m_program->use();
+  m_program->setUniformMat4("uniform_mvMatrix", modelViewMatrix);
+  m_program->setUniformMat4("uniform_mvpMatrix", modelViewProjectionMatrix);
 
-  this->renderGeometry();
+  renderGeometry();
 }
 
 void kit::BakedTerrain::renderShadows(glm::mat4 viewmatrix, glm::mat4 projectionmatrix)
 {
   glDisable(GL_CULL_FACE);
   kit::Model::getShadowProgram(false, false, false)->use();
-  kit::Model::getShadowProgram(false, false, false)->setUniformMat4("uniform_mvpMatrix", projectionmatrix * viewmatrix * this->getTransformMatrix());
-  this->renderGeometry();
+  kit::Model::getShadowProgram(false, false, false)->setUniformMat4("uniform_mvpMatrix", projectionmatrix * viewmatrix * getTransformMatrix());
+  renderGeometry();
 }
 
 void kit::BakedTerrain::renderGeometry()
 {
-  if(!this->m_valid)
+  if(!m_valid)
   {
     return;
   }
 
-  glBindVertexArray(this->m_glVertexArray);
-  glDrawElements( GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0);
+  glBindVertexArray(m_glVertexArray);
+  glDrawElements( GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, (void*)0);
 }
 
 void kit::BakedTerrain::updateGpuProgram()
 {
-  if(!this->m_valid)
+  if(!m_valid)
   {
     return;
   }
@@ -417,12 +400,12 @@ void kit::BakedTerrain::updateGpuProgram()
     pixelSource << std::endl;
     
     // Uniforms
-    if (this->m_numLayers > 1)
+    if (m_numLayers > 1)
     {
       pixelSource << "uniform sampler2D uniform_materialMask0;" << std::endl;
     }
 
-    if (this->m_numLayers > 4)
+    if (m_numLayers > 4)
     {
       pixelSource << "uniform sampler2D uniform_materialMask1;" << std::endl;
     }
@@ -433,7 +416,7 @@ void kit::BakedTerrain::updateGpuProgram()
     pixelSource << std::endl;
 
     // Layerspecific uniforms
-    for(int i = 0; i < this->m_numLayers; i++)
+    for(int i = 0; i < m_numLayers; i++)
     {
       pixelSource << "uniform sampler2D uniform_arLayer" << i << ";" << std::endl;
       pixelSource << "uniform sampler2D uniform_ndLayer" << i << ";" << std::endl;
@@ -446,7 +429,7 @@ void kit::BakedTerrain::updateGpuProgram()
 
     // Prepare variables
     pixelSource << "  vec2 fullUv = in_texCoords;" << std::endl;
-    pixelSource << "  vec2 detailUv = in_texCoords * vec2(" << (float)this->m_size.x * this->m_xzScale << ", " << (float)this->m_size.y  * this->m_xzScale << ");" << std::endl;
+    pixelSource << "  vec2 detailUv = in_texCoords * vec2(" << (float)m_size.x * m_xzScale << ", " << (float)m_size.y  * m_xzScale << ");" << std::endl;
     pixelSource << "  float linearDistance = distance(vec3(0.0), in_position.xyz / in_position.w);" << std::endl;
 
     // Prepare output variables
@@ -465,21 +448,21 @@ void kit::BakedTerrain::updateGpuProgram()
     pixelSource << "  {" << std::endl;
 
     // Sample the materialmasks
-    if (this->m_numLayers > 1)
+    if (m_numLayers > 1)
     {
       pixelSource << "    vec4 materialMask0 = texture(uniform_materialMask0, fullUv);" << std::endl;
     }
 
-    if (this->m_numLayers > 4)
+    if (m_numLayers > 4)
     {
       pixelSource << "    vec4 materialMask1 = texture(uniform_materialMask1, fullUv);" << std::endl;
     }
 
     // Sample the layer maps
-    for (int i = 0; i < this->m_numLayers; i++)
+    for (int i = 0; i < m_numLayers; i++)
     {
-      pixelSource << "    vec4 ar" << i << " = texture(uniform_arLayer" << i << ", detailUv * " << this->m_layerInfo[i].uvScale << ");" << std::endl;
-      pixelSource << "    vec4 nd" << i << " = texture(uniform_ndLayer" << i << ", detailUv * " << this->m_layerInfo[i].uvScale << ");" << std::endl;
+      pixelSource << "    vec4 ar" << i << " = texture(uniform_arLayer" << i << ", detailUv * " << m_layerInfo[i].uvScale << ");" << std::endl;
+      pixelSource << "    vec4 nd" << i << " = texture(uniform_ndLayer" << i << ", detailUv * " << m_layerInfo[i].uvScale << ");" << std::endl;
 
       if (i == 0)
       {
@@ -513,86 +496,92 @@ void kit::BakedTerrain::updateGpuProgram()
   }
 
   // Compile shader objects
-  auto vertexShader = kit::Shader::create(Shader::Type::Vertex);
+  auto vertexShader = new kit::Shader(Shader::Type::Vertex);
   vertexShader->sourceFromString(vertexSource.str());
   vertexShader->compile();
 
-  auto pixelShader = kit::Shader::create(Shader::Type::Fragment);
+  auto pixelShader = new kit::Shader(Shader::Type::Fragment);
   pixelShader->sourceFromString(pixelSource.str());
   pixelShader->compile();
 
   // Link program
-  this->m_program = kit::Program::create();
-  this->m_program->attachShader(vertexShader);
-  this->m_program->attachShader(pixelShader);
-  this->m_program->link();
-  this->m_program->detachShader(vertexShader);
-  this->m_program->detachShader(pixelShader);
+  if(m_program)
+    delete m_program;
+  
+  m_program = new kit::Program();
+  m_program->attachShader(vertexShader);
+  m_program->attachShader(pixelShader);
+  m_program->link();
+  m_program->detachShader(vertexShader);
+  m_program->detachShader(pixelShader);
 
+  delete vertexShader;
+  delete pixelShader;
+  
   // Update uniforms
-  if (this->m_numLayers > 1)
+  if (m_numLayers > 1)
   {
-    this->m_program->setUniformTexture("uniform_materialMask0", this->m_materialMask[0]);
+    m_program->setUniformTexture("uniform_materialMask0", m_materialMask[0]);
   }
 
-  if (this->m_numLayers > 4)
+  if (m_numLayers > 4)
   {
-    this->m_program->setUniformTexture("uniform_materialMask1", this->m_materialMask[1]);
+    m_program->setUniformTexture("uniform_materialMask1", m_materialMask[1]);
   }
   
-  this->m_program->setUniformTexture("uniform_arCache", this->m_arCache);
-  this->m_program->setUniformTexture("uniform_nxCache", this->m_nxCache);
-  this->m_program->setUniform1f("uniform_detailDistance", 25.0f); //< TODO: Replace with configuration parameter
+  m_program->setUniformTexture("uniform_arCache", m_arCache);
+  m_program->setUniformTexture("uniform_nxCache", m_nxCache);
+  m_program->setUniform1f("uniform_detailDistance", 25.0f); //< TODO: Replace with configuration parameter
 
   // Layer-specific uniforms
-  for(int i = 0; i < this->m_numLayers; i++)
+  for(int i = 0; i < m_numLayers; i++)
   {
-    this->m_program->setUniformTexture("uniform_arLayer" + std::to_string(i), this->m_layerInfo[i].arCache);
-    this->m_program->setUniformTexture("uniform_ndLayer" + std::to_string(i), this->m_layerInfo[i].ndCache);
+    m_program->setUniformTexture("uniform_arLayer" + std::to_string(i), m_layerInfo[i].arCache);
+    m_program->setUniformTexture("uniform_ndLayer" + std::to_string(i), m_layerInfo[i].ndCache);
   }
 }
 
-kit::Texture::Ptr kit::BakedTerrain::getArCache()
+kit::Texture * kit::BakedTerrain::getArCache()
 {
-  return this->m_arCache;
+  return m_arCache;
 }
 
-kit::Texture::Ptr kit::BakedTerrain::getNxCache()
+kit::Texture * kit::BakedTerrain::getNxCache()
 {
-  return this->m_nxCache;
+  return m_nxCache;
 }
 
-kit::Texture::Ptr kit::BakedTerrain::getMaterialMask0()
+kit::Texture * kit::BakedTerrain::getMaterialMask0()
 {
-  return this->m_materialMask[0];
+  return m_materialMask[0];
 }
 
-kit::Texture::Ptr kit::BakedTerrain::getMaterialMask1()
+kit::Texture * kit::BakedTerrain::getMaterialMask1()
 {
-  return this->m_materialMask[1];
+  return m_materialMask[1];
 }
 
 kit::BakedTerrain::Vertex const & kit::BakedTerrain::getVertexAt(uint32_t x, uint32_t y)
 {
-  x = (glm::min)(this->m_size.x - 1, x);
-  y = (glm::min)(this->m_size.y - 1, y);
-  return this->m_heightData[(this->m_size.x * y) + x];
-  //return this->m_heightData[(this->m_size.y * x) + x];
+  x = (glm::min)(m_size.x - 1, x);
+  y = (glm::min)(m_size.y - 1, y);
+  return m_heightData[(m_size.x * y) + x];
+  //return m_heightData[(m_size.y * x) + x];
 }
 
 float kit::BakedTerrain::sampleHeight(float x, float z)
 {
   glm::vec2 fullSize;
-  fullSize.x = float(this->m_size.x) * this->m_xzScale;
-  fullSize.y = float(this->m_size.y) * this->m_xzScale;
+  fullSize.x = float(m_size.x) * m_xzScale;
+  fullSize.y = float(m_size.y) * m_xzScale;
 
   glm::vec2 halfSize = fullSize / 2.0f;
 
   x += halfSize.x;
   z += halfSize.y;
 
-  float xMap = x / this->m_xzScale;
-  float zMap = z / this->m_xzScale;
+  float xMap = x / m_xzScale;
+  float zMap = z / m_xzScale;
 
   uint32_t px = (uint32_t)glm::floor(xMap);
   uint32_t pz = (uint32_t)glm::floor(zMap);
@@ -600,10 +589,10 @@ float kit::BakedTerrain::sampleHeight(float x, float z)
   uint32_t hx = px + 1;
   uint32_t hz = pz + 1;
 
-  float v1 = this->getVertexAt(px, pz).m_height;
-  float v2 = this->getVertexAt(hx, pz).m_height;
-  float v3 = this->getVertexAt(px, hz).m_height;
-  float v4 = this->getVertexAt(hx, hz).m_height;
+  float v1 = getVertexAt(px, pz).m_height;
+  float v2 = getVertexAt(hx, pz).m_height;
+  float v3 = getVertexAt(px, hz).m_height;
+  float v4 = getVertexAt(hx, hz).m_height;
 
   // Calculate the weights for each pixel
   float fx = (xMap - (float)px);
@@ -619,22 +608,22 @@ float kit::BakedTerrain::sampleHeight(float x, float z)
   float height = v1 * w1 + v2 * w2 + v3 * w3 + v4 * w4;
 
   //std::cout << "Height at " << x << "x" << z << ": " << height << std::endl;
-  return height * this->m_yScale;
+  return height * m_yScale;
 }
 
 glm::vec3 kit::BakedTerrain::sampleNormal(float x, float z)
 {
   glm::vec2 fullSize;
-  fullSize.x = float(this->m_size.x) * this->m_xzScale;
-  fullSize.y = float(this->m_size.y) * this->m_xzScale;
+  fullSize.x = float(m_size.x) * m_xzScale;
+  fullSize.y = float(m_size.y) * m_xzScale;
 
   glm::vec2 halfSize = fullSize / 2.0f;
 
   x += halfSize.x;
   z += halfSize.y;
 
-  float xMap = x / this->m_xzScale;
-  float zMap = z / this->m_xzScale;
+  float xMap = x / m_xzScale;
+  float zMap = z / m_xzScale;
 
   uint32_t px = (uint32_t)glm::floor(xMap);
   uint32_t pz = (uint32_t)glm::floor(zMap);
@@ -642,10 +631,10 @@ glm::vec3 kit::BakedTerrain::sampleNormal(float x, float z)
   uint32_t hx = px + 1;
   uint32_t hz = pz + 1;
 
-  glm::vec3 v1 = this->getVertexAt(px, pz).m_normal;
-  glm::vec3 v2 = this->getVertexAt(hx, pz).m_normal;
-  glm::vec3 v3 = this->getVertexAt(px, hz).m_normal;
-  glm::vec3 v4 = this->getVertexAt(hx, hz).m_normal;
+  glm::vec3 v1 = getVertexAt(px, pz).m_normal;
+  glm::vec3 v2 = getVertexAt(hx, pz).m_normal;
+  glm::vec3 v3 = getVertexAt(px, hz).m_normal;
+  glm::vec3 v4 = getVertexAt(hx, hz).m_normal;
 
   // Calculate the weights for each pixel
   float fx = (xMap - (float)px);
@@ -665,17 +654,17 @@ glm::vec3 kit::BakedTerrain::sampleNormal(float x, float z)
 
 const glm::uvec2 & kit::BakedTerrain::getSize()
 {
-  return this->m_size;
+  return m_size;
 }
 
 const float & kit::BakedTerrain::getXzScale()
 {
-  return this->m_xzScale;
+  return m_xzScale;
 }
 
 bool kit::BakedTerrain::checkCollision(glm::vec3 point)
 {
-  return this->sampleHeight(point.x, point.z) >= point.y;
+  return sampleHeight(point.x, point.z) >= point.y;
 }
 
 int32_t kit::BakedTerrain::getRenderPriority()
@@ -687,5 +676,5 @@ int32_t kit::BakedTerrain::getRenderPriority()
 
 void kit::BakedTerrain::setDetailDistance(const float& meters)
 {
-  this->m_program->setUniform1f("uniform_detailDistance", meters);
+  m_program->setUniform1f("uniform_detailDistance", meters);
 }

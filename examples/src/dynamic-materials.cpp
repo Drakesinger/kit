@@ -17,6 +17,7 @@
 #include <Kit/Material.hpp>
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <Kit/Skeleton.hpp>
 
 int main(int argc, char *argv[])
 {
@@ -27,33 +28,33 @@ int main(int argc, char *argv[])
   winArgs.title = "Dynamic materials example";
   winArgs.resolution = glm::uvec2(1280, 720);
 
-  auto win = kit::Window::create(winArgs);
+  auto win = new kit::Window(winArgs);
   win->setMouseVirtual(true);
   
   // Create our renderer, set it's resolution to fit the windows resolution
-  auto renderer = kit::Renderer::create(glm::uvec2(1280, 720));
+  auto renderer = new kit::Renderer(glm::uvec2(1280, 720));
 
   // Create a render payload, anything we add to this will get rendered in our renderer
-  auto payload = kit::RenderPayload::create();
+  auto payload = new kit::RenderPayload();
   renderer->registerPayload(payload);
 
   // Create a fullscreen quad, so we can blit what the renderer produce to the screen
-  auto screenQuad = kit::Quad::create();
+  auto screenQuad = new kit::Quad();
 
   
   // Create a camera. fov of 72 degrees, aspect ratio according to resolution, and a short cliprange
   // Position the camera 2 meters backwards (Z- is forward)
-  auto camera = kit::Camera::create(72.0f, 1280.0f / 720.0f, glm::vec2(0.1f, 100.0f));
+  auto camera = new kit::Camera(72.0f, 1280.0f / 720.0f, glm::vec2(0.1f, 100.0f));
   camera->setPosition(glm::vec3(0.0f, 0.0f, 7.0f));
 
   // Create an environment light so that we can see what we render (IBL = Imagebased light)
-  auto light = kit::Light::create(kit::Light::IBL);
+  auto light = new kit::Light(kit::Light::IBL);
   light->setEnvironment("fortpoint");
   light->setColor(glm::vec3(1.0f, 1.0f, 1.0f) * 3.0f);
   payload->addLight(light);
 
   // Create a "weapon" model
-  auto scanner = kit::Model::create("ScannerMesh.mesh", "ScannerMesh.skeleton");
+  auto scanner = new kit::Model("ScannerMesh.mesh", "ScannerMesh.skeleton");
   scanner->getSkeleton()->setAnimation("Scanner|Idle");
   scanner->getSkeleton()->play(true);
   payload->addRenderable(scanner);
@@ -70,13 +71,13 @@ int main(int argc, char *argv[])
     }
   }
   
-  auto sphere = kit::Model::create("Sphere.mesh");
+  auto sphere = new kit::Model("Sphere.mesh");
   sphere->rotateX(90.0f); // Rotate it 90 degrees (the sphere model has an ugly UV seam)
   sphere->setInstancing(true, instances);
   payload->addRenderable(sphere); // Dont forget to add the sphere to the payload
 
   // Create a discrete skybox, base it on the environment light
-  auto skybox = kit::Skybox::create(light->getIrradianceMap());
+  auto skybox = new kit::Skybox("fortpoint");
   skybox->setStrength(0.5f);
   renderer->setSkybox(skybox);
 
@@ -99,10 +100,10 @@ int main(int argc, char *argv[])
   float verticalAngle = 0.0f;
   
   // Create a smaller quad to debugrender our minicamera
-  auto miniQuad = kit::Quad::create(glm::vec2(0.0f, 0.0f), glm::vec2(0.2f * 0.80822, 0.2f));
-  auto miniRenderer = kit::Renderer::create(glm::uvec2(uint32_t(128.0f * 0.80822), 128));
+  auto miniQuad = new kit::Quad(glm::vec2(0.0f, 0.0f), glm::vec2(0.2f * 0.80822, 0.2f));
+  auto miniRenderer = new kit::Renderer(glm::uvec2(uint32_t(128.0f * 0.80822), 128));
   miniRenderer->registerPayload(payload);
-  auto miniCamera = kit::Camera::create(90.0f, 0.80822f, glm::vec2(0.1f, 100.0f));
+  auto miniCamera = new kit::Camera(90.0f, 0.80822f, glm::vec2(0.1f, 100.0f));
   miniRenderer->setActiveCamera(miniCamera);
   miniRenderer->setSkybox(skybox);
   miniRenderer->setSRGBEnabled(false);
@@ -229,4 +230,19 @@ int main(int argc, char *argv[])
     // Flip the buffers so that what we just rendered is visible on the window
     win->display();
   }
+
+  delete miniCamera;
+  delete miniRenderer;
+  delete miniQuad;
+  
+  delete skybox;
+  delete sphere;
+  delete scanner;
+  delete light;
+  delete camera;
+  delete screenQuad;
+  delete payload;
+  delete renderer;
+  delete win;
+  
 }

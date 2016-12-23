@@ -2,89 +2,79 @@
 
 #include "Kit/IncOpenGL.hpp"
 #include "Kit/Texture.hpp"
+#include "Kit/PixelBuffer.hpp"
 
 kit::DoubleBuffer::DoubleBuffer(glm::uvec2 resolution, kit::PixelBuffer::AttachmentList colorattachments, kit::PixelBuffer::AttachmentInfo depthattachment)
 {
-  this->m_resolution = resolution;
-  this->m_frontBuffer = kit::PixelBuffer::create(resolution, colorattachments, depthattachment);
-  this->m_backBuffer = kit::PixelBuffer::create(resolution, colorattachments, depthattachment);
+  m_resolution = resolution;
+  m_frontBuffer = new kit::PixelBuffer(resolution, colorattachments, depthattachment);
+  m_backBuffer = new kit::PixelBuffer(resolution, colorattachments, depthattachment);
 }
 
 kit::DoubleBuffer::DoubleBuffer(glm::uvec2 resolution, kit::PixelBuffer::AttachmentList colorattachments)
 {
-  this->m_resolution = resolution;
-  this->m_frontBuffer = kit::PixelBuffer::create(resolution, colorattachments);
-  this->m_backBuffer = kit::PixelBuffer::create(resolution, colorattachments);
+  m_resolution = resolution;
+  m_frontBuffer = new kit::PixelBuffer(resolution, colorattachments);
+  m_backBuffer = new kit::PixelBuffer(resolution, colorattachments);
 }
 
-kit::DoubleBuffer::DoubleBuffer(kit::Texture::Ptr front, kit::Texture::Ptr back)
+kit::DoubleBuffer::DoubleBuffer(kit::Texture * front, kit::Texture * back)
 {
-  this->m_resolution = glm::uvec2(front->getResolution().x, front->getResolution().y);
-  this->m_frontBuffer = kit::PixelBuffer::create(this->m_resolution, {PixelBuffer::AttachmentInfo(front)});
-  this->m_backBuffer = kit::PixelBuffer::create(this->m_resolution, {PixelBuffer::AttachmentInfo(back)});
+  m_resolution = glm::uvec2(front->getResolution().x, front->getResolution().y);
+  m_frontBuffer = new kit::PixelBuffer(m_resolution, {PixelBuffer::AttachmentInfo(front)});
+  m_backBuffer = new kit::PixelBuffer(m_resolution, {PixelBuffer::AttachmentInfo(back)});
 }
 
 void kit::DoubleBuffer::flip()
 {
-  this->m_frontBuffer.swap(this->m_backBuffer);
+  kit::PixelBuffer * f = m_frontBuffer;;
+  m_frontBuffer = m_backBuffer;
+  m_backBuffer = f;
 }
 
 void kit::DoubleBuffer::clear(std::vector<glm::vec4> colors, float depth)
 {
-  this->m_backBuffer->clear(colors, depth);
-  this->m_backBuffer->bind();
+  m_backBuffer->clear(colors, depth);
+  m_backBuffer->bind();
 }
 
 void kit::DoubleBuffer::clear(std::vector<glm::vec4> colors)
 {
-  this->m_backBuffer->clear(colors);
-  this->m_backBuffer->bind();
+  m_backBuffer->clear(colors);
+  m_backBuffer->bind();
 }
 
 kit::DoubleBuffer::~DoubleBuffer()
 {
-
+  delete m_frontBuffer;
+  delete m_backBuffer;
 }
 
-kit::DoubleBuffer::Ptr kit::DoubleBuffer::create(glm::uvec2 resolution, kit::PixelBuffer::AttachmentList colorattachments, kit::PixelBuffer::AttachmentInfo depthattachment)
-{
-  return std::make_shared<kit::DoubleBuffer>(resolution, colorattachments, depthattachment);
+
+kit::PixelBuffer * kit::DoubleBuffer::getFrontBuffer(){
+  return m_frontBuffer;
 }
 
-kit::DoubleBuffer::Ptr kit::DoubleBuffer::create(glm::uvec2 resolution, kit::PixelBuffer::AttachmentList colorattachments)
-{
-  return std::make_shared<kit::DoubleBuffer>(resolution, colorattachments);
+kit::PixelBuffer * kit::DoubleBuffer::getBackBuffer(){
+  return m_backBuffer;
 }
 
-kit::DoubleBuffer::Ptr kit::DoubleBuffer::create(kit::Texture::Ptr front, kit::Texture::Ptr back)
-{
-  return std::make_shared<kit::DoubleBuffer>(front, back);
-}
-
-kit::PixelBuffer::Ptr kit::DoubleBuffer::getFrontBuffer(){
-  return this->m_frontBuffer;
-}
-
-kit::PixelBuffer::Ptr kit::DoubleBuffer::getBackBuffer(){
-  return this->m_backBuffer;
-}
-
-void kit::DoubleBuffer::blitFrom(kit::DoubleBuffer::Ptr source)
+void kit::DoubleBuffer::blitFrom(kit::DoubleBuffer * source)
 {
 #ifndef KIT_SHITTY_INTEL
   glBlitNamedFramebuffer(
     source->getFrontBuffer()->getHandle(),
-    this->getBackBuffer()->getHandle(),
+    getBackBuffer()->getHandle(),
     0, 0, source->getResolution().x, source->getResolution().y,
-    0, 0, this->getResolution().x, this->getResolution().y,
+    0, 0, getResolution().x, getResolution().y,
     GL_COLOR_BUFFER_BIT, GL_LINEAR
   );
 #else 
   source->getFrontBuffer()->bind(kit::PixelBuffer::Read);
-  this->getFrontBuffer()->bind(kit::PixelBuffer::Draw);
+  getFrontBuffer()->bind(kit::PixelBuffer::Draw);
   glBlitFramebuffer(
     0, 0, source->getResolution().x, source->getResolution().y,
-    0, 0, this->getResolution().x, this->getResolution().y,
+    0, 0, getResolution().x, getResolution().y,
     GL_COLOR_BUFFER_BIT, GL_LINEAR
   );
 #endif
@@ -92,7 +82,7 @@ void kit::DoubleBuffer::blitFrom(kit::DoubleBuffer::Ptr source)
 
 glm::uvec2 kit::DoubleBuffer::getResolution()
 {
-  return this->m_resolution;
+  return m_resolution;
 }
 
 /*

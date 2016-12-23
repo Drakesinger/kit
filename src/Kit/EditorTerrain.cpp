@@ -8,13 +8,15 @@
 #include "Kit/Renderer.hpp"
 #include "Kit/Shader.hpp"
 #include "Kit/Types.hpp"
+#include "Kit/DoubleBuffer.hpp"
+#include "Kit/PixelBuffer.hpp"
 
 #include <string>
 #include <fstream>
 #include <cstdlib>
 #include <sstream>
 #include <algorithm>
-#include <Kit/DoubleBuffer.hpp>
+
 
 #include <glm/glm.hpp>
 #include <glm/gtx/vector_angle.hpp> 
@@ -39,55 +41,55 @@ static std::string getMaskSuffix(int layer)
 }
 kit::EditorTerrain::Triangle::Triangle(kit::EditorTerrain::Vertex* a, kit::EditorTerrain::Vertex* b, kit::EditorTerrain::Vertex* c)
 {
-  this->m_a = a;
-  this->m_b = b;
-  this->m_c = c;
-  this->m_bitangent = glm::vec3(0.0f, 0.0f, 0.0f);
-  this->m_normal = glm::vec3(0.0f, 0.0f, 0.0f);
-  this->m_tangent = glm::vec3(0.0f, 0.0f, 0.0f);
+  m_a = a;
+  m_b = b;
+  m_c = c;
+  m_bitangent = glm::vec3(0.0f, 0.0f, 0.0f);
+  m_normal = glm::vec3(0.0f, 0.0f, 0.0f);
+  m_tangent = glm::vec3(0.0f, 0.0f, 0.0f);
 }
 
 
 kit::EditorTerrain::EditorTerrain() : kit::Renderable()
 {
   // Initialize the layerinfo array with some sane defaults
-  for(auto & currLayer : this->m_layerInfo)
+  for(auto & currLayer : m_layerInfo)
   {
-    currLayer.material = kit::Material::create();
+    currLayer.material = new kit::Material();
   }
 
-  this->m_name = "";
+  m_name = "";
   
-  this->m_bakeProgramArnx = nullptr;
-  this->m_arnxCache = nullptr;
+  m_bakeProgramArnx = nullptr;
+  m_arnxCache = nullptr;
     
-  this->m_materialMask = nullptr;
-  this->m_materialPaintProgram = nullptr;
-  this->m_heightPaintProgram = nullptr;
+  m_materialMask = nullptr;
+  m_materialPaintProgram = nullptr;
+  m_heightPaintProgram = nullptr;
 
-  this->m_indexCount = 0;
-  this->m_numLayers = 0;
-  this->m_program = nullptr;
-  this->m_resolution = glm::uvec2(0, 0);
-  this->m_valid = false;
+  m_indexCount = 0;
+  m_numLayers = 0;
+  m_program = nullptr;
+  m_resolution = glm::uvec2(0, 0);
+  m_valid = false;
 
-  this->m_heightmap = nullptr;
-  this->m_yScale = 0.0f;
-  this->m_xzScale = 0.0f;
+  m_heightmap = nullptr;
+  m_yScale = 0.0f;
+  m_xzScale = 0.0f;
 
-  this->m_decalBrush = nullptr;
-  this->m_decalProgram = nullptr;
-  this->m_decalBrushPosition = glm::vec2(0.0f, 0.0f);
-  this->m_decalBrushSize = glm::vec2(0.0f, 0.0f);
+  m_decalBrush = nullptr;
+  m_decalProgram = nullptr;
+  m_decalBrushPosition = glm::vec2(0.0f, 0.0f);
+  m_decalBrushSize = glm::vec2(0.0f, 0.0f);
   
-  glGenVertexArrays(1, &this->m_glVertexArray);
-  glGenBuffers(1, &this->m_glVertexIndices);
-  glGenBuffers(1, &this->m_glVertexBuffer);
+  glGenVertexArrays(1, &m_glVertexArray);
+  glGenBuffers(1, &m_glVertexIndices);
+  glGenBuffers(1, &m_glVertexBuffer);
   
   // Configure attributes
-  glBindVertexArray(this->m_glVertexArray);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_glVertexIndices);
-  glBindBuffer(GL_ARRAY_BUFFER, this->m_glVertexBuffer);
+  glBindVertexArray(m_glVertexArray);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glVertexIndices);
+  glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
   
   static const uint32_t attributeSize = sizeof(float) * 4;
 
@@ -101,63 +103,99 @@ kit::EditorTerrain::EditorTerrain() : kit::Renderable()
   
   // Compile static programs
   {
-    this->m_materialPaintProgram = kit::Program::load({"editor/terrain-material-paint.vert"}, {"editor/terrain-material-paint.frag"});
-    this->m_heightPaintProgram = kit::Program::load({"editor/terrain-height-paint.vert"}, {"editor/terrain-height-paint.frag"});
+    m_materialPaintProgram = new kit::Program({"editor/terrain-material-paint.vert"}, {"editor/terrain-material-paint.frag"});
+    m_heightPaintProgram = new kit::Program({"editor/terrain-height-paint.vert"}, {"editor/terrain-height-paint.frag"});
   }
 }
 
 kit::EditorTerrain::~EditorTerrain()
 {
-  glDeleteBuffers(1, &this->m_glVertexIndices);
-  glDeleteBuffers(1, &this->m_glVertexBuffer);
-  glDeleteVertexArrays(1, &this->m_glVertexArray);
+  glDeleteBuffers(1, &m_glVertexIndices);
+  glDeleteBuffers(1, &m_glVertexBuffer);
+  glDeleteVertexArrays(1, &m_glVertexArray);
 
-  for(Triangle *currTriangle : this->m_triangles)
+  for(Triangle *currTriangle : m_triangles)
   {
     delete currTriangle;
   }
   
-  for(Vertex *currVertex : this->m_vertices)
+  for(Vertex *currVertex : m_vertices)
   {
     delete currVertex;
   }
-  this->m_triangles.clear();
-  this->m_vertices.clear();
+  m_triangles.clear();
+  m_vertices.clear();
+  
+  if(m_materialMask)
+    delete m_materialMask;
+  
+  if(m_materialPaintProgram)
+    delete m_materialPaintProgram ;
+  
+  if(m_heightmap)
+    delete m_heightmap;
+  
+  if(m_heightPaintProgram)
+    delete m_heightPaintProgram;
+  
+  if(m_program)
+    delete m_program;
+  
+  if(m_pickProgram)
+    delete m_pickProgram;
+  
+  if(m_shadowProgram)
+    delete m_shadowProgram;
+  
+  if(m_bakeProgramArnx)
+    delete m_bakeProgramArnx;
+  
+  if(m_arnxCache)
+    delete m_arnxCache;
+  
+  if(m_decalBrush)
+    delete m_decalBrush;
+  
+  if(m_decalProgram)
+    delete m_decalProgram;
+  
+  if(m_wireProgram)
+    delete m_wireProgram;
 }
 
 void kit::EditorTerrain::generateCache()
 {
   // Clear old CPU data
-  for(Triangle *currTriangle : this->m_triangles)
+  for(Triangle *currTriangle : m_triangles)
   {
     delete currTriangle;
   }
   
-  for(Vertex *currVertex : this->m_vertices)
+  for(Vertex *currVertex : m_vertices)
   {
     delete currVertex;
   }
   
-  this->m_triangles.clear();
-  this->m_vertices.clear();
+  m_triangles.clear();
+  m_vertices.clear();
   
   // Create CPU data
   glm::vec2 fullSize;
-  fullSize.x = float(this->m_resolution.x) * this->m_xzScale;
-  fullSize.y = float(this->m_resolution.y) * this->m_xzScale;
+  fullSize.x = float(m_resolution.x) * m_xzScale;
+  fullSize.y = float(m_resolution.y) * m_xzScale;
 
   glm::vec2 halfSize = fullSize / 2.0f;
   
   // Generate vertexdata on the CPU
   uint32_t currId = 0;
-  for(uint32_t y = 0; y < this->m_resolution.y; y++)
+  for(uint32_t y = 0; y < m_resolution.y; y++)
   {
-    for(uint32_t x = 0; x < this->m_resolution.x; x++)
+    for(uint32_t x = 0; x < m_resolution.x; x++)
     {
       Vertex * newVertex = new Vertex();
-      newVertex->m_position.x = float(x) * this->m_xzScale - halfSize.x;
+      newVertex->m_position.x = float(x) * m_xzScale - halfSize.x;
       newVertex->m_position.y = 0.0f;
-      newVertex->m_position.z = float(y) * this->m_xzScale - halfSize.y;
+      newVertex->m_position.z = float(y) * m_xzScale - halfSize.y;
 
       newVertex->m_normal.x = 0.0;
       newVertex->m_normal.y = 0.0;
@@ -167,12 +205,12 @@ void kit::EditorTerrain::generateCache()
       newVertex->m_tangent.y = 0.0;
       newVertex->m_tangent.z = 0.0;
 
-      newVertex->m_uv.x = float(x) * (1.0f/float(this->m_resolution.x));
-      newVertex->m_uv.y = 1.0f - (float(y) * (1.0f/float(this->m_resolution.y)));
+      newVertex->m_uv.x = float(x) * (1.0f/float(m_resolution.x));
+      newVertex->m_uv.y = 1.0f - (float(y) * (1.0f/float(m_resolution.y)));
       newVertex->m_id = currId;
 
-      this->m_vertices.push_back(newVertex);
-      this->m_indexCache[newVertex] = currId++;
+      m_vertices.push_back(newVertex);
+      m_indexCache[newVertex] = currId++;
 
     }
   }
@@ -180,10 +218,10 @@ void kit::EditorTerrain::generateCache()
   // Generate triangles on the CPU
   bool xflip = false;
   bool yflip = false;
-  for(unsigned int y = 0; y < this->m_resolution.y-1; y++)
+  for(unsigned int y = 0; y < m_resolution.y-1; y++)
   {
     xflip = false;
-    for(unsigned int x = 0; x < this->m_resolution.x-1; x++)
+    for(unsigned int x = 0; x < m_resolution.x-1; x++)
     {
       Triangle* newTriangleA;
       Triangle* newTriangleB;
@@ -192,26 +230,26 @@ void kit::EditorTerrain::generateCache()
       {
         if(yflip)
         {
-          newTriangleA = new Triangle(this->getVertexAt(x, y), this->getVertexAt(x+1, y+1), this->getVertexAt(x, y+1)); // X
-          newTriangleB = new Triangle(this->getVertexAt(x, y), this->getVertexAt(x+1, y), this->getVertexAt(x+1, y+1)); // X
+          newTriangleA = new Triangle(getVertexAt(x, y), getVertexAt(x+1, y+1), getVertexAt(x, y+1)); // X
+          newTriangleB = new Triangle(getVertexAt(x, y), getVertexAt(x+1, y), getVertexAt(x+1, y+1)); // X
         }
         else
         {
-          newTriangleA = new Triangle(this->getVertexAt(x, y), this->getVertexAt(x+1, y), this->getVertexAt(x, y+1));
-          newTriangleB = new Triangle(this->getVertexAt(x, y+1), this->getVertexAt(x+1, y), this->getVertexAt(x+1, y+1));
+          newTriangleA = new Triangle(getVertexAt(x, y), getVertexAt(x+1, y), getVertexAt(x, y+1));
+          newTriangleB = new Triangle(getVertexAt(x, y+1), getVertexAt(x+1, y), getVertexAt(x+1, y+1));
         }
       }
       else
       {
         if(yflip)
         {
-          newTriangleA = new Triangle(this->getVertexAt(x, y+1), this->getVertexAt(x+1, y), this->getVertexAt(x+1, y+1));
-          newTriangleB = new Triangle(this->getVertexAt(x, y), this->getVertexAt(x+1, y), this->getVertexAt(x, y+1));
+          newTriangleA = new Triangle(getVertexAt(x, y+1), getVertexAt(x+1, y), getVertexAt(x+1, y+1));
+          newTriangleB = new Triangle(getVertexAt(x, y), getVertexAt(x+1, y), getVertexAt(x, y+1));
         }
         else
         {
-          newTriangleA = new Triangle(this->getVertexAt(x, y), this->getVertexAt(x+1, y), this->getVertexAt(x+1, y+1));
-          newTriangleB = new Triangle(this->getVertexAt(x, y), this->getVertexAt(x+1, y+1), this->getVertexAt(x, y+1));
+          newTriangleA = new Triangle(getVertexAt(x, y), getVertexAt(x+1, y), getVertexAt(x+1, y+1));
+          newTriangleB = new Triangle(getVertexAt(x, y), getVertexAt(x+1, y+1), getVertexAt(x, y+1));
         }
       }
 
@@ -223,8 +261,8 @@ void kit::EditorTerrain::generateCache()
       newTriangleB->m_b->m_triangles.push_back(newTriangleB);
       newTriangleB->m_c->m_triangles.push_back(newTriangleB);
 
-      this->m_triangles.push_back(newTriangleA);
-      this->m_triangles.push_back(newTriangleB);
+      m_triangles.push_back(newTriangleA);
+      m_triangles.push_back(newTriangleB);
 
       xflip = !xflip;
     }
@@ -234,18 +272,18 @@ void kit::EditorTerrain::generateCache()
   // Upload data 
   // Create indices
   std::vector<uint32_t> indexData;
-  for(Triangle* currTriangle : this->m_triangles)
+  for(Triangle* currTriangle : m_triangles)
   {
     indexData.push_back(currTriangle->m_c->m_id);
     indexData.push_back(currTriangle->m_b->m_id);
     indexData.push_back(currTriangle->m_a->m_id);
   }
 
-  this->m_indexCount = (uint32_t)this->m_triangles.size() * 3;
+  m_indexCount = (uint32_t)m_triangles.size() * 3;
 
   // Create vertices
   std::vector<float> vertexData;
-  for(Vertex* currVertex : this->m_vertices)
+  for(Vertex* currVertex : m_vertices)
   {
     vertexData.push_back(currVertex->m_position.x);
     vertexData.push_back(currVertex->m_position.z);
@@ -253,100 +291,94 @@ void kit::EditorTerrain::generateCache()
     vertexData.push_back(currVertex->m_uv.y);
   }
 
-  glBindVertexArray(this->m_glVertexArray);
+  glBindVertexArray(m_glVertexArray);
 
   // Upload indices
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_glVertexIndices);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glVertexIndices);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(uint32_t), &indexData[0], GL_STATIC_DRAW);
 
   // Upload vertices 
-  glBindBuffer(GL_ARRAY_BUFFER, this->m_glVertexBuffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
   glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float) , &vertexData[0], GL_STATIC_DRAW);
   
   // Create buffers etc
-  glm::vec2 mapResolutionf = glm::vec2(this->m_resolution.x, this->m_resolution.y) * this->m_xzScale * 8.0f;// 8 fragments per meter, gives us 1.25dm  precision
+  glm::vec2 mapResolutionf = glm::vec2(m_resolution.x, m_resolution.y) * m_xzScale * 8.0f;// 8 fragments per meter, gives us 1.25dm  precision
   glm::uvec2 mapResolution = glm::uvec2(mapResolutionf.x, mapResolutionf.y);
-  this->m_arnxCache = kit::PixelBuffer::create(mapResolution, {PixelBuffer::AttachmentInfo(Texture::RGBA8), PixelBuffer::AttachmentInfo(Texture::RGBA8)});
-  this->m_materialMask = kit::DoubleBuffer::create(mapResolution, { PixelBuffer::AttachmentInfo(Texture::RGBA8) , PixelBuffer::AttachmentInfo(Texture::RGBA8) });
-  this->m_heightmap = kit::DoubleBuffer::create(this->m_resolution, {PixelBuffer::AttachmentInfo(Texture::R16F)});
+  m_arnxCache = new kit::PixelBuffer(mapResolution, {PixelBuffer::AttachmentInfo(Texture::RGBA8), PixelBuffer::AttachmentInfo(Texture::RGBA8)});
+  m_materialMask = new kit::DoubleBuffer(mapResolution, { PixelBuffer::AttachmentInfo(Texture::RGBA8) , PixelBuffer::AttachmentInfo(Texture::RGBA8) });
+  m_heightmap = new kit::DoubleBuffer(m_resolution, {PixelBuffer::AttachmentInfo(Texture::R16F)});
 
   // Clear material mask
-  this->m_materialMask->getFrontBuffer()->clearAttachment(0, glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
-  this->m_materialMask->getBackBuffer()->clearAttachment(0, glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
+  m_materialMask->getFrontBuffer()->clearAttachment(0, glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
+  m_materialMask->getBackBuffer()->clearAttachment(0, glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
 
-  this->m_materialMask->getFrontBuffer()->clearAttachment(1, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
-  this->m_materialMask->getBackBuffer()->clearAttachment(1, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+  m_materialMask->getFrontBuffer()->clearAttachment(1, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+  m_materialMask->getBackBuffer()->clearAttachment(1, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
 
   // Clear heightmap
-  this->m_heightmap->getFrontBuffer()->clearAttachment(0, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
-  this->m_heightmap->getBackBuffer()->clearAttachment(0, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+  m_heightmap->getFrontBuffer()->clearAttachment(0, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+  m_heightmap->getBackBuffer()->clearAttachment(0, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
 }
 
-kit::EditorTerrain::Ptr kit::EditorTerrain::create(const std::string&name, glm::uvec2 resolution, float xzScale, float yScale)
+kit::EditorTerrain::EditorTerrain(const std::string&name, glm::uvec2 resolution, float xzScale, float yScale) : kit::EditorTerrain()
 {
-  std::cout << "Creating editor terrain \"" << name.c_str() << "\" with resolution " << resolution.x << "x" << resolution.y << std::endl;
-  auto returner = std::make_shared<kit::EditorTerrain>();
-
-  returner->m_name = name,
-  returner->m_resolution = resolution;
-  returner->m_yScale = yScale;
-  returner->m_xzScale = xzScale;
+  m_name = name,
+  m_resolution = resolution;
+  m_yScale = yScale;
+  m_xzScale = xzScale;
   
   // Initialize layers
   {
-    returner->m_numLayers = 1;
-    returner->m_layerInfo[0].material = kit::Material::load("Dirt.material");
+    m_numLayers = 1;
+    m_layerInfo[0].material = kit::Material::load("Dirt.material");
   }
 
   // Create and initialize buffers etc.
   {
-    returner->generateCache();
+    generateCache();
     
     // Generate, compile and link GPU program
-    returner->updateGpuProgram();
+    updateGpuProgram();
 
     // Bake ARNX-cache
-    returner->bakeARNXCache();
+    bakeARNXCache();
   }
 
-  returner->m_valid = true;
-  return returner;
+  m_valid = true;
 }
 
 void kit::EditorTerrain::reset(const std::string&name, glm::uvec2 resolution, float xzScale, float yScale)
 {
-  this->m_name = name;
-  this->m_resolution = resolution;
-  this->m_xzScale = xzScale;
-  this->m_yScale = yScale;
+  m_name = name;
+  m_resolution = resolution;
+  m_xzScale = xzScale;
+  m_yScale = yScale;
   
   // Initialize layers
   {
-    this->m_numLayers = 1;
-    this->m_layerInfo[0].material = kit::Material::load("Dirt.material");
+    m_numLayers = 1;
+    m_layerInfo[0].material = kit::Material::load("Dirt.material");
   }
 
   // Create and initialize buffers etc.
   {
-    this->generateCache();
+    generateCache();
     
     // Generate, compile and link GPU program
-    this->updateGpuProgram();
+    updateGpuProgram();
     
     // Bake ARNM-cache
-    this->bakeARNXCache();
+    bakeARNXCache();
   }
 }
 
-kit::EditorTerrain::Ptr kit::EditorTerrain::load(const std::string&name)
+kit::EditorTerrain::EditorTerrain(const std::string&name) : kit::EditorTerrain()
 {
-  std::cout << "Loading editor terrain \"" << name.c_str() << "\"" << std::endl;
-  auto returner = std::make_shared<kit::EditorTerrain>();
-  
-  returner->m_name = name;
-  returner->m_resolution = glm::uvec2(4, 4);
-  returner->m_xzScale = 1.0f;
-  returner->m_yScale = 1.0f;
+
+  m_name = name;
+  m_resolution = glm::uvec2(4, 4);
+  m_xzScale = 1.0f;
+  m_yScale = 1.0f;
   
   std::stringstream terrainPath;
   terrainPath << "./data/terrains/" << name << "/";
@@ -356,8 +388,7 @@ kit::EditorTerrain::Ptr kit::EditorTerrain::load(const std::string&name)
   std::ifstream header(headerPath);
   if(!header)
   {
-    KIT_ERR("Failed to load terrain, could not open headerfile");
-    return returner;
+    KIT_THROW("Failed to load terrain, could not open headerfile");
   }
   
   std::string currline;
@@ -368,22 +399,22 @@ kit::EditorTerrain::Ptr kit::EditorTerrain::load(const std::string&name)
     {
       if(args[0] == "xzscale")
       {
-        returner->m_xzScale = (float)std::atof(args[1].c_str());
+        m_xzScale = (float)std::atof(args[1].c_str());
       }
       if(args[0] == "yscale")
       {
-        returner->m_yScale = (float)std::atof(args[1].c_str());
+        m_yScale = (float)std::atof(args[1].c_str());
       }
       if(args[0] == "numlayers")
       {
-        returner->m_numLayers = std::atoi(args[1].c_str());
+        m_numLayers = std::atoi(args[1].c_str());
       }
     }
     if(args.size() == 3)
     {
       if(args[0] == "size")
       {
-        returner->m_resolution = glm::uvec2(std::atoi(args[1].c_str()), std::atoi(args[2].c_str()));
+        m_resolution = glm::uvec2(std::atoi(args[1].c_str()), std::atoi(args[2].c_str()));
       }
     }
     if(args.size() == 3)
@@ -394,9 +425,8 @@ kit::EditorTerrain::Ptr kit::EditorTerrain::load(const std::string&name)
         if(currLayer < 0 || currLayer > 3)
         {
           KIT_ERR("Warning: Invalid layer declaration in terrain data");
-          continue;
         }
-        returner->m_layerInfo[currLayer].material = kit::Material::load(args[3]);
+        m_layerInfo[currLayer].material = kit::Material::load(args[3]);
       }
     }
   }
@@ -405,62 +435,61 @@ kit::EditorTerrain::Ptr kit::EditorTerrain::load(const std::string&name)
 
   // Create and initialize buffers etc.
   {
-    returner->generateCache();
+    generateCache();
     
     // Generate, compile and link GPU program
-    returner->updateGpuProgram();
+    updateGpuProgram();
     
     // Bake ARNM-cache
-    returner->bakeARNXCache();
+    bakeARNXCache();
   }
   
-  returner->m_valid = true;
-  returner->updateGpuProgram();
-  return returner;
+  m_valid = true;
+  updateGpuProgram();
 }
 
-void kit::EditorTerrain::renderDeferred(kit::Renderer::Ptr renderer)
+void kit::EditorTerrain::renderDeferred(kit::Renderer * renderer)
 {
-  if(!this->m_valid)
+  if(!m_valid)
   {
     return;
   }
 
-  glm::mat4 modelViewMatrix = renderer->getActiveCamera()->getViewMatrix() * this->getTransformMatrix();
-  glm::mat4 modelViewProjectionMatrix = renderer->getActiveCamera()->getProjectionMatrix() * renderer->getActiveCamera()->getViewMatrix() * this->getTransformMatrix();
+  glm::mat4 modelViewMatrix = renderer->getActiveCamera()->getViewMatrix() * getTransformMatrix();
+  glm::mat4 modelViewProjectionMatrix = renderer->getActiveCamera()->getProjectionMatrix() * renderer->getActiveCamera()->getViewMatrix() * getTransformMatrix();
 
   glDisable(GL_BLEND);
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
 
-  this->m_program->use();
-  this->m_program->setUniformMat4("uniform_mvMatrix", modelViewMatrix);
-  this->m_program->setUniformMat4("uniform_mvpMatrix", modelViewProjectionMatrix);
+  m_program->use();
+  m_program->setUniformMat4("uniform_mvMatrix", modelViewMatrix);
+  m_program->setUniformMat4("uniform_mvpMatrix", modelViewProjectionMatrix);
 
-  this->renderGeometry();
+  renderGeometry();
 }
 
 void kit::EditorTerrain::renderShadows(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
 {
   glDisable(GL_CULL_FACE);
-  this->m_shadowProgram->use();
-  this->m_shadowProgram->setUniformMat4("uniform_mvpMatrix", projectionMatrix * viewMatrix * this->getTransformMatrix());
-  this->renderGeometry();
+  m_shadowProgram->use();
+  m_shadowProgram->setUniformMat4("uniform_mvpMatrix", projectionMatrix * viewMatrix * getTransformMatrix());
+  renderGeometry();
 }
 
-void kit::EditorTerrain::renderForward(kit::Renderer::Ptr renderer)
+void kit::EditorTerrain::renderForward(kit::Renderer * renderer)
 {
-  if(!this->m_valid)
+  if(!m_valid)
   {
     return;
   }
   
-  if(this->m_decalBrush == nullptr)
+  if(m_decalBrush == nullptr)
   {
     return;
   }
 
-  glm::mat4 modelViewProjectionMatrix = renderer->getActiveCamera()->getProjectionMatrix() * renderer->getActiveCamera()->getViewMatrix() * this->getTransformMatrix();
+  glm::mat4 modelViewProjectionMatrix = renderer->getActiveCamera()->getProjectionMatrix() * renderer->getActiveCamera()->getViewMatrix() * getTransformMatrix();
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_ONE, GL_ONE);
@@ -469,21 +498,21 @@ void kit::EditorTerrain::renderForward(kit::Renderer::Ptr renderer)
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
 
-  this->m_decalProgram->use();
-  this->m_decalProgram->setUniformMat4("uniform_mvpMatrix", modelViewProjectionMatrix);
-  this->m_decalProgram->setUniform1f("uniform_whitepoint", renderer->getWhitepoint());
+  m_decalProgram->use();
+  m_decalProgram->setUniformMat4("uniform_mvpMatrix", modelViewProjectionMatrix);
+  m_decalProgram->setUniform1f("uniform_whitepoint", renderer->getWhitepoint());
 
-  this->renderGeometry();
+  renderGeometry();
   
-  this->m_wireProgram->use();
-  this->m_wireProgram->setUniformMat4("uniform_mvpMatrix", modelViewProjectionMatrix);
-  this->m_wireProgram->setUniform1f("uniform_whitepoint", renderer->getWhitepoint());
+  m_wireProgram->use();
+  m_wireProgram->setUniformMat4("uniform_mvpMatrix", modelViewProjectionMatrix);
+  m_wireProgram->setUniform1f("uniform_whitepoint", renderer->getWhitepoint());
 
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   glEnable(GL_POLYGON_OFFSET_LINE);
   glPolygonOffset(-1.0f, 1.0f);
   glEnable(GL_DEPTH_TEST);
-  this->renderGeometry();
+  renderGeometry();
   glPolygonOffset(0.0f, 0.0f);
   glDisable(GL_POLYGON_OFFSET_LINE);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -497,13 +526,13 @@ void kit::EditorTerrain::renderForward(kit::Renderer::Ptr renderer)
 
 void kit::EditorTerrain::renderGeometry()
 {
-  if(!this->m_valid)
+  if(!m_valid)
   {
     return;
   }
 
-  glBindVertexArray(this->m_glVertexArray);
-  glDrawElements( GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0);
+  glBindVertexArray(m_glVertexArray);
+  glDrawElements( GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, (void*)0);
 }
 
 void kit::EditorTerrain::updateGpuProgram()
@@ -543,7 +572,7 @@ void kit::EditorTerrain::updateGpuProgram()
       
       vertexSource << "vec4 sampleHeight(vec2 position)" << std::endl;
       vertexSource << "{" << std::endl;
-      vertexSource << "  vec2 tsize = vec2(" << this->m_resolution.x << ", " << this->m_resolution.y << ");" << std::endl;
+      vertexSource << "  vec2 tsize = vec2(" << m_resolution.x << ", " << m_resolution.y << ");" << std::endl;
       vertexSource << "  vec2 tstep = vec2(1.0 / tsize);" << std::endl;
       vertexSource << "  vec3 off = vec3(1.0, 1.0, 0.0);" << std::endl;
       vertexSource << "  float cHeight = texture(uniform_heightmap, flipY(((position + (tsize / 2.0)) *tstep) + tstep*0.5)).r;" << std::endl;
@@ -552,7 +581,7 @@ void kit::EditorTerrain::updateGpuProgram()
       vertexSource << "  float hR = texture(uniform_heightmap, flipY(((position + off.xz + (tsize / 2.0)) *tstep) + tstep*0.5)).r;" << std::endl;
       vertexSource << "  float hD = texture(uniform_heightmap, flipY(((position - off.zy + (tsize / 2.0)) *tstep) + tstep*0.5)).r;" << std::endl;
       vertexSource << "  float hU = texture(uniform_heightmap, flipY(((position + off.xy + (tsize / 2.0)) *tstep) + tstep*0.5)).r;" << std::endl;
-      vertexSource << "  return vec4( normalize(vec3(hL - hR , 1.0 / " << this->m_yScale << ", hD - hU)) , cHeight);" << std::endl;
+      vertexSource << "  return vec4( normalize(vec3(hL - hR , 1.0 / " << m_yScale << ", hD - hU)) , cHeight);" << std::endl;
       vertexSource << "}" << std::endl;
 
       // ---- Main code begins ---- //
@@ -560,9 +589,9 @@ void kit::EditorTerrain::updateGpuProgram()
       vertexSource << "{" << std::endl;
 
       // Prepare variables
-      vertexSource << "  vec2 sampleUv = vec2(in_position / " << this->m_xzScale << ");" << std::endl;
+      vertexSource << "  vec2 sampleUv = vec2(in_position / " << m_xzScale << ");" << std::endl;
       vertexSource << "  vec4 hmSample   = sampleHeight(sampleUv);" << std::endl;
-      vertexSource << "  vec4 position  = vec4(in_position.x, hmSample.w * " << this->m_yScale << ", in_position.y, 1.0);" << std::endl;
+      vertexSource << "  vec4 position  = vec4(in_position.x, hmSample.w * " << m_yScale << ", in_position.y, 1.0);" << std::endl;
       vertexSource << std::endl;
 
       // Write attributes
@@ -614,12 +643,12 @@ void kit::EditorTerrain::updateGpuProgram()
       pixelSource << std::endl;
 
       // Uniforms
-      if (this->m_numLayers > 1)
+      if (m_numLayers > 1)
       {
         pixelSource << "uniform sampler2D uniform_materialMask0;" << std::endl;
       }
 
-      if (this->m_numLayers > 4)
+      if (m_numLayers > 4)
       {
         pixelSource << "uniform sampler2D uniform_materialMask1;" << std::endl;
       }
@@ -629,7 +658,7 @@ void kit::EditorTerrain::updateGpuProgram()
       pixelSource << std::endl;
 
       // Layerspecific uniforms
-      for(int i = 0; i < this->m_numLayers; i++)
+      for(int i = 0; i < m_numLayers; i++)
       {
         pixelSource << "uniform sampler2D uniform_arLayer" << i << ";" << std::endl;
 
@@ -647,7 +676,7 @@ void kit::EditorTerrain::updateGpuProgram()
 
       // Prepare variables
       pixelSource << "  vec2 fullUv = in_texCoords;" << std::endl;
-      pixelSource << "  vec2 detailUv = in_texCoords * vec2(" << float(this->m_resolution.x) * this->m_xzScale << ", " << float(this->m_resolution.y) * this->m_xzScale << ");" << std::endl;
+      pixelSource << "  vec2 detailUv = in_texCoords * vec2(" << float(m_resolution.x) * m_xzScale << ", " << float(m_resolution.y) * m_xzScale << ");" << std::endl;
       pixelSource << "  float linearDistance = distance(vec3(0.0), in_position.xyz / in_position.w);" << std::endl;
 
       // Prepare output variables
@@ -664,20 +693,20 @@ void kit::EditorTerrain::updateGpuProgram()
       pixelSource << "  {" << std::endl;
 
       // Sample the materialmasks
-      if (this->m_numLayers > 1)
+      if (m_numLayers > 1)
       {
         pixelSource << "    vec4 materialMask0 = texture(uniform_materialMask0, fullUv);" << std::endl;
       }
 
-      if (this->m_numLayers > 4)
+      if (m_numLayers > 4)
       {
         pixelSource << "    vec4 materialMask1 = texture(uniform_materialMask1, fullUv);" << std::endl;
       }
 
       // Sample the layer maps
-      for (int i = 0; i < this->m_numLayers; i++)
+      for (int i = 0; i < m_numLayers; i++)
       {
-        pixelSource << "    vec4 ar" << i << " = texture(uniform_arLayer" << i << ", detailUv * " << this->m_layerInfo[i].material->getUvScale() << ");" << std::endl;
+        pixelSource << "    vec4 ar" << i << " = texture(uniform_arLayer" << i << ", detailUv * " << m_layerInfo[i].material->getUvScale() << ");" << std::endl;
 
         if (i == 0)
         {
@@ -685,7 +714,7 @@ void kit::EditorTerrain::updateGpuProgram()
         }
         else
         {
-          pixelSource << "    float d" << i << " = texture(uniform_ndLayer" << i << ", detailUv * " << this->m_layerInfo[i].material->getUvScale() << ").a;" << std::endl;
+          pixelSource << "    float d" << i << " = texture(uniform_ndLayer" << i << ", detailUv * " << m_layerInfo[i].material->getUvScale() << ").a;" << std::endl;
           pixelSource << "    arOut = blend2(arOut, ar" << i << ", materialMask" << getMaskSuffix(i) << " + d" << i << ");" << std::endl;
         }
       }
@@ -807,100 +836,123 @@ void kit::EditorTerrain::updateGpuProgram()
     }
     
     // Compile shader objects
-    auto vertexShader = kit::Shader::create(Shader::Type::Vertex);
+    auto vertexShader = new kit::Shader(Shader::Type::Vertex);
     vertexShader->sourceFromString(vertexSource.str());
     vertexShader->compile();
 
-    auto pixelShader = kit::Shader::create(Shader::Type::Fragment);
+    auto pixelShader = new kit::Shader(Shader::Type::Fragment);
     pixelShader->sourceFromString(pixelSource.str());
     pixelShader->compile();
     
-    auto pickShader = kit::Shader::create(Shader::Type::Fragment);
+    auto pickShader = new kit::Shader(Shader::Type::Fragment);
     pickShader->sourceFromString(pickSource.str());
     pickShader->compile();
 
-    auto decalShader = kit::Shader::create(Shader::Type::Fragment);
+    auto decalShader = new kit::Shader(Shader::Type::Fragment);
     decalShader->sourceFromString(decalSource.str());
     decalShader->compile();
 
-    auto wireShader = kit::Shader::create(Shader::Type::Fragment);
+    auto wireShader = new kit::Shader(Shader::Type::Fragment);
     wireShader->sourceFromString(wireSource.str());
     wireShader->compile();
     
-    auto shadowShader = kit::Shader::create(Shader::Type::Fragment);
+    auto shadowShader = new kit::Shader(Shader::Type::Fragment);
     shadowShader->sourceFromString(shadowSource.str());
     shadowShader->compile();
     
     // Link program
-    this->m_program = kit::Program::create();
-    this->m_program->attachShader(vertexShader);
-    this->m_program->attachShader(pixelShader);
-    this->m_program->link();
-    this->m_program->detachShader(vertexShader);
-    this->m_program->detachShader(pixelShader);
+    if(m_program)
+      delete m_program;
+    
+    m_program = new kit::Program();
+    m_program->attachShader(vertexShader);
+    m_program->attachShader(pixelShader);
+    m_program->link();
+    m_program->detachShader(vertexShader);
+    m_program->detachShader(pixelShader);
 
     // Update uniforms
-    if (this->m_numLayers > 1)
+    if (m_numLayers > 1)
     {
-      this->m_program->setUniformTexture("uniform_materialMask0", this->m_materialMask->getFrontBuffer()->getColorAttachment(0));
+      m_program->setUniformTexture("uniform_materialMask0", m_materialMask->getFrontBuffer()->getColorAttachment(0));
     }
 
-    if (this->m_numLayers > 4)
+    if (m_numLayers > 4)
     {
-      this->m_program->setUniformTexture("uniform_materialMask1", this->m_materialMask->getFrontBuffer()->getColorAttachment(1));
+      m_program->setUniformTexture("uniform_materialMask1", m_materialMask->getFrontBuffer()->getColorAttachment(1));
     }
 
-    this->m_program->setUniformTexture("uniform_arCache", this->m_arnxCache->getColorAttachment(0));
-    this->m_program->setUniformTexture("uniform_heightmap", this->m_heightmap->getFrontBuffer()->getColorAttachment(0));
-    this->m_program->setUniform1f("uniform_detailDistance", 25.0f); //< TODO: Replace with configuration parameter
+    m_program->setUniformTexture("uniform_arCache", m_arnxCache->getColorAttachment(0));
+    m_program->setUniformTexture("uniform_heightmap", m_heightmap->getFrontBuffer()->getColorAttachment(0));
+    m_program->setUniform1f("uniform_detailDistance", 25.0f); ///< TODO: Replace with configuration parameter
 
     // Layer-specific uniforms
-    for(int i = 0; i < this->m_numLayers; i++)
+    for(int i = 0; i < m_numLayers; i++)
     {
-      this->m_program->setUniformTexture("uniform_arLayer" + std::to_string(i), this->m_layerInfo[i].material->getARCache());
+      m_program->setUniformTexture("uniform_arLayer" + std::to_string(i), m_layerInfo[i].material->getARCache());
 
       if (i != 0)
       {
-        this->m_program->setUniformTexture("uniform_ndLayer" + std::to_string(i), this->m_layerInfo[i].material->getNDCache());
+        m_program->setUniformTexture("uniform_ndLayer" + std::to_string(i), m_layerInfo[i].material->getNDCache());
       }
     }
     
     // Link picking program
-    this->m_pickProgram = kit::Program::create();
-    this->m_pickProgram->attachShader(vertexShader);
-    this->m_pickProgram->attachShader(pickShader);
-    this->m_pickProgram->link();
-    this->m_pickProgram->detachShader(vertexShader);
-    this->m_pickProgram->detachShader(pickShader);
+    if(m_pickProgram)
+      delete m_pickProgram;
     
-    this->m_pickProgram->setUniformTexture("uniform_heightmap", this->m_heightmap->getFrontBuffer()->getColorAttachment(0));
+    m_pickProgram = new kit::Program();
+    m_pickProgram->attachShader(vertexShader);
+    m_pickProgram->attachShader(pickShader);
+    m_pickProgram->link();
+    m_pickProgram->detachShader(vertexShader);
+    m_pickProgram->detachShader(pickShader);
+    
+    m_pickProgram->setUniformTexture("uniform_heightmap", m_heightmap->getFrontBuffer()->getColorAttachment(0));
     
     // Link decal program
-    this->m_decalProgram = kit::Program::create();
-    this->m_decalProgram->attachShader(vertexShader);
-    this->m_decalProgram->attachShader(decalShader);
-    this->m_decalProgram->link();
-    this->m_decalProgram->detachShader(vertexShader);
-    this->m_decalProgram->detachShader(decalShader);
-    this->m_decalProgram->setUniformTexture("uniform_heightmap", this->m_heightmap->getFrontBuffer()->getColorAttachment(0));
+    if(m_decalProgram)
+      delete m_decalProgram;
+    
+    m_decalProgram = new kit::Program();
+    m_decalProgram->attachShader(vertexShader);
+    m_decalProgram->attachShader(decalShader);
+    m_decalProgram->link();
+    m_decalProgram->detachShader(vertexShader);
+    m_decalProgram->detachShader(decalShader);
+    m_decalProgram->setUniformTexture("uniform_heightmap", m_heightmap->getFrontBuffer()->getColorAttachment(0));
     
     // Link wire program
-    this->m_wireProgram = kit::Program::create();
-    this->m_wireProgram->attachShader(vertexShader);
-    this->m_wireProgram->attachShader(wireShader);
-    this->m_wireProgram->link();
-    this->m_wireProgram->detachShader(vertexShader);
-    this->m_wireProgram->detachShader(wireShader);
-    this->m_wireProgram->setUniformTexture("uniform_heightmap", this->m_heightmap->getFrontBuffer()->getColorAttachment(0));
+    if(m_wireProgram)
+      delete m_wireProgram;
+    
+    m_wireProgram = new kit::Program();
+    m_wireProgram->attachShader(vertexShader);
+    m_wireProgram->attachShader(wireShader);
+    m_wireProgram->link();
+    m_wireProgram->detachShader(vertexShader);
+    m_wireProgram->detachShader(wireShader);
+    m_wireProgram->setUniformTexture("uniform_heightmap", m_heightmap->getFrontBuffer()->getColorAttachment(0));
 
     // Link shadow program
-    this->m_shadowProgram = kit::Program::create();
-    this->m_shadowProgram->attachShader(vertexShader);
-    this->m_shadowProgram->attachShader(decalShader);
-    this->m_shadowProgram->link();
-    this->m_shadowProgram->detachShader(vertexShader);
-    this->m_shadowProgram->detachShader(decalShader);
-    this->m_shadowProgram->setUniformTexture("uniform_heightmap", this->m_heightmap->getFrontBuffer()->getColorAttachment(0));
+    if(m_shadowProgram)
+      delete m_shadowProgram;
+    
+    m_shadowProgram = new kit::Program();
+    m_shadowProgram->attachShader(vertexShader);
+    m_shadowProgram->attachShader(decalShader);
+    m_shadowProgram->link();
+    m_shadowProgram->detachShader(vertexShader);
+    m_shadowProgram->detachShader(decalShader);
+    m_shadowProgram->setUniformTexture("uniform_heightmap", m_heightmap->getFrontBuffer()->getColorAttachment(0));
+    
+    delete vertexShader;
+    delete pixelShader;
+    delete pickShader;
+    delete decalShader;
+    delete wireShader;
+    delete shadowShader;
+
   }
   
   // Then render our ARNX baking program
@@ -969,18 +1021,18 @@ void kit::EditorTerrain::updateGpuProgram()
       pixelSource << std::endl;
       
       // Uniforms
-      if (this->m_numLayers > 1)
+      if (m_numLayers > 1)
       {
         pixelSource << "uniform sampler2D uniform_materialMask0;" << std::endl;
       }
-      if (this->m_numLayers > 4)
+      if (m_numLayers > 4)
       {
         pixelSource << "uniform sampler2D uniform_materialMask1;" << std::endl;
       }
       pixelSource << std::endl;
 
       // Layerspecific uniforms
-      for(int i = 0; i < this->m_numLayers; i++)
+      for(int i = 0; i < m_numLayers; i++)
       {
         pixelSource << "uniform sampler2D uniform_arLayer" << i << ";" << std::endl;
         pixelSource << "uniform sampler2D uniform_ndLayer" << i << ";" << std::endl;
@@ -993,28 +1045,28 @@ void kit::EditorTerrain::updateGpuProgram()
 
       // Prepare variables
       pixelSource << "  vec2 fullUv = in_texCoords;" << std::endl;
-      pixelSource << "  vec2 detailUv = in_texCoords * vec2(" << float(this->m_resolution.x) * this->m_xzScale << ", " << float(this->m_resolution.y) * this->m_xzScale << ");" << std::endl;
+      pixelSource << "  vec2 detailUv = in_texCoords * vec2(" << float(m_resolution.x) * m_xzScale << ", " << float(m_resolution.y) * m_xzScale << ");" << std::endl;
 
       // Prepare output variables
       pixelSource << "  vec4 arOut; " << std::endl;
       pixelSource << "  vec4 nxOut; " << std::endl;
 
       // Sample the materialmasks
-      if (this->m_numLayers > 1)
+      if (m_numLayers > 1)
       {
         pixelSource << "    vec4 materialMask0 = texture(uniform_materialMask0, fullUv);" << std::endl;
       }
 
-      if (this->m_numLayers > 4)
+      if (m_numLayers > 4)
       {
         pixelSource << "    vec4 materialMask1 = texture(uniform_materialMask1, fullUv);" << std::endl;
       }
 
       // Sample the layer maps
-      for (int i = 0; i < this->m_numLayers; i++)
+      for (int i = 0; i < m_numLayers; i++)
       {
-        pixelSource << "    vec4 ar" << i << " = texture(uniform_arLayer" << i << ", detailUv * " << this->m_layerInfo[i].material->getUvScale() << ");" << std::endl;
-        pixelSource << "    vec4 nd" << i << " = texture(uniform_ndLayer" << i << ", detailUv * " << this->m_layerInfo[i].material->getUvScale() << ");" << std::endl;
+        pixelSource << "    vec4 ar" << i << " = texture(uniform_arLayer" << i << ", detailUv * " << m_layerInfo[i].material->getUvScale() << ");" << std::endl;
+        pixelSource << "    vec4 nd" << i << " = texture(uniform_ndLayer" << i << ", detailUv * " << m_layerInfo[i].material->getUvScale() << ");" << std::endl;
 
         if (i == 0)
         {
@@ -1037,38 +1089,44 @@ void kit::EditorTerrain::updateGpuProgram()
     }
 
     // Compile shader objects
-    auto vertexShader = kit::Shader::create(Shader::Type::Vertex);
+    auto vertexShader = new kit::Shader(Shader::Type::Vertex);
     vertexShader->sourceFromString(vertexSource.str());
     vertexShader->compile();
 
-    auto pixelShader = kit::Shader::create(Shader::Type::Fragment);
+    auto pixelShader = new kit::Shader(Shader::Type::Fragment);
     pixelShader->sourceFromString(pixelSource.str());
     pixelShader->compile();
 
     // Link program
-    this->m_bakeProgramArnx = kit::Program::create();
-    this->m_bakeProgramArnx->attachShader(vertexShader);
-    this->m_bakeProgramArnx->attachShader(pixelShader);
-    this->m_bakeProgramArnx->link();
-    this->m_bakeProgramArnx->detachShader(vertexShader);
-    this->m_bakeProgramArnx->detachShader(pixelShader);
+    if(m_bakeProgramArnx)
+      delete m_bakeProgramArnx;
+    
+    m_bakeProgramArnx = new kit::Program();
+    m_bakeProgramArnx->attachShader(vertexShader);
+    m_bakeProgramArnx->attachShader(pixelShader);
+    m_bakeProgramArnx->link();
+    m_bakeProgramArnx->detachShader(vertexShader);
+    m_bakeProgramArnx->detachShader(pixelShader);
 
+    delete vertexShader;
+    delete pixelShader;
+    
     // Update uniforms
-    if (this->m_numLayers > 1)
+    if (m_numLayers > 1)
     {
-      this->m_bakeProgramArnx->setUniformTexture("uniform_materialMask0", this->m_materialMask->getFrontBuffer()->getColorAttachment(0));
+      m_bakeProgramArnx->setUniformTexture("uniform_materialMask0", m_materialMask->getFrontBuffer()->getColorAttachment(0));
     }
-    if (this->m_numLayers > 4)
+    if (m_numLayers > 4)
     {
-      this->m_bakeProgramArnx->setUniformTexture("uniform_materialMask1", this->m_materialMask->getFrontBuffer()->getColorAttachment(1));
+      m_bakeProgramArnx->setUniformTexture("uniform_materialMask1", m_materialMask->getFrontBuffer()->getColorAttachment(1));
     }
 
 
     // Layer-specific uniforms
-    for(int i = 0; i < this->m_numLayers; i++)
+    for(int i = 0; i < m_numLayers; i++)
     {
-      this->m_bakeProgramArnx->setUniformTexture("uniform_arLayer" + std::to_string(i), this->m_layerInfo[i].material->getARCache());
-      this->m_bakeProgramArnx->setUniformTexture("uniform_ndLayer" + std::to_string(i), this->m_layerInfo[i].material->getNDCache());
+      m_bakeProgramArnx->setUniformTexture("uniform_arLayer" + std::to_string(i), m_layerInfo[i].material->getARCache());
+      m_bakeProgramArnx->setUniformTexture("uniform_ndLayer" + std::to_string(i), m_layerInfo[i].material->getNDCache());
     }
   }
 }
@@ -1123,28 +1181,28 @@ void kit::EditorTerrain::bakeCPUNormals()
 
 void kit::EditorTerrain::bakeCPUHeight()
 {
-  auto pixelData = this->m_heightmap->getFrontBuffer()->readPixels(0);
+  auto pixelData = m_heightmap->getFrontBuffer()->readPixels(0);
 
-  for(uint32_t i = 0; i < this->m_resolution.x * this->m_resolution.y; i++)
+  for(uint32_t i = 0; i < m_resolution.x * m_resolution.y; i++)
   {
-    this->m_vertices[i]->m_position.y = pixelData[i] * this->m_yScale;
+    m_vertices[i]->m_position.y = pixelData[i] * m_yScale;
   }
 }
 
 kit::EditorTerrain::Vertex *kit::EditorTerrain::getVertexAt(int32_t x, int32_t y)
 {
 
-  if((uint32_t)x >= this->m_resolution.x)
+  if((uint32_t)x >= m_resolution.x)
   {
-    x = this->m_resolution.x-1;
+    x = m_resolution.x-1;
   }
   if(x < 0)
   {
     x = 0;
   }
   
-  if((uint32_t)y >= this->m_resolution.y)  {
-    y = this->m_resolution.y-1;
+  if((uint32_t)y >= m_resolution.y)  {
+    y = m_resolution.y-1;
   }
   
   if(y < 0)
@@ -1152,30 +1210,30 @@ kit::EditorTerrain::Vertex *kit::EditorTerrain::getVertexAt(int32_t x, int32_t y
     y = 0;
   }
   
-  uint32_t index = (y*this->m_resolution.x) + x;
+  uint32_t index = (y*m_resolution.x) + x;
   
-  if(index >= this->m_vertices.size())
+  if(index >= m_vertices.size())
   {
     KIT_THROW("Invalid vertex index");
   }
   
-  return this->m_vertices[index];
+  return m_vertices[index];
 }
 
 glm::vec3 kit::EditorTerrain::sampleHeightmap(int32_t x, int32_t y)
 {
   glm::vec2 fullSize;
-  fullSize.x = float(this->m_resolution.x) * this->m_xzScale;
-  fullSize.y = float(this->m_resolution.y) * this->m_xzScale;
+  fullSize.x = float(m_resolution.x) * m_xzScale;
+  fullSize.y = float(m_resolution.y) * m_xzScale;
 
   glm::vec2 halfSize = fullSize / 2.0f;
 
-  x = (glm::min)(this->m_resolution.x-1, (unsigned int)x);
-  y = (glm::min)(this->m_resolution.y-1, (unsigned int)y);
+  x = (glm::min)(m_resolution.x-1, (unsigned int)x);
+  y = (glm::min)(m_resolution.y-1, (unsigned int)y);
   
-  float ry = this->m_heightmap->getFrontBuffer()->readPixel(0, x, this->m_resolution.y - 1 - y).x * this->m_yScale;
-  float rx = (float(x) * this->m_xzScale) - halfSize.x;
-  float rz = (float(y) * this->m_xzScale) - halfSize.y;
+  float ry = m_heightmap->getFrontBuffer()->readPixel(0, x, m_resolution.y - 1 - y).x * m_yScale;
+  float rx = (float(x) * m_xzScale) - halfSize.x;
+  float rz = (float(y) * m_xzScale) - halfSize.y;
   
   return glm::vec3(rx, ry, rz);
   
@@ -1184,16 +1242,16 @@ glm::vec3 kit::EditorTerrain::sampleHeightmap(int32_t x, int32_t y)
 glm::vec3 kit::EditorTerrain::sampleBilinear(float x, float z)
 {
   glm::vec2 fullSize;
-  fullSize.x = float(this->m_resolution.x) * this->m_xzScale;
-  fullSize.y = float(this->m_resolution.y) * this->m_xzScale;
+  fullSize.x = float(m_resolution.x) * m_xzScale;
+  fullSize.y = float(m_resolution.y) * m_xzScale;
 
   glm::vec2 halfSize = fullSize / 2.0f;
   
   x += halfSize.x;
   z += halfSize.y;
   
-  float xMap = x / this->m_xzScale;
-  float zMap = z / this->m_xzScale;
+  float xMap = x / m_xzScale;
+  float zMap = z / m_xzScale;
   
   uint32_t px = (uint32_t)glm::floor(xMap);
   uint32_t pz = (uint32_t)glm::floor(zMap);
@@ -1201,10 +1259,10 @@ glm::vec3 kit::EditorTerrain::sampleBilinear(float x, float z)
   uint32_t hx = px + 1;
   uint32_t hz = pz + 1;
   
-  auto v1 = this->sampleHeightmap(px, pz);
-  auto v2 = this->sampleHeightmap(hx, pz);
-  auto v3 = this->sampleHeightmap(px, hz);
-  auto v4 = this->sampleHeightmap(hx, hz);
+  auto v1 = sampleHeightmap(px, pz);
+  auto v2 = sampleHeightmap(hx, pz);
+  auto v3 = sampleHeightmap(px, hz);
+  auto v4 = sampleHeightmap(hx, hz);
   
 
   
@@ -1257,11 +1315,11 @@ glm::vec3 kit::EditorTerrain::sampleBilinear(float x, float z)
 
 void kit::EditorTerrain::bakeARNXCache()
 {
-  this->m_arnxCache->clearAttachment(0, glm::vec4(0.5f, 0.5f, 0.5f, 0.8f));
-  this->m_arnxCache->clearAttachment(1, glm::vec4(0.0f, 0.0f, 1.0f, 0.2f));
+  m_arnxCache->clearAttachment(0, glm::vec4(0.5f, 0.5f, 0.5f, 0.8f));
+  m_arnxCache->clearAttachment(1, glm::vec4(0.0f, 0.0f, 1.0f, 0.2f));
 
-  this->m_bakeProgramArnx->use();
-  this->m_arnxCache->bind();
+  m_bakeProgramArnx->use();
+  m_arnxCache->bind();
   
   glDisable(GL_BLEND);
   glDisable(GL_CULL_FACE);
@@ -1269,26 +1327,26 @@ void kit::EditorTerrain::bakeARNXCache()
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
-kit::TexturePtr kit::EditorTerrain::getARCache()
+kit::Texture * kit::EditorTerrain::getARCache()
 {
-  return this->m_arnxCache->getColorAttachment(0);
+  return m_arnxCache->getColorAttachment(0);
 }
 
-kit::TexturePtr kit::EditorTerrain::getNXCache()
+kit::Texture * kit::EditorTerrain::getNXCache()
 {
-  return this->m_arnxCache->getColorAttachment(1);
+  return m_arnxCache->getColorAttachment(1);
 }
 
-kit::TexturePtr kit::EditorTerrain::getHeightmap()
+kit::Texture * kit::EditorTerrain::getHeightmap()
 {
-  return this->m_heightmap->getFrontBuffer()->getColorAttachment(0);
+  return m_heightmap->getFrontBuffer()->getColorAttachment(0);
 }
 
-void kit::EditorTerrain::renderPickbuffer(kit::Camera::Ptr cam)
+void kit::EditorTerrain::renderPickbuffer(kit::Camera * cam)
 {
 
-  glm::mat4 modelViewProjectionMatrix = cam->getProjectionMatrix() * cam->getViewMatrix() * this->getTransformMatrix();
-  glm::mat4 modelViewMatrix = cam->getViewMatrix() * this->getTransformMatrix();
+  glm::mat4 modelViewProjectionMatrix = cam->getProjectionMatrix() * cam->getViewMatrix() * getTransformMatrix();
+  glm::mat4 modelViewMatrix = cam->getViewMatrix() * getTransformMatrix();
 
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
@@ -1296,115 +1354,115 @@ void kit::EditorTerrain::renderPickbuffer(kit::Camera::Ptr cam)
   glDepthMask(GL_TRUE);
   glEnable(GL_DEPTH_TEST);
 
-  this->m_pickProgram->use();
-  this->m_pickProgram->setUniformMat4("uniform_mvpMatrix", modelViewProjectionMatrix);
-  this->m_pickProgram->setUniformMat4("uniform_mvMatrix", modelViewMatrix);
+  m_pickProgram->use();
+  m_pickProgram->setUniformMat4("uniform_mvpMatrix", modelViewProjectionMatrix);
+  m_pickProgram->setUniformMat4("uniform_mvMatrix", modelViewMatrix);
 
-  this->renderGeometry();
+  renderGeometry();
 }
 
-void kit::EditorTerrain::setDecalBrush(kit::TexturePtr brush, glm::vec2 positionUv, glm::vec2 sizeUv)
+void kit::EditorTerrain::setDecalBrush(kit::Texture * brush, glm::vec2 positionUv, glm::vec2 sizeUv)
 {
-  this->m_decalBrush = brush;
-  this->m_decalBrushPosition = positionUv;
-  this->m_decalBrushSize = sizeUv;
+  m_decalBrush = brush;
+  m_decalBrushPosition = positionUv;
+  m_decalBrushSize = sizeUv;
   
-  if(this->m_decalBrush != nullptr)
+  if(m_decalBrush != nullptr)
   {
-    this->m_decalProgram->setUniform2f("uniform_brushPos", positionUv);
-    this->m_decalProgram->setUniform2f("uniform_brushSize", sizeUv);
-    this->m_decalProgram->setUniformTexture("uniform_brush", this->m_decalBrush);
+    m_decalProgram->setUniform2f("uniform_brushPos", positionUv);
+    m_decalProgram->setUniform2f("uniform_brushSize", sizeUv);
+    m_decalProgram->setUniformTexture("uniform_brush", m_decalBrush);
   }
   
 }
 
-void kit::EditorTerrain::paintMaterialMask(uint8_t layerid, kit::TexturePtr brush, glm::vec2 positionUv, glm::vec2 sizeUv, PaintOperation op, float strength)
+void kit::EditorTerrain::paintMaterialMask(uint8_t layerid, kit::Texture * brush, glm::vec2 positionUv, glm::vec2 sizeUv, PaintOperation op, float strength)
 {
   //int compIndex = layerid > 3 ? layerid - 4 : layerid;
 
-  this->m_materialPaintProgram->use();
-  this->m_materialPaintProgram->setUniform1i("uniform_currLayer", layerid);
-  this->m_materialPaintProgram->setUniform1i("uniform_opMode", (int)op);
-  this->m_materialPaintProgram->setUniform2f("uniform_brushPos", positionUv);
-  this->m_materialPaintProgram->setUniform2f("uniform_brushSize", sizeUv);
-  this->m_materialPaintProgram->setUniformTexture("uniform_materialMask0", this->m_materialMask->getFrontBuffer()->getColorAttachment(0));
-  this->m_materialPaintProgram->setUniformTexture("uniform_materialMask1", this->m_materialMask->getFrontBuffer()->getColorAttachment(1));
-  this->m_materialPaintProgram->setUniformTexture("uniform_brush", brush);
-  this->m_materialPaintProgram->setUniform1f("uniform_strength", strength);
+  m_materialPaintProgram->use();
+  m_materialPaintProgram->setUniform1i("uniform_currLayer", layerid);
+  m_materialPaintProgram->setUniform1i("uniform_opMode", (int)op);
+  m_materialPaintProgram->setUniform2f("uniform_brushPos", positionUv);
+  m_materialPaintProgram->setUniform2f("uniform_brushSize", sizeUv);
+  m_materialPaintProgram->setUniformTexture("uniform_materialMask0", m_materialMask->getFrontBuffer()->getColorAttachment(0));
+  m_materialPaintProgram->setUniformTexture("uniform_materialMask1", m_materialMask->getFrontBuffer()->getColorAttachment(1));
+  m_materialPaintProgram->setUniformTexture("uniform_brush", brush);
+  m_materialPaintProgram->setUniform1f("uniform_strength", strength);
 
-  this->m_materialMask->getBackBuffer()->bind();
-  this->m_materialMask->getBackBuffer()->clearAttachment(0, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
-  this->m_materialMask->getBackBuffer()->clearAttachment(1, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+  m_materialMask->getBackBuffer()->bind();
+  m_materialMask->getBackBuffer()->clearAttachment(0, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+  m_materialMask->getBackBuffer()->clearAttachment(1, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
   glDisable(GL_BLEND);
   glDisable(GL_DEPTH_TEST);
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-  this->m_materialMask->flip();
-  this->m_materialMask->getFrontBuffer()->getColorAttachment(0)->generateMipmap();
-  this->m_materialMask->getFrontBuffer()->getColorAttachment(1)->generateMipmap();
+  m_materialMask->flip();
+  m_materialMask->getFrontBuffer()->getColorAttachment(0)->generateMipmap();
+  m_materialMask->getFrontBuffer()->getColorAttachment(1)->generateMipmap();
 
 
-  if (this->m_numLayers > 1)
+  if (m_numLayers > 1)
   {
-    this->m_program->setUniformTexture("uniform_materialMask0", this->m_materialMask->getFrontBuffer()->getColorAttachment(0));
-    this->m_bakeProgramArnx->setUniformTexture("uniform_materialMask0", this->m_materialMask->getFrontBuffer()->getColorAttachment(0));
+    m_program->setUniformTexture("uniform_materialMask0", m_materialMask->getFrontBuffer()->getColorAttachment(0));
+    m_bakeProgramArnx->setUniformTexture("uniform_materialMask0", m_materialMask->getFrontBuffer()->getColorAttachment(0));
   }
-  if (this->m_numLayers > 4)
+  if (m_numLayers > 4)
   {
-    this->m_program->setUniformTexture("uniform_materialMask1", this->m_materialMask->getFrontBuffer()->getColorAttachment(1));
-    this->m_bakeProgramArnx->setUniformTexture("uniform_materialMask1", this->m_materialMask->getFrontBuffer()->getColorAttachment(1));
+    m_program->setUniformTexture("uniform_materialMask1", m_materialMask->getFrontBuffer()->getColorAttachment(1));
+    m_bakeProgramArnx->setUniformTexture("uniform_materialMask1", m_materialMask->getFrontBuffer()->getColorAttachment(1));
   }
 
-  this->bakeARNXCache();
+  bakeARNXCache();
 }
 
-void kit::EditorTerrain::paintHeightmap(kit::TexturePtr brush, glm::vec2 positionUv, glm::vec2 sizeUv, PaintOperation op, float strength)
+void kit::EditorTerrain::paintHeightmap(kit::Texture * brush, glm::vec2 positionUv, glm::vec2 sizeUv, PaintOperation op, float strength)
 {
 
-  this->m_heightPaintProgram->use();
-  this->m_heightPaintProgram->setUniform1i("uniform_opMode", (int)op);
-  this->m_heightPaintProgram->setUniform2f("uniform_brushPos", positionUv);
-  this->m_heightPaintProgram->setUniform2f("uniform_brushSize", sizeUv);
-  this->m_heightPaintProgram->setUniformTexture("uniform_heightmap", this->m_heightmap->getFrontBuffer()->getColorAttachment(0));
-  this->m_heightPaintProgram->setUniformTexture("uniform_brush", brush);
-  this->m_heightPaintProgram->setUniform1f("uniform_yScale", this->m_yScale);
-  this->m_heightPaintProgram->setUniform1f("uniform_strength", strength);
+  m_heightPaintProgram->use();
+  m_heightPaintProgram->setUniform1i("uniform_opMode", (int)op);
+  m_heightPaintProgram->setUniform2f("uniform_brushPos", positionUv);
+  m_heightPaintProgram->setUniform2f("uniform_brushSize", sizeUv);
+  m_heightPaintProgram->setUniformTexture("uniform_heightmap", m_heightmap->getFrontBuffer()->getColorAttachment(0));
+  m_heightPaintProgram->setUniformTexture("uniform_brush", brush);
+  m_heightPaintProgram->setUniform1f("uniform_yScale", m_yScale);
+  m_heightPaintProgram->setUniform1f("uniform_strength", strength);
 
-  this->m_heightmap->getBackBuffer()->bind();
-  this->m_heightmap->getBackBuffer()->clearAttachment(0, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+  m_heightmap->getBackBuffer()->bind();
+  m_heightmap->getBackBuffer()->clearAttachment(0, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
   glDisable(GL_BLEND);
   glDisable(GL_DEPTH_TEST);
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-  this->m_heightmap->flip();
-  this->m_heightmap->getFrontBuffer()->getColorAttachment(0)->generateMipmap();
-  this->m_program->setUniformTexture("uniform_heightmap", this->m_heightmap->getFrontBuffer()->getColorAttachment(0));
-  this->m_wireProgram->setUniformTexture("uniform_heightmap", this->m_heightmap->getFrontBuffer()->getColorAttachment(0));
-  this->m_pickProgram->setUniformTexture("uniform_heightmap", this->m_heightmap->getFrontBuffer()->getColorAttachment(0));
-  this->m_shadowProgram->setUniformTexture("uniform_heightmap", this->m_heightmap->getFrontBuffer()->getColorAttachment(0));
+  m_heightmap->flip();
+  m_heightmap->getFrontBuffer()->getColorAttachment(0)->generateMipmap();
+  m_program->setUniformTexture("uniform_heightmap", m_heightmap->getFrontBuffer()->getColorAttachment(0));
+  m_wireProgram->setUniformTexture("uniform_heightmap", m_heightmap->getFrontBuffer()->getColorAttachment(0));
+  m_pickProgram->setUniformTexture("uniform_heightmap", m_heightmap->getFrontBuffer()->getColorAttachment(0));
+  m_shadowProgram->setUniformTexture("uniform_heightmap", m_heightmap->getFrontBuffer()->getColorAttachment(0));
 }
 
 glm::uvec2 kit::EditorTerrain::getResolution()
 {
-  return this->m_resolution;
+  return m_resolution;
 }
 
 float kit::EditorTerrain::getXZScale()
 {
-  return this->m_xzScale;
+  return m_xzScale;
 }
 
 glm::vec2 kit::EditorTerrain::getWorldSize()
 {
-  return glm::vec2((float)this->m_resolution.x, (float)this->m_resolution.y) * this->m_xzScale;
+  return glm::vec2((float)m_resolution.x, (float)m_resolution.y) * m_xzScale;
 }
 
 void kit::EditorTerrain::bake()
 {
-  this->bakeARNXCache();
-  this->bakeCPUHeight();
-  this->bakeCPUNormals();
+  bakeARNXCache();
+  bakeCPUHeight();
+  bakeCPUNormals();
 
   std::stringstream terrainPath;
-  terrainPath << "./data/terrains/" << this->m_name;
+  terrainPath << "./data/terrains/" << m_name;
 
   std::stringstream bakedPath;
   bakedPath << terrainPath.str() << "/baked";
@@ -1421,28 +1479,28 @@ void kit::EditorTerrain::bake()
     return;
   }
 
-  this->m_arnxCache->getColorAttachment(0)->saveToFile(bakedPath.str() + std::string("/arcache.tga"));
-  this->m_arnxCache->getColorAttachment(1)->saveToFile(bakedPath.str() + std::string("/nxcache.tga"));
+  m_arnxCache->getColorAttachment(0)->saveToFile(bakedPath.str() + std::string("/arcache.tga"));
+  m_arnxCache->getColorAttachment(1)->saveToFile(bakedPath.str() + std::string("/nxcache.tga"));
 
-  if (this->m_numLayers > 1)
+  if (m_numLayers > 1)
   {
-    this->m_materialMask->getFrontBuffer()->getColorAttachment(0)->saveToFile(bakedPath.str() + std::string("/materialmask0.tga"));
+    m_materialMask->getFrontBuffer()->getColorAttachment(0)->saveToFile(bakedPath.str() + std::string("/materialmask0.tga"));
   }
-  if (this->m_numLayers > 4)
+  if (m_numLayers > 4)
   {
-    this->m_materialMask->getFrontBuffer()->getColorAttachment(1)->saveToFile(bakedPath.str() + std::string("/materialmask1.tga"));
+    m_materialMask->getFrontBuffer()->getColorAttachment(1)->saveToFile(bakedPath.str() + std::string("/materialmask1.tga"));
   }
 
-  for(int i = 0; i < this->m_numLayers; i++)
+  for(int i = 0; i < m_numLayers; i++)
   {
-    if(this->m_layerInfo[i].material == nullptr)
+    if(m_layerInfo[i].material == nullptr)
     {
       KIT_ERR("Failed to bake terrain, layer is missing material");
       return;
     }
     
-    this->m_layerInfo[i].material->getARCache()->saveToFile(bakedPath.str() + std::string("/arlayer") + std::to_string(i) + std::string(".tga"));
-    this->m_layerInfo[i].material->getNDCache()->saveToFile(bakedPath.str() + std::string("/ndlayer") + std::to_string(i) + std::string(".tga"));
+    m_layerInfo[i].material->getARCache()->saveToFile(bakedPath.str() + std::string("/arlayer") + std::to_string(i) + std::string(".tga"));
+    m_layerInfo[i].material->getNDCache()->saveToFile(bakedPath.str() + std::string("/ndlayer") + std::to_string(i) + std::string(".tga"));
   }
   
   std::ofstream header(bakedPath.str() + std::string("/header"));
@@ -1452,13 +1510,13 @@ void kit::EditorTerrain::bake()
     return;
   }
   
-  header << "xzscale " << this->m_xzScale << std::endl;
-  header << "yscale " << this->m_yScale << std::endl;
-  header << "numlayers " << (int)this->m_numLayers << std::endl;
-  header << "size " << this->m_resolution.x << " " << this->m_resolution.y << std::endl;
-  for(int i = 0; i < this->m_numLayers; i++)
+  header << "xzscale " << m_xzScale << std::endl;
+  header << "yscale " << m_yScale << std::endl;
+  header << "numlayers " << (int)m_numLayers << std::endl;
+  header << "size " << m_resolution.x << " " << m_resolution.y << std::endl;
+  for(int i = 0; i < m_numLayers; i++)
   {
-    header << "layer " << i << " " << this->m_layerInfo[i].material->getUvScale() << std::endl;
+    header << "layer " << i << " " << m_layerInfo[i].material->getUvScale() << std::endl;
   }
   header.close();
   
@@ -1471,8 +1529,8 @@ void kit::EditorTerrain::bake()
   }
 
   // Write indices
-  kit::writeUint32(data, uint32_t(this->m_triangles.size() * 3));
-  for (Triangle * currTriangle : this->m_triangles)
+  kit::writeUint32(data, uint32_t(m_triangles.size() * 3));
+  for (Triangle * currTriangle : m_triangles)
   {
     kit::writeUint32(data, currTriangle->m_c->m_id);
     kit::writeUint32(data, currTriangle->m_b->m_id);
@@ -1480,8 +1538,8 @@ void kit::EditorTerrain::bake()
   }
 
   // Write vertices
-  kit::writeUint32(data, uint32_t(this->m_vertices.size() * 14));
-  for (Vertex * currVertex : this->m_vertices)
+  kit::writeUint32(data, uint32_t(m_vertices.size() * 14));
+  for (Vertex * currVertex : m_vertices)
   {
     kit::writeVec3(data, currVertex->m_position);
     kit::writeVec2(data, currVertex->m_uv);
@@ -1500,12 +1558,12 @@ void kit::EditorTerrain::bake()
     KIT_ERR("Failed to bake terrain, could not create heightdata-file");
   }
   
-  for (uint32_t y = 0; y < this->m_resolution.y; y++)
+  for (uint32_t y = 0; y < m_resolution.y; y++)
   {
-    for (uint32_t x = 0; x < this->m_resolution.x; x++)
+    for (uint32_t x = 0; x < m_resolution.x; x++)
     {
-      auto * v = this->getVertexAt(x, y);
-      float h = v->m_position.y / this->m_yScale;
+      auto * v = getVertexAt(x, y);
+      float h = v->m_position.y / m_yScale;
 
       kit::writeFloat(hdata, h);
       kit::writeVec3(hdata, v->m_normal);
@@ -1518,7 +1576,7 @@ void kit::EditorTerrain::bake()
 void kit::EditorTerrain::save()
 {
   std::stringstream terrainPath;
-  terrainPath << "./data/terrains/" << this->m_name;
+  terrainPath << "./data/terrains/" << m_name;
 
   if(!kit::createDirectory(terrainPath.str()))
   {
@@ -1526,10 +1584,10 @@ void kit::EditorTerrain::save()
     return;
   }
 
-  this->m_materialMask->getFrontBuffer()->getColorAttachment(0)->saveToFile(terrainPath.str() + std::string("/materialmask0.tga"));
-  this->m_materialMask->getFrontBuffer()->getColorAttachment(1)->saveToFile(terrainPath.str() + std::string("/materialmask1.tga"));
+  m_materialMask->getFrontBuffer()->getColorAttachment(0)->saveToFile(terrainPath.str() + std::string("/materialmask0.tga"));
+  m_materialMask->getFrontBuffer()->getColorAttachment(1)->saveToFile(terrainPath.str() + std::string("/materialmask1.tga"));
 
-  this->m_heightmap->getFrontBuffer()->getColorAttachment(0)->saveToFile(terrainPath.str() + std::string("/heightmap.tga"));
+  m_heightmap->getFrontBuffer()->getColorAttachment(0)->saveToFile(terrainPath.str() + std::string("/heightmap.tga"));
 
   
   std::ofstream header(terrainPath.str() + std::string("/header"));
@@ -1539,35 +1597,35 @@ void kit::EditorTerrain::save()
     return;
   }
   
-  header << "xzscale " << this->m_xzScale << std::endl;
-  header << "yscale " << this->m_yScale << std::endl;
-  header << "numlayers " << (int)this->m_numLayers << std::endl;
-  header << "size " << this->m_resolution.x << " " << this->m_resolution.y << std::endl;
-  for(int i = 0; i < this->m_numLayers; i++)
+  header << "xzscale " << m_xzScale << std::endl;
+  header << "yscale " << m_yScale << std::endl;
+  header << "numlayers " << (int)m_numLayers << std::endl;
+  header << "size " << m_resolution.x << " " << m_resolution.y << std::endl;
+  for(int i = 0; i < m_numLayers; i++)
   {
-    if(this->m_layerInfo[i].material == nullptr)
+    if(m_layerInfo[i].material == nullptr)
     {
       KIT_ERR("Failed to save terrain, invalid layer material");
       return;
     }
-    header << "layer " << i << " \"" << this->m_layerInfo[i].material->getName() << "\"" << std::endl;
+    header << "layer " << i << " \"" << m_layerInfo[i].material->getName() << "\"" << std::endl;
   }
   header.close();
 }
 
 void kit::EditorTerrain::setName(const std::string&name)
 {
-  this->m_name = name;
+  m_name = name;
 }
 
 kit::EditorTerrain::LayerInfo& kit::EditorTerrain::getLayerInfo(int layer)
 {
-  if(layer > 7 || layer > this->m_numLayers-1)
+  if(layer > 7 || layer > m_numLayers-1)
   {
     KIT_ERR("Warning: Tried to get layerinfo out of bounds, returning highest");
-    return this->m_layerInfo[this->m_numLayers - 1];
+    return m_layerInfo[m_numLayers - 1];
   }
-  return this->m_layerInfo[layer];
+  return m_layerInfo[layer];
 }
 
 void kit::EditorTerrain::setNumLayers(uint8_t l)
@@ -1577,39 +1635,39 @@ void kit::EditorTerrain::setNumLayers(uint8_t l)
     KIT_ERR("Warning: Tried to set layercount to out of bounds");
     return;
   }
-  this->m_numLayers = l;
+  m_numLayers = l;
 }
 
 uint8_t kit::EditorTerrain::getNumLayers()
 {
-  return this->m_numLayers;
+  return m_numLayers;
 }
 
 void kit::EditorTerrain::saveAs(const std::string&name)
 {
-  this->m_name = name;
-  this->save();
+  m_name = name;
+  save();
 }
 
 void kit::EditorTerrain::invalidateMaterials()
 {
-    for(int i = 0; i < this->m_numLayers; i++)
+    for(int i = 0; i < m_numLayers; i++)
     {
-      this->m_program->setUniformTexture("uniform_arLayer" + std::to_string(i), this->m_layerInfo[i].material->getARCache());
+      m_program->setUniformTexture("uniform_arLayer" + std::to_string(i), m_layerInfo[i].material->getARCache());
       
       if (i != 0)
       {
-        this->m_program->setUniformTexture("uniform_ndLayer" + std::to_string(i), this->m_layerInfo[i].material->getNDCache());
+        m_program->setUniformTexture("uniform_ndLayer" + std::to_string(i), m_layerInfo[i].material->getNDCache());
       }
 
-      this->m_bakeProgramArnx->setUniformTexture("uniform_arLayer" + std::to_string(i), this->m_layerInfo[i].material->getARCache());
-      this->m_bakeProgramArnx->setUniformTexture("uniform_ndLayer" + std::to_string(i), this->m_layerInfo[i].material->getNDCache());
+      m_bakeProgramArnx->setUniformTexture("uniform_arLayer" + std::to_string(i), m_layerInfo[i].material->getARCache());
+      m_bakeProgramArnx->setUniformTexture("uniform_ndLayer" + std::to_string(i), m_layerInfo[i].material->getNDCache());
     }
-    this->bakeARNXCache();
+    bakeARNXCache();
     
 }
 
-kit::PixelBuffer::Ptr kit::EditorTerrain::getMaterialMask()
+kit::PixelBuffer * kit::EditorTerrain::getMaterialMask()
 {
-  return this->m_materialMask->getFrontBuffer();
+  return m_materialMask->getFrontBuffer();
 }

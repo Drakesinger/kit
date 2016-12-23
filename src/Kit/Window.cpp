@@ -19,39 +19,39 @@
 uint32_t kit::Window::m_instanceCount = 0;
 std::vector<kit::Window*> kit::Window::m_windows = std::vector<kit::Window*>();
 
+kit::GLFWSingleton kit::Window::m_glfwSingleton = kit::GLFWSingleton();
+
 kit::Window::Args::Args()
 {
   // Defaults to using the resolution of the primary monitor
-  kit::Monitor::Ptr primaryMonitor = kit::Monitor::getPrimaryMonitor();
-  kit::VideoMode videoMode = primaryMonitor->getVideoMode();
   
-  this->sharedWindow = nullptr;
-  this->mode = kit::Window::Mode::Windowed;
-  this->fullscreenMonitor = primaryMonitor;
-  this->resolution = glm::uvec2(videoMode.m_width, videoMode.m_Height);
-  this->resizable = false;
-  this->title = "New window";
+  sharedWindow = nullptr;
+  mode = kit::Window::Mode::Windowed;
+  fullscreenMonitor = nullptr;
+  resolution = glm::uvec2(0, 0);
+  resizable = false;
+  title = "New window";
 }
 
-kit::Window::Args::Args(const std::string&title, kit::Window::Mode mode, glm::uvec2 resolution, kit::Monitor::Ptr fullscreenMonitor, kit::Window::Ptr sharedWindow, bool resizable)
+kit::Window::Args::Args(const std::string & t, kit::Window::Mode m, glm::uvec2 r, kit::Monitor * f, kit::Window * s, bool rz)
 {
-  this->mode = mode;
-  this->resolution = resolution;
-  this->sharedWindow = sharedWindow;
-  this->fullscreenMonitor = fullscreenMonitor;
-  this->resizable = resizable;
-  this->title = title;
+  mode = m;
+  resolution = r;
+  sharedWindow = s;
+  fullscreenMonitor = f;
+  resizable = rz;
+  title = t;
 }
 
 kit::Window::Window(kit::Window::Args const & windowArgs)
 {
   kit::Window::m_instanceCount++;
   
-  this->m_glfwHandle = nullptr;
-  this->m_isFocused = true;
-  this->m_isMinimized = false;
-  this->m_virtualMouse = false;
-  this->m_eventsDistributed = false;
+  m_glfwHandle = nullptr;
+  m_isFocused = true;
+  m_isMinimized = false;
+  m_virtualMouse = false;
+  m_eventsDistributed = false;
 
   // Get the GLFW handle from the window to share resources with
   GLFWwindow * glfwSharedWindow = nullptr;  
@@ -61,7 +61,18 @@ kit::Window::Window(kit::Window::Args const & windowArgs)
   }
   
   // Get the GLFW handle for the fullscreen monitor to use
-  GLFWmonitor* glfwFullscreenMonitor = windowArgs.fullscreenMonitor->getGLFWHandle();
+  auto autoMon = kit::Monitor::getPrimaryMonitor();
+  GLFWmonitor* glfwFullscreenMonitor = autoMon->getGLFWHandle();
+  if(windowArgs.fullscreenMonitor)
+  {
+      GLFWmonitor* glfwFullscreenMonitor = windowArgs.fullscreenMonitor->getGLFWHandle();
+  }
+  
+  glm::uvec2 effResolution = windowArgs.resolution;
+  if(effResolution.x < 1 || effResolution.y < 1)
+  {
+    effResolution = glm::uvec2(autoMon->getVideoMode().m_width, autoMon->getVideoMode().m_height);
+  }
 
   // Set OpenGL context hints.
   kit::Window::prepareGLFWHints(GLFW_CLIENT_API, GLFW_OPENGL_API);
@@ -86,19 +97,19 @@ kit::Window::Window(kit::Window::Args const & windowArgs)
     case kit::Window::Mode::Windowed:
       if(!windowArgs.resizable)
       {
-	kit::Window::prepareGLFWHints(GLFW_RESIZABLE, GL_FALSE);
+        kit::Window::prepareGLFWHints(GLFW_RESIZABLE, GL_FALSE);
       }
-      this->m_glfwHandle = glfwCreateWindow(windowArgs.resolution.x, windowArgs.resolution.y, windowArgs.title.c_str(), nullptr, glfwSharedWindow);
+      m_glfwHandle = glfwCreateWindow(effResolution.x, effResolution.y, windowArgs.title.c_str(), nullptr, glfwSharedWindow);
       break;
 
     case kit::Window::Mode::Fullscreen:
-      this->m_glfwHandle = glfwCreateWindow(windowArgs.resolution.x, windowArgs.resolution.y, windowArgs.title.c_str(), glfwFullscreenMonitor, glfwSharedWindow);
+      m_glfwHandle = glfwCreateWindow(effResolution.x, effResolution.y, windowArgs.title.c_str(), glfwFullscreenMonitor, glfwSharedWindow);
       break;
 
     case kit::Window::Mode::Borderless:
       kit::Window::prepareGLFWHints(GLFW_DECORATED, GL_FALSE);
       kit::Window::prepareGLFWHints(GLFW_RESIZABLE, GL_FALSE);
-      this->m_glfwHandle = glfwCreateWindow(windowArgs.resolution.x, windowArgs.resolution.y, windowArgs.title.c_str(), nullptr, glfwSharedWindow);
+      m_glfwHandle = glfwCreateWindow(effResolution.x, effResolution.y, windowArgs.title.c_str(), nullptr, glfwSharedWindow);
       break;
 
     default:
@@ -110,7 +121,7 @@ kit::Window::Window(kit::Window::Args const & windowArgs)
   kit::Window::restoreGLFWHints();
   
   // Assert that we have a GLFW window
-  if(!this->m_glfwHandle)
+  if(!m_glfwHandle)
   {
     KIT_THROW("Failed to create GLFW window");
   }
@@ -119,28 +130,28 @@ kit::Window::Window(kit::Window::Args const & windowArgs)
   kit::Window::m_windows.push_back(this);
   
   // Register GLFW callbacks for this window
-  glfwSetWindowPosCallback(this->m_glfwHandle, kit::Window::__winfunc_position);
-  glfwSetWindowSizeCallback(this->m_glfwHandle, kit::Window::__winfunc_size);
-  glfwSetWindowCloseCallback(this->m_glfwHandle, kit::Window::__winfunc_close);
-  glfwSetWindowFocusCallback(this->m_glfwHandle, kit::Window::__winfunc_focus);
-  glfwSetWindowIconifyCallback(this->m_glfwHandle, kit::Window::__winfunc_minimize);
-  glfwSetFramebufferSizeCallback(this->m_glfwHandle, kit::Window::__winfunc_framebuffersize);
-  glfwSetMouseButtonCallback(this->m_glfwHandle, kit::Window::__infunc_mousebutton);
-  glfwSetCursorPosCallback(this->m_glfwHandle, kit::Window::__infunc_cursorpos);
-  glfwSetCursorEnterCallback(this->m_glfwHandle, kit::Window::__infunc_cursorenter);
-  glfwSetScrollCallback(this->m_glfwHandle, kit::Window::__infunc_scroll);
-  glfwSetKeyCallback(this->m_glfwHandle, kit::Window::__infunc_key);
-  glfwSetCharCallback(this->m_glfwHandle, kit::Window::__infunc_char);
+  glfwSetWindowPosCallback(m_glfwHandle, kit::Window::__winfunc_position);
+  glfwSetWindowSizeCallback(m_glfwHandle, kit::Window::__winfunc_size);
+  glfwSetWindowCloseCallback(m_glfwHandle, kit::Window::__winfunc_close);
+  glfwSetWindowFocusCallback(m_glfwHandle, kit::Window::__winfunc_focus);
+  glfwSetWindowIconifyCallback(m_glfwHandle, kit::Window::__winfunc_minimize);
+  glfwSetFramebufferSizeCallback(m_glfwHandle, kit::Window::__winfunc_framebuffersize);
+  glfwSetMouseButtonCallback(m_glfwHandle, kit::Window::__infunc_mousebutton);
+  glfwSetCursorPosCallback(m_glfwHandle, kit::Window::__infunc_cursorpos);
+  glfwSetCursorEnterCallback(m_glfwHandle, kit::Window::__infunc_cursorenter);
+  glfwSetScrollCallback(m_glfwHandle, kit::Window::__infunc_scroll);
+  glfwSetKeyCallback(m_glfwHandle, kit::Window::__infunc_key);
+  glfwSetCharCallback(m_glfwHandle, kit::Window::__infunc_char);
 
   // Activate the current windows context
-  this->activateContext();
+  activateContext();
   
   // Enable V-sync
   glfwSwapInterval(1);
   
   // Make sure GL3W is initialized, and set the viewport
   kit::initializeGL3W();
-  glViewport(0, 0, this->getFramebufferSize().x , this->getFramebufferSize().y);
+  glViewport(0, 0, getFramebufferSize().x , getFramebufferSize().y);
 }
 
 kit::Window::~Window()
@@ -161,63 +172,57 @@ kit::Window::~Window()
   }
   
   // Destroy the GLFW instance
-  glfwDestroyWindow(this->m_glfwHandle);
+  glfwDestroyWindow(m_glfwHandle);
 }
 
 void kit::Window::setVSync(bool enabled)
 {
-  this->activateContext();
+  activateContext();
   glfwSwapInterval((enabled ? 1 : 0));
 }
 
-kit::Window::Ptr kit::Window::create(const std::string&title, kit::Window::Mode mode, glm::uvec2 resolution)
+kit::Window::Window(const std::string & title, kit::Window::Mode mode, glm::uvec2 resolution) : kit::Window(kit::Window::Args(title, mode, resolution))
 {
-  kit::Window::Args args(title, mode, resolution);
-  return kit::Window::create(args);
-}
 
-kit::Window::Ptr kit::Window::create(kit::Window::Args const & windowArgs)
-{
-  return std::make_shared<kit::Window>(windowArgs);
 }
 
 void kit::Window::activateContext()
 {
-  if(this->m_glfwHandle == nullptr)
+  if(m_glfwHandle == nullptr)
   {
     return;
   }
   
-  glfwMakeContextCurrent(this->m_glfwHandle);
+  glfwMakeContextCurrent(m_glfwHandle);
 }
 
 void kit::Window::display()
 {
-  glfwSwapBuffers(this->m_glfwHandle);
+  glfwSwapBuffers(m_glfwHandle);
 }
 
 void kit::Window::clear(glm::vec4 clearColor)
 {
-  this->bind();
+  bind();
   glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glViewport(0, 0, this->getFramebufferSize().x, this->getFramebufferSize().y);
+  glViewport(0, 0, getFramebufferSize().x, getFramebufferSize().y);
 }
 
 void kit::Window::bind()
 {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  glViewport(0, 0, this->getFramebufferSize().x, this->getFramebufferSize().y);
+  glViewport(0, 0, getFramebufferSize().x, getFramebufferSize().y);
 }
 
 GLFWwindow * kit::Window::getGLFWHandle()
 {
-  return this->m_glfwHandle;
+  return m_glfwHandle;
 }
 
 int  kit::Window::getGLFWAttribute(int attribute)
 {
-  return glfwGetWindowAttrib(this->m_glfwHandle, attribute);
+  return glfwGetWindowAttrib(m_glfwHandle, attribute);
 }
 
 void kit::Window::prepareGLFWHints(int target, int hint, bool restoreBeforePreparing)
@@ -237,54 +242,54 @@ void kit::Window::restoreGLFWHints()
 
 void kit::Window::close()
 {
-  glfwSetWindowShouldClose(this->m_glfwHandle, true);
+  glfwSetWindowShouldClose(m_glfwHandle, true);
 }
 
 bool kit::Window::isOpen()
 {
-  return (glfwWindowShouldClose(this->m_glfwHandle) == 0);
+  return (glfwWindowShouldClose(m_glfwHandle) == 0);
 }
 
 void kit::Window::setTitle(const std::string&newTitle)
 {
-  glfwSetWindowTitle(this->m_glfwHandle, newTitle.c_str());
+  glfwSetWindowTitle(m_glfwHandle, newTitle.c_str());
 }
 
 glm::ivec2 kit::Window::getPosition()
 {
   glm::ivec2 returner;
-  glfwGetWindowPos(this->m_glfwHandle, &returner.x, &returner.y);
+  glfwGetWindowPos(m_glfwHandle, &returner.x, &returner.y);
   return returner;
 }
 
 void kit::Window::setPosition(glm::ivec2 newPosition)
 {
-  glfwSetWindowPos(this->m_glfwHandle, newPosition.x, newPosition.y);
+  glfwSetWindowPos(m_glfwHandle, newPosition.x, newPosition.y);
 }
 
 glm::ivec2 kit::Window::getSize()
 {
   glm::ivec2 returner;
-  glfwGetWindowSize(this->m_glfwHandle, &returner.x, &returner.y);
+  glfwGetWindowSize(m_glfwHandle, &returner.x, &returner.y);
   return returner;
 }
 
 void kit::Window::setSize(glm::ivec2 newSize)
 {
-  glfwSetWindowSize(this->m_glfwHandle, newSize.x, newSize.y);
+  glfwSetWindowSize(m_glfwHandle, newSize.x, newSize.y);
 }
 
 glm::ivec2 kit::Window::getFramebufferSize()
 {
   glm::ivec2 returner;
-  glfwGetFramebufferSize(this->m_glfwHandle, &returner.x, &returner.y);
+  glfwGetFramebufferSize(m_glfwHandle, &returner.x, &returner.y);
   return returner;
 }
 
 void kit::Window::maximize()
 {
 #ifdef _WIN32
-  SendMessage(glfwGetWin32Window(this->m_glfwHandle), WM_SYSCOMMAND, SC_MAXIMIZE, 0);
+  SendMessage(glfwGetWin32Window(m_glfwHandle), WM_SYSCOMMAND, SC_MAXIMIZE, 0);
 #else
   KIT_ERR("Warning: Unsupported OS");
 #endif
@@ -292,42 +297,42 @@ void kit::Window::maximize()
 
 void kit::Window::minimize()
 {
-  glfwIconifyWindow(this->m_glfwHandle);
+  glfwIconifyWindow(m_glfwHandle);
 }
 
 void kit::Window::restore()
 {
-  glfwRestoreWindow(this->m_glfwHandle);
+  glfwRestoreWindow(m_glfwHandle);
 }
 
 void kit::Window::show()
 {
-  glfwShowWindow(this->m_glfwHandle);
+  glfwShowWindow(m_glfwHandle);
 }
 
 void kit::Window::hide()
 {
-  glfwHideWindow(this->m_glfwHandle);
+  glfwHideWindow(m_glfwHandle);
 }
 
 void kit::Window::addEvent(kit::WindowEvent e)
 {
-  this->m_eventList.push(e);
+  m_eventList.push(e);
 }
 
 bool kit::Window::fetchEvent(kit::WindowEvent & e)
 {
   // If events hasn't been distributed yet, distribute them
-  if(!this->m_eventsDistributed)
+  if(!m_eventsDistributed)
   {
     glfwPollEvents(); 
-    this->m_eventsDistributed = true;
+    m_eventsDistributed = true;
   }
 
   // If every event have been fetched, set distribution flag to false and return false
   if(m_eventList.size() < 1)
   {
-    this->m_eventsDistributed = false;
+    m_eventsDistributed = false;
     return false;
   }
 
@@ -340,19 +345,19 @@ bool kit::Window::fetchEvent(kit::WindowEvent & e)
 
 bool kit::Window::isKeyDown(kit::Key k)
 {
-  return (glfwGetKey(this->m_glfwHandle, k) == GLFW_PRESS) ? true : false;
+  return (glfwGetKey(m_glfwHandle, k) == GLFW_PRESS) ? true : false;
 }
 
 bool kit::Window::isMouseButtonDown(kit::MouseButton m)
 {
-  return (glfwGetMouseButton(this->m_glfwHandle, m) == GLFW_PRESS) ? true : false;
+  return (glfwGetMouseButton(m_glfwHandle, m) == GLFW_PRESS) ? true : false;
 }
 
 glm::vec2 kit::Window::getMousePosition()
 {
   glm::vec2 returner;
   double x, y;
-  glfwGetCursorPos(this->m_glfwHandle, &x, &y);
+  glfwGetCursorPos(m_glfwHandle, &x, &y);
   returner.x = (float)x;
   returner.y = (float)y;
   return returner;
@@ -360,25 +365,25 @@ glm::vec2 kit::Window::getMousePosition()
 
 void kit::Window::setMousePosition(glm::vec2 newPosition)
 {
-  glfwSetCursorPos(this->m_glfwHandle, newPosition.x, newPosition.y);
+  glfwSetCursorPos(m_glfwHandle, newPosition.x, newPosition.y);
 }
 
 void kit::Window::mouseCursorVisible(bool visible)
 {
-  glfwSetInputMode(this->m_glfwHandle, GLFW_CURSOR, (visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN));
+  glfwSetInputMode(m_glfwHandle, GLFW_CURSOR, (visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN));
 }
 
 void kit::Window::setMouseVirtual(bool isVirtual)
 {
-  this->m_virtualMouse = isVirtual;
+  m_virtualMouse = isVirtual;
 
   if(isVirtual)
   {
-    glfwSetInputMode(this->m_glfwHandle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(m_glfwHandle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   }
   else
   {
-    glfwSetInputMode(this->m_glfwHandle, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    glfwSetInputMode(m_glfwHandle, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
   }
 }
 
@@ -550,10 +555,10 @@ kit::Window* kit::Window::kitWFromGLFW(GLFWwindow* ptr)
 
 bool kit::Window::isFocused()
 {
-  return this->m_isFocused;
+  return m_isFocused;
 }
 
 bool kit::Window::isMinimized()
 {
-  return this->m_isMinimized;
+  return m_isMinimized;
 }

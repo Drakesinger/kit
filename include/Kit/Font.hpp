@@ -1,5 +1,4 @@
-#ifndef KIT_FONT_HPP
-#define KIT_FONT_HPP
+#pragma once
 
 #include "Kit/Export.hpp"
 
@@ -19,15 +18,11 @@
 namespace kit 
 {
   class Texture;
-  typedef std::weak_ptr<Texture> TextureWPtr;
-  typedef std::shared_ptr<Texture> TexturePtr;
-
-  class KITAPI Font : public std::enable_shared_from_this<Font>
+  
+  class KITAPI Font
   {
     public:
-      typedef std::shared_ptr<kit::Font> Ptr;
-      typedef std::weak_ptr<kit::Font> WPtr;
-
+      
       struct KITAPI Glyph
       {
         glm::uvec2 m_size;     // Size of this glyph in pixels
@@ -39,22 +34,23 @@ namespace kit
       class KITAPI GlyphMap
       {
         public:
-          GlyphMap(kit::Font::WPtr font, float size);
+          GlyphMap(kit::Font * font, float size);
+          ~GlyphMap();
           kit::Font::Glyph const & getGlyph(wchar_t character);
-          kit::TextureWPtr getTexture();
+          kit::Texture * getTexture();
           const float & getLineHeight();
           const float & getHeight();
           
           float getLineAdvance();
           
         private:
-          kit::TexturePtr m_texture;
+          kit::Texture * m_texture = nullptr;
           std::map<wchar_t, kit::Font::Glyph> m_glyphIndex;
           float m_lineHeight;
           float m_height;
       };
 
-      static kit::Font::Ptr load(const std::string& filename, char const * dataDirectory = "./data/");
+      Font(const std::string& filename, char const * dataDirectory = "./data/");
 
       void precacheSize(float size);
       
@@ -65,19 +61,17 @@ namespace kit
       Font();
       ~Font();
       
-      static kit::Font::Ptr getSystemFont();
+      static kit::Font * getSystemFont();
       
     private:
-      std::map<float, GlyphMap*> m_glyphCache; //< Index of glyphmaps of different sizes
+      std::map<float, GlyphMap*> m_glyphCache; ///< Index of glyphmaps of different sizes
       
       static uint32_t m_instanceCount;
       
       static FT_Library m_ftLibrary;
-      FT_Face m_ftFace; //< Freetype Face instance
+      FT_Face m_ftFace; ///< Freetype Face instance
       bool m_ftLoaded;
       
-      static kit::Font::Ptr m_systemFont;
+      static kit::Font * m_systemFont;
   };
 }
-
-#endif

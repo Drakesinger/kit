@@ -19,8 +19,8 @@ namespace kit{
 
   private:
 
-    void allocateShared();
-    void releaseShared();
+    static void allocateShared();
+    static void releaseShared();
 
     static uint32_t m_instanceCount;
   };

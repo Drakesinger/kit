@@ -1,4 +1,4 @@
-#include "Kit/Water.hpp"
+/*#include "Kit/Water.hpp"
 
 #include "Kit/IncOpenGL.hpp"
 #include "Kit/Camera.hpp"
@@ -219,3 +219,4 @@ void kit::Water::setSunColor(glm::vec3 c)
 {
   this->m_sunColor = c;
 }
+*/

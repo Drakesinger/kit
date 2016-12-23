@@ -1,42 +1,51 @@
 #include "Kit/PixelBuffer.hpp"
 #include "Kit/IncOpenGL.hpp"
 
-kit::PixelBuffer::AttachmentInfo::AttachmentInfo(kit::Texture::Ptr texture)
+kit::PixelBuffer::AttachmentInfo::AttachmentInfo(kit::Texture * t)
 {
-  this->edgeSamplingMode = Texture::Repeat;
-  this->format = Texture::RGBA8;
-  this->magFilteringMode = Texture::Linear;
-  this->minFilteringMode = Texture::LinearMipmapLinear;
-  this->texture = texture;
+  edgeSamplingMode = Texture::Repeat;
+  format = Texture::RGBA8;
+  magFilteringMode = Texture::Linear;
+  minFilteringMode = Texture::LinearMipmapLinear;
+  texture = t;
 }
 
-kit::PixelBuffer::AttachmentInfo::AttachmentInfo(kit::Texture::InternalFormat format, kit::Texture::EdgeSamplingMode edgemode, kit::Texture::FilteringMode minfilter, kit::Texture::FilteringMode magfilter)
+kit::PixelBuffer::AttachmentInfo::AttachmentInfo(kit::Texture::InternalFormat f, kit::Texture::EdgeSamplingMode edgemode, kit::Texture::FilteringMode minfilter, kit::Texture::FilteringMode magfilter)
 {
-  this->edgeSamplingMode = edgemode;
-  this->format = format;
-  this->magFilteringMode = magfilter;
-  this->minFilteringMode = minfilter;
-  this->texture = nullptr;
+  edgeSamplingMode = edgemode;
+  format = f;
+  magFilteringMode = magfilter;
+  minFilteringMode = minfilter;
+  texture = nullptr;
 }
 
 kit::PixelBuffer::PixelBuffer()
 {
   
-  this->m_glHandle = 0;
-  this->m_resolution = glm::uvec2(0, 0);
-  this->m_depthAttachment = nullptr;
+  m_glHandle = 0;
+  m_resolution = glm::uvec2(0, 0);
+  m_depthAttachment = nullptr;
 #ifndef KIT_SHITTY_INTEL
-  glCreateFramebuffers(1, &this->m_glHandle);
+  glCreateFramebuffers(1, &m_glHandle);
 #else
-  glGenFramebuffers(1, &this->m_glHandle); 
+  glGenFramebuffers(1, &m_glHandle); 
 #endif 
 }
 
 kit::PixelBuffer::~PixelBuffer()
 {
-  glDeleteFramebuffers(1, &this->m_glHandle);
-  this->m_glHandle = 0;
+  glDeleteFramebuffers(1, &m_glHandle);
+  m_glHandle = 0;
   glGetError();
+  
+  if(m_ownDepth && m_depthAttachment)
+    delete m_depthAttachment;
+  
+  for(auto & e : m_colorAttachments)
+  {
+    if(e.ownTexture && e.texture)
+      delete e.texture;
+  }
 }
 
 void kit::PixelBuffer::bind(kit::PixelBuffer::BindMethod method)
@@ -44,16 +53,16 @@ void kit::PixelBuffer::bind(kit::PixelBuffer::BindMethod method)
   switch(method)
   {
     case Read:
-      glBindFramebuffer(GL_READ_FRAMEBUFFER, this->m_glHandle);
+      glBindFramebuffer(GL_READ_FRAMEBUFFER, m_glHandle);
       break;
     case Draw:
-      glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this->m_glHandle);
+      glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_glHandle);
       break;
     case Both:
-      glBindFramebuffer(GL_FRAMEBUFFER, this->m_glHandle);
+      glBindFramebuffer(GL_FRAMEBUFFER, m_glHandle);
       break;
   }
-  glViewport(0, 0, this->m_resolution.x, this->m_resolution.y);
+  glViewport(0, 0, m_resolution.x, m_resolution.y);
 }
 
 void kit::PixelBuffer::unbind(kit::PixelBuffer::BindMethod method)
@@ -73,19 +82,16 @@ void kit::PixelBuffer::unbind(kit::PixelBuffer::BindMethod method)
   }
 }
 
-kit::PixelBuffer::Ptr kit::PixelBuffer::create(glm::uvec2 resolution, kit::PixelBuffer::AttachmentList colorattachments)
+kit::PixelBuffer::PixelBuffer(glm::uvec2 resolution, kit::PixelBuffer::AttachmentList colorattachments) : kit::PixelBuffer()
 {
-  
-  kit::PixelBuffer::Ptr returner = std::make_shared<kit::PixelBuffer>();
-  
-  returner->m_resolution = resolution;
+  m_resolution = resolution;
   
   if(colorattachments.size() == 0)
   {
 #ifndef KIT_SHITTY_INTEL
-    glNamedFramebufferDrawBuffer(returner->m_glHandle, GL_NONE);
+    glNamedFramebufferDrawBuffer(m_glHandle, GL_NONE);
 #else 
-    returner->bind();
+    bind();
     glDrawBuffer(GL_NONE);
 #endif 
   }
@@ -112,52 +118,47 @@ kit::PixelBuffer::Ptr kit::PixelBuffer::create(glm::uvec2 resolution, kit::Pixel
           KIT_THROW("Pixelbuffer attachments must be of the same size");
         }
         
-        returner->m_colorAttachments.push_back(info.texture);
+        m_colorAttachments.push_back(AttachmentEntry(info.texture, false));
 #ifndef KIT_SHITTY_INTEL
-        glNamedFramebufferTexture(returner->m_glHandle, currEnum, info.texture->getHandle(), 0);
+        glNamedFramebufferTexture(m_glHandle, currEnum, info.texture->getHandle(), 0);
 #else 
-        returner->bind();
+        bind();
         glFramebufferTexture(GL_FRAMEBUFFER, currEnum, info.texture->getHandle(), 0);
 #endif 
       }
       else
       {
-        kit::Texture::Ptr adder = kit::Texture::create2D(resolution, info.format, info.edgeSamplingMode, info.minFilteringMode, info.magFilteringMode);
-        returner->m_colorAttachments.push_back(adder);
+        kit::Texture * adder = new kit::Texture(resolution, info.format, info.edgeSamplingMode, info.minFilteringMode, info.magFilteringMode);
+        m_colorAttachments.push_back(AttachmentEntry(adder, true));
 #ifndef KIT_SHITTY_INTEL
-        glNamedFramebufferTexture(returner->m_glHandle, currEnum, adder->getHandle(), 0);
+        glNamedFramebufferTexture(m_glHandle, currEnum, adder->getHandle(), 0);
 #else 
-        returner->bind();
+        bind();
         glFramebufferTexture(GL_FRAMEBUFFER, currEnum, adder->getHandle(), 0);
 #endif 
       }
     }
-
     
     // Set drawbuffers
 #ifndef KIT_SHITTY_INTEL
-    glNamedFramebufferDrawBuffers(returner->m_glHandle, (GLsizei)drawBuffers.size(), &drawBuffers[0]);
+    glNamedFramebufferDrawBuffers(m_glHandle, (GLsizei)drawBuffers.size(), &drawBuffers[0]);
 #else 
-    returner->bind();
+    bind();
     glDrawBuffers((GLsizei)drawBuffers.size(), &drawBuffers[0]);
 #endif 
   }
-  
-  return returner;
 }
 
-kit::PixelBuffer::Ptr kit::PixelBuffer::create(glm::uvec2 resolution, kit::PixelBuffer::AttachmentList colorattachments, kit::PixelBuffer::AttachmentInfo depthattachment)
+kit::PixelBuffer::PixelBuffer(glm::uvec2 resolution, kit::PixelBuffer::AttachmentList colorattachments, kit::PixelBuffer::AttachmentInfo depthattachment) : kit::PixelBuffer()
 {
-  
-  kit::PixelBuffer::Ptr returner = std::make_shared<kit::PixelBuffer>();
-  returner->m_resolution = resolution;
+  m_resolution = resolution;
   
   if(colorattachments.size() == 0)
   {
 #ifndef KIT_SHITTY_INTEL
-    glNamedFramebufferDrawBuffer(returner->m_glHandle, GL_NONE);
+    glNamedFramebufferDrawBuffer(m_glHandle, GL_NONE);
 #else 
-    returner->bind();
+    bind();
     glDrawBuffer(GL_NONE);
 #endif 
   }
@@ -184,22 +185,22 @@ kit::PixelBuffer::Ptr kit::PixelBuffer::create(glm::uvec2 resolution, kit::Pixel
           KIT_THROW("Pixelbuffer attachments must be of the same size");
         }
         
-        returner->m_colorAttachments.push_back(info.texture);
+        m_colorAttachments.push_back(AttachmentEntry(info.texture, false));
 #ifndef KIT_SHITTY_INTEL
-        glNamedFramebufferTexture(returner->m_glHandle, currEnum, info.texture->getHandle(), 0);
+        glNamedFramebufferTexture(m_glHandle, currEnum, info.texture->getHandle(), 0);
 #else 
-        returner->bind();
+        bind();
         glFramebufferTexture(GL_FRAMEBUFFER, currEnum, info.texture->getHandle(), 0);
 #endif 
       }
       else
       {
-        kit::Texture::Ptr adder = kit::Texture::create2D(resolution, info.format, info.edgeSamplingMode, info.minFilteringMode, info.magFilteringMode);
-        returner->m_colorAttachments.push_back(adder);
+        kit::Texture * adder = new kit::Texture(resolution, info.format, info.edgeSamplingMode, info.minFilteringMode, info.magFilteringMode);
+        m_colorAttachments.push_back(AttachmentEntry(adder, true));
 #ifndef KIT_SHITTY_INTEL
-        glNamedFramebufferTexture(returner->m_glHandle, currEnum, adder->getHandle(), 0);
+        glNamedFramebufferTexture(m_glHandle, currEnum, adder->getHandle(), 0);
 #else 
-        returner->bind();
+        bind();
         glFramebufferTexture(GL_FRAMEBUFFER, currEnum, adder->getHandle(), 0);
 #endif 
       }
@@ -207,9 +208,9 @@ kit::PixelBuffer::Ptr kit::PixelBuffer::create(glm::uvec2 resolution, kit::Pixel
     
     // Set drawbuffers
 #ifndef KIT_SHITTY_INTEL
-    glNamedFramebufferDrawBuffers(returner->m_glHandle, (GLsizei)drawBuffers.size(), &drawBuffers[0]);
+    glNamedFramebufferDrawBuffers(m_glHandle, (GLsizei)drawBuffers.size(), &drawBuffers[0]);
 #else 
-    returner->bind();
+    bind();
     glDrawBuffers((GLsizei)drawBuffers.size(), &drawBuffers[0]);
 #endif 
   }
@@ -230,12 +231,12 @@ kit::PixelBuffer::Ptr kit::PixelBuffer::create(glm::uvec2 resolution, kit::Pixel
       KIT_THROW("Pixelbuffer attachments must be of the same size");
     }
     
-    returner->m_depthAttachment = depthattachment.texture;
+    m_depthAttachment = depthattachment.texture;
 #ifndef KIT_SHITTY_INTEL
-    glNamedFramebufferTexture(returner->m_glHandle, GL_DEPTH_ATTACHMENT, returner->m_depthAttachment->getHandle(), 0);
+    glNamedFramebufferTexture(m_glHandle, GL_DEPTH_ATTACHMENT, m_depthAttachment->getHandle(), 0);
 #else 
-    returner->bind();
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, returner->m_depthAttachment->getHandle(), 0);
+    bind();
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_depthAttachment->getHandle(), 0);
 #endif 
   }
   else
@@ -247,29 +248,27 @@ kit::PixelBuffer::Ptr kit::PixelBuffer::create(glm::uvec2 resolution, kit::Pixel
       KIT_THROW("Wrong internal format of depth component");
     }
     
-    returner->m_depthAttachment = kit::Texture::create2D(resolution, depthattachment.format, depthattachment.edgeSamplingMode, depthattachment.minFilteringMode, depthattachment.magFilteringMode);
+    m_depthAttachment = new kit::Texture(resolution, depthattachment.format, depthattachment.edgeSamplingMode, depthattachment.minFilteringMode, depthattachment.magFilteringMode);
 #ifndef KIT_SHITTY_INTEL
-    glNamedFramebufferTexture(returner->m_glHandle, GL_DEPTH_ATTACHMENT, returner->m_depthAttachment->getHandle(), 0);
+    glNamedFramebufferTexture(m_glHandle, GL_DEPTH_ATTACHMENT, m_depthAttachment->getHandle(), 0);
 #else 
-    returner->bind();
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, returner->m_depthAttachment->getHandle(), 0);
+    bind();
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_depthAttachment->getHandle(), 0);
 #endif
   }
-  
-  return returner;
 }
 
-kit::PixelBuffer::Ptr kit::PixelBuffer::createShadowBuffer(glm::uvec2 resolution)
+kit::PixelBuffer * kit::PixelBuffer::createShadowBuffer(glm::uvec2 resolution)
 {
-  return kit::PixelBuffer::create(resolution, AttachmentList(), AttachmentInfo(kit::Texture::createShadowmap(resolution)));
+  return new kit::PixelBuffer(resolution, AttachmentList(), AttachmentInfo(kit::Texture::createShadowmap(resolution)));
 }
 
 void kit::PixelBuffer::setDrawBuffers(std::vector< uint32_t > drawBuffers)
 {
 #ifndef KIT_SHITTY_INTEL
-  glNamedFramebufferDrawBuffers(this->m_glHandle, (GLsizei)drawBuffers.size(), &drawBuffers[0]);
+  glNamedFramebufferDrawBuffers(m_glHandle, (GLsizei)drawBuffers.size(), &drawBuffers[0]);
 #else 
-  this->bind();
+  bind();
   glDrawBuffers((GLsizei)drawBuffers.size(), &drawBuffers[0]);
 #endif 
 }
@@ -278,19 +277,19 @@ void kit::PixelBuffer::setDrawBuffers(std::vector< uint32_t > drawBuffers)
 void kit::PixelBuffer::clear(std::vector<glm::vec4> colours, float depth)
 {
   glDepthMask(GL_TRUE);
-  this->bind();
+  bind();
   
-  if(this->m_depthAttachment == nullptr)
+  if(m_depthAttachment == nullptr)
   {
     KIT_THROW("Cant clear depth attachment as it does not exist, use the other clear method");
   }
   
-  if(colours.size() != this->m_colorAttachments.size())
+  if(colours.size() != m_colorAttachments.size())
   {
     KIT_THROW("Wrong number of colors passed, one color per attachment is required.");
   }
   
-  for(uint32_t i = 0; i < this->m_colorAttachments.size(); i++)
+  for(uint32_t i = 0; i < m_colorAttachments.size(); i++)
   {
     float currColor[4] = {colours[i].x, colours[i].y, colours[i].z, colours[i].w};
     glClearBufferfv(GL_COLOR, i, &currColor[0]);
@@ -301,8 +300,8 @@ void kit::PixelBuffer::clear(std::vector<glm::vec4> colours, float depth)
 
 void kit::PixelBuffer::clearAttachment(uint32_t attachment, glm::vec4 clearcolor)
 {
-  this->bind();
-  if (attachment >= this->m_colorAttachments.size())
+  bind();
+  if (attachment >= m_colorAttachments.size())
   {
     KIT_THROW("Cant clear attachment, index out of range.");
   }
@@ -313,8 +312,8 @@ void kit::PixelBuffer::clearAttachment(uint32_t attachment, glm::vec4 clearcolor
 
 void kit::PixelBuffer::clearAttachment(uint32_t attachment, glm::uvec4 clearcolor)
 {
-  this->bind();
-  if (attachment >= this->m_colorAttachments.size())
+  bind();
+  if (attachment >= m_colorAttachments.size())
   {
     KIT_THROW("Cant clear attachment, index out of range.");
   }
@@ -325,8 +324,8 @@ void kit::PixelBuffer::clearAttachment(uint32_t attachment, glm::uvec4 clearcolo
 
 void kit::PixelBuffer::clearAttachment(uint32_t attachment, glm::ivec4 clearcolor)
 {
-  this->bind();
-  if (attachment >= this->m_colorAttachments.size())
+  bind();
+  if (attachment >= m_colorAttachments.size())
   {
     KIT_THROW("Cant clear attachment, index out of range.");
   }
@@ -337,13 +336,13 @@ void kit::PixelBuffer::clearAttachment(uint32_t attachment, glm::ivec4 clearcolo
 
 void kit::PixelBuffer::clear(std::vector< glm::vec4 > colours)
 { 
-  this->bind();
-  if(colours.size() != this->m_colorAttachments.size())
+  bind();
+  if(colours.size() != m_colorAttachments.size())
   {
     KIT_THROW("Wrong number of colors passed, one color per attachment is required.");
   }
 
-  for(uint32_t i = 0; i < this->m_colorAttachments.size(); i++)
+  for(uint32_t i = 0; i < m_colorAttachments.size(); i++)
   {
     float currColor[4] = {colours[i].x, colours[i].y, colours[i].z, colours[i].w};
     glClearBufferfv(GL_COLOR, i, &currColor[i]);
@@ -353,8 +352,8 @@ void kit::PixelBuffer::clear(std::vector< glm::vec4 > colours)
 void kit::PixelBuffer::clearDepth(float d)
 {
   glDepthMask(GL_TRUE);
-  this->bind();
-  if(this->m_depthAttachment == nullptr)
+  bind();
+  if(m_depthAttachment == nullptr)
   {
     KIT_THROW("Cant clear depth attachment as it does not exist, use the other clear method");
   }
@@ -364,37 +363,37 @@ void kit::PixelBuffer::clearDepth(float d)
 
 uint32_t kit::PixelBuffer::getNumColorAttachments()
 {
-  return (uint32_t)this->m_colorAttachments.size();
+  return (uint32_t)m_colorAttachments.size();
 }
 
-kit::Texture::Ptr kit::PixelBuffer::getColorAttachment(uint32_t index)
+kit::Texture * kit::PixelBuffer::getColorAttachment(uint32_t index)
 {
-  if(index >= this->m_colorAttachments.size())
+  if(index >= m_colorAttachments.size())
   {
     KIT_THROW("Index out of range");
   }
 
-  return this->m_colorAttachments[index];
+  return m_colorAttachments[index].texture;
 }
 
-kit::Texture::Ptr kit::PixelBuffer::getDepthAttachment()
+kit::Texture * kit::PixelBuffer::getDepthAttachment()
 {
-  return this->m_depthAttachment;
+  return m_depthAttachment;
 }
 
 uint32_t kit::PixelBuffer::getHandle()
 {
-  return this->m_glHandle;
+  return m_glHandle;
 }
 
 glm::uvec2 kit::PixelBuffer::getResolution()
 {
-  return this->m_resolution;
+  return m_resolution;
 }
 
 glm::vec4 kit::PixelBuffer::readPixel(uint32_t index, uint32_t x, uint32_t y)
 {
-  this->bind();
+  bind();
   glReadBuffer(GL_COLOR_ATTACHMENT0 + index);
   float data[4];
   glReadPixels(x, y, 1, 1, GL_RGBA, GL_FLOAT, &data[0]);
@@ -409,23 +408,23 @@ glm::vec4 kit::PixelBuffer::readPixel(uint32_t index, uint32_t x, uint32_t y)
 std::vector<float> kit::PixelBuffer::readPixels(uint32_t index)
 {
   std::vector<float> returner;
-  uint32_t numPixels = this->m_resolution.x * this->m_resolution.y;
+  uint32_t numPixels = m_resolution.x * m_resolution.y;
   float * data = new float[numPixels];
   returner.reserve(numPixels);
   
-  this->bind();
+  bind();
   glReadBuffer(GL_COLOR_ATTACHMENT0 + index);
-  glReadPixels(0, 0, this->m_resolution.x, this->m_resolution.y, GL_RED, GL_FLOAT, &data[0]);
+  glReadPixels(0, 0, m_resolution.x, m_resolution.y, GL_RED, GL_FLOAT, &data[0]);
   kit::PixelBuffer::unbind();
   glFinish();
   glReadBuffer(GL_FRONT);
 
-  for(uint32_t currRow = 0; currRow < this->m_resolution.y; currRow++)
+  for(uint32_t currRow = 0; currRow < m_resolution.y; currRow++)
   {
-    for(uint32_t currCol = 0; currCol < this->m_resolution.x; currCol++)
+    for(uint32_t currCol = 0; currCol < m_resolution.x; currCol++)
     {
-      int invRow = this->m_resolution.y - currRow - 1;
-      returner.push_back(data[(invRow*this->m_resolution.x)+currCol]);
+      int invRow = m_resolution.y - currRow - 1;
+      returner.push_back(data[(invRow*m_resolution.x)+currCol]);
     }
   }
 
@@ -434,7 +433,7 @@ std::vector<float> kit::PixelBuffer::readPixels(uint32_t index)
   return returner;
 }
 
-void kit::PixelBuffer::blitFrom(kit::PixelBuffer::Ptr source, bool colorMask, std::vector<std::array<bool, 4>> componentMask, bool depthMask, bool stencilMask)
+void kit::PixelBuffer::blitFrom(kit::PixelBuffer * source, bool colorMask, std::vector<std::array<bool, 4>> componentMask, bool depthMask, bool stencilMask)
 {
   bool clearColorMask = false;
   GLbitfield mask = 0;
@@ -442,7 +441,7 @@ void kit::PixelBuffer::blitFrom(kit::PixelBuffer::Ptr source, bool colorMask, st
   if (colorMask)
   {
     mask |= GL_COLOR_BUFFER_BIT;
-    if (this->m_colorAttachments.size() != source->getNumColorAttachments())
+    if (m_colorAttachments.size() != source->getNumColorAttachments())
     {
       KIT_THROW("source: color attachment count mismatch");
       return;
@@ -461,13 +460,13 @@ void kit::PixelBuffer::blitFrom(kit::PixelBuffer::Ptr source, bool colorMask, st
 
   if (componentMask.size() != 0 && colorMask)
   {
-    if (componentMask.size() != this->m_colorAttachments.size())
+    if (componentMask.size() != m_colorAttachments.size())
     {
       KIT_ERR("componentMask: color attachment count mismatch");
       return;
     }
 
-    for (uint32_t i = 0; i < this->m_colorAttachments.size(); i++)
+    for (uint32_t i = 0; i < m_colorAttachments.size(); i++)
     {
       glColorMaski(i, componentMask[i][0], componentMask[i][1], componentMask[i][2], componentMask[i][3]);
     }
@@ -475,13 +474,23 @@ void kit::PixelBuffer::blitFrom(kit::PixelBuffer::Ptr source, bool colorMask, st
     clearColorMask = true;
   }
 
-  glBlitNamedFramebuffer(source->getHandle(), this->getHandle(), 0, 0, source->getResolution().x, source->getResolution().y, 0, 0, this->getResolution().x, this->getResolution().y, mask, GL_LINEAR);
+  glBlitNamedFramebuffer(source->getHandle(), getHandle(), 0, 0, source->getResolution().x, source->getResolution().y, 0, 0, getResolution().x, getResolution().y, mask, GL_LINEAR);
 
   if (clearColorMask)
   {
-    for (uint32_t i = 0; i < this->m_colorAttachments.size(); i++)
+    for (uint32_t i = 0; i < m_colorAttachments.size(); i++)
     {
       glColorMaski(i, true, true, true, true);
     }
   }
+}
+
+kit::PixelBuffer::AttachmentEntry::AttachmentEntry(kit::Texture* t, bool b)
+{
+  texture = t;
+  ownTexture = b;
+}
+
+kit::PixelBuffer::AttachmentEntry::~AttachmentEntry()
+{
 }

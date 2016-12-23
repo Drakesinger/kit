@@ -1,35 +1,32 @@
-#ifndef KIT_EDITORTERRAIN_HPP
-#define KIT_EDITORTERRAIN_HPP
+#pragma once
 
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
 
 #include "Kit/Renderable.hpp"
 
-#include <memory>
-
 namespace kit 
 {
   class Texture;
-  typedef std::shared_ptr<Texture> TexturePtr;
+  
 
   class PixelBuffer;
-  typedef std::shared_ptr<PixelBuffer> PixelBufferPtr;
+  
 
   class DoubleBuffer;
-  typedef std::shared_ptr<DoubleBuffer> DoubleBufferPtr;
+  
 
   class Material;
-  typedef std::shared_ptr<Material> MaterialPtr;
+  
 
   class Program;
-  typedef std::shared_ptr<Program> ProgramPtr;
+  
 
   class Camera;
-  typedef std::shared_ptr<Camera> CameraPtr;
+  
 
   class Renderer;
-  typedef std::shared_ptr<Renderer> RendererPtr;
+  
 
   class KITAPI EditorTerrain : public kit::Renderable
   {
@@ -57,14 +54,14 @@ namespace kit
         glm::vec3 m_tangent;
         glm::vec3 m_bitangent;
 
-        Vertex* m_a;
-        Vertex* m_b;
-        Vertex* m_c;
+        Vertex* m_a = nullptr;
+        Vertex* m_b = nullptr;
+        Vertex* m_c = nullptr;
       };
 
       struct LayerInfo
       {
-        kit::MaterialPtr material;
+        kit::Material * material;
       };
       
       enum PaintOperation
@@ -75,9 +72,10 @@ namespace kit
         Smooth = 3
       };
 
-      typedef std::shared_ptr<EditorTerrain> Ptr;
-
       EditorTerrain();
+      EditorTerrain(const std::string& name, glm::uvec2 resolution, float xzScale = 0.25, float yScale = 5.0f);
+      EditorTerrain(const std::string& name);
+      
       ~EditorTerrain();
 
       void bake();
@@ -85,20 +83,17 @@ namespace kit
       void save();
       void saveAs(const std::string& name);
 
-      static Ptr create(const std::string& name, glm::uvec2 resolution, float xzScale = 0.25, float yScale = 5.0f);
-      static Ptr load(const std::string& name);
-
       void reset(const std::string&, glm::uvec2 resolution, float xzScale, float yScale);
       
-      void renderDeferred(kit::RendererPtr renderer) override;
-      void renderForward(kit::RendererPtr renderer) override;
+      void renderDeferred(kit::Renderer * renderer) override;
+      void renderForward(kit::Renderer * renderer) override;
       void renderGeometry() override;
       void renderShadows(glm::mat4 v, glm::mat4 p) override;
 
-      void renderPickbuffer(kit::CameraPtr camera);
+      void renderPickbuffer(kit::Camera * camera);
       
-      void paintMaterialMask(uint8_t layerid, kit::TexturePtr brush, glm::vec2 positionUv, glm::vec2 sizeUv, PaintOperation op,  float str);
-      void paintHeightmap(kit::TexturePtr brush, glm::vec2 positionPixels, glm::vec2 sizePixels, PaintOperation op, float str);
+      void paintMaterialMask(uint8_t layerid, kit::Texture * brush, glm::vec2 positionUv, glm::vec2 sizeUv, PaintOperation op,  float str);
+      void paintHeightmap(kit::Texture * brush, glm::vec2 positionPixels, glm::vec2 sizePixels, PaintOperation op, float str);
 
       void setNumLayers(uint8_t);
       uint8_t getNumLayers();
@@ -106,15 +101,15 @@ namespace kit
       
       Vertex * getVertexAt(int32_t x, int32_t y);
       
-      glm::vec3 sampleHeightmap(int32_t x, int32_t y); //< Samples heightmap by pixel
-      glm::vec3 sampleBilinear(float x, float z);            //< Bilinearly samples heightmap. Input world (x,z). Output (world height, rotationx, rotationy)
+      glm::vec3 sampleHeightmap(int32_t x, int32_t y); ///< Samples heightmap by pixel
+      glm::vec3 sampleBilinear(float x, float z);      ///< Bilinearly samples heightmap. Input world (x,z). Output (world height, rotationx, rotationy)
       
-      void setDecalBrush(kit::TexturePtr brush = nullptr, glm::vec2 positionUv = glm::vec2(0.f,0.f), glm::vec2 sizeUv= glm::vec2(0.f,0.f));
+      void setDecalBrush(kit::Texture * brush = nullptr, glm::vec2 positionUv = glm::vec2(0.f,0.f), glm::vec2 sizeUv= glm::vec2(0.f,0.f));
       
-      kit::TexturePtr getARCache();
-      kit::TexturePtr getNXCache();
-      kit::TexturePtr getHeightmap();
-      kit::PixelBufferPtr getMaterialMask();
+      kit::Texture * getARCache();
+      kit::Texture * getNXCache();
+      kit::Texture * getHeightmap();
+      kit::PixelBuffer * getMaterialMask();
       
       glm::uvec2 getResolution();
       glm::vec2 getWorldSize();
@@ -122,11 +117,11 @@ namespace kit
       
       void setName(const std::string&);
       
-      void                            bakeCPUHeight();      //< Bakes CPU height-data from GPU heightmap
-      void                            bakeCPUNormals();     //< Bakes CPU normals and tangents from CPU vertex data
+      void                            bakeCPUHeight();      ///< Bakes CPU height-data from GPU heightmap
+      void                            bakeCPUNormals();     ///< Bakes CPU normals and tangents from CPU vertex data
 
-      void                            updateGpuProgram();   //< Compiles a new program for the GPU
-      void                            bakeARNXCache();      //< Renders deferred ARNX cache into m_arnxCache
+      void                            updateGpuProgram();   ///< Compiles a new program for the GPU
+      void                            bakeARNXCache();      ///< Renders deferred ARNX cache into m_arnxCache
       
       void invalidateMaterials();
       
@@ -134,10 +129,10 @@ namespace kit
       void generateCache();
       
       std::string                     m_name;
-      bool                            m_valid;              //< False if terrain has been invalidated
+      bool                            m_valid;              ///< False if terrain has been invalidated
 
-      LayerInfo                       m_layerInfo[8];       //< Layer info
-      uint8_t                      m_numLayers;          //< How many layers currently in use
+      LayerInfo                       m_layerInfo[8];       ///< Layer info
+      uint8_t                      m_numLayers;             ///< How many layers currently in use
 
       float                           m_yScale;
       float                           m_xzScale;
@@ -149,32 +144,30 @@ namespace kit
       std::map<Vertex*, uint32_t>  m_indexCache;
 
       // GPU data
-      uint32_t                     m_indexCount;         //< Index count
-      uint32_t                          m_glVertexArray;      //< VAO
-      uint32_t                          m_glVertexIndices;    //< VBO for elements/indices
-      uint32_t                          m_glVertexBuffer;     //< VBO for vertex data
+      uint32_t                     m_indexCount;              ///< Index count
+      uint32_t                          m_glVertexArray;      ///< VAO
+      uint32_t                          m_glVertexIndices;    ///< VBO for elements/indices
+      uint32_t                          m_glVertexBuffer;     ///< VBO for vertex data
 
-      kit::DoubleBufferPtr            m_materialMask;       //< Material mask, paintable
-      kit::ProgramPtr                 m_materialPaintProgram;            //< GPU program
+      kit::DoubleBuffer *            m_materialMask = nullptr;       ///< Material mask, paintable
+      kit::Program *                 m_materialPaintProgram = nullptr;            ///< GPU program
       
-      kit::DoubleBufferPtr            m_heightmap;          //< Heightmap, paintable
-      kit::ProgramPtr                 m_heightPaintProgram;            //< GPU program
+      kit::DoubleBuffer *            m_heightmap = nullptr;          ///< Heightmap, paintable
+      kit::Program *                 m_heightPaintProgram = nullptr;            ///< GPU program
 
-      kit::ProgramPtr                 m_program;            //< GPU program
-      kit::ProgramPtr                 m_pickProgram;            //< GPU program
-      kit::ProgramPtr                 m_shadowProgram;
+      kit::Program *                 m_program = nullptr;            ///< GPU program
+      kit::Program *                 m_pickProgram = nullptr;            ///< GPU program
+      kit::Program *                 m_shadowProgram = nullptr;
 
-      kit::ProgramPtr                 m_bakeProgramArnx;    //< GPU program for baking arnx
-      kit::PixelBufferPtr             m_arnxCache;          //< Albedo+roughness and normal+x values for the whole terrain, low-LOD
+      kit::Program *                 m_bakeProgramArnx = nullptr;    ///< GPU program for baking arnx
+      kit::PixelBuffer *             m_arnxCache = nullptr;          ///< Albedo+roughness and normal+x values for the whole terrain, low-LOD
 
       glm::vec2                      m_decalBrushPosition;
       glm::vec2                      m_decalBrushSize;
-      kit::TexturePtr                 m_decalBrush;
-      kit::ProgramPtr                 m_decalProgram;
+      kit::Texture *                 m_decalBrush = nullptr;
+      kit::Program *                 m_decalProgram = nullptr;
       
-      kit::ProgramPtr                 m_wireProgram;
+      kit::Program *                 m_wireProgram = nullptr;
   };
 
 }
-
-#endif

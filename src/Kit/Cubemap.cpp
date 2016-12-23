@@ -12,23 +12,23 @@
 
 kit::Cubemap::Cubemap()
 {
-        glGenTextures(1, &this->m_glHandle);
+  glGenTextures(1, &this->m_glHandle);
   this->m_resolution = glm::uvec2(0,0);
 }
 
 kit::Cubemap::Cubemap(uint32_t handle){
-    this->m_glHandle = handle;
+  this->m_glHandle = handle;
 }
 
 kit::Cubemap::~Cubemap()
 {
-        glDeleteTextures(1, &this->m_glHandle);
+  glDeleteTextures(1, &this->m_glHandle);
 }
 
-kit::Cubemap::Ptr kit::Cubemap::loadRadianceMap(const std::string& name)
+kit::Cubemap * kit::Cubemap::loadRadianceMap(const std::string& name)
 {
-  std::cout << "Loading radiance map " << name << std::endl;
-  kit::Cubemap::Ptr returner = std::make_shared<kit::Cubemap>();
+
+  kit::Cubemap * returner = new kit::Cubemap();
   std::stringstream namer;
   unsigned char* bufferdata;
   int x, y, n;
@@ -102,10 +102,10 @@ kit::Cubemap::Ptr kit::Cubemap::loadRadianceMap(const std::string& name)
   return returner;
 }
 
-kit::Cubemap::Ptr kit::Cubemap::loadIrradianceMap(const std::string& name)
+kit::Cubemap * kit::Cubemap::loadIrradianceMap(const std::string& name)
 {
   std::cout << "Loading irradiance map " << name << std::endl;
-  kit::Cubemap::Ptr returner = std::make_shared<kit::Cubemap>();
+  kit::Cubemap * returner = new kit::Cubemap();
   unsigned char* bufferdata;
   int x, y, n;
 
@@ -161,10 +161,10 @@ kit::Cubemap::Ptr kit::Cubemap::loadIrradianceMap(const std::string& name)
   return returner;
 }
 
-kit::Cubemap::Ptr kit::Cubemap::loadSkybox(const std::string& name)
+kit::Cubemap * kit::Cubemap::loadSkybox(const std::string& name)
 {
   std::cout << "Loading skybox " << name << std::endl;
-  kit::Cubemap::Ptr returner = std::make_shared<kit::Cubemap>();
+  kit::Cubemap * returner = new kit::Cubemap();
   unsigned char* bufferdata;
   int x, y, n;
 
@@ -221,9 +221,9 @@ kit::Cubemap::Ptr kit::Cubemap::loadSkybox(const std::string& name)
   return returner;
 }
 
-kit::Cubemap::Ptr kit::Cubemap::load(const std::string& zpos, const std::string& zneg, const std::string& xpos, const std::string& xneg, const std::string& ypos, const std::string& yneg)
+kit::Cubemap * kit::Cubemap::load(const std::string& zpos, const std::string& zneg, const std::string& xpos, const std::string& xneg, const std::string& ypos, const std::string& yneg)
 {
-  kit::Cubemap::Ptr returner = std::make_shared<kit::Cubemap>();
+  kit::Cubemap * returner = new kit::Cubemap();
 
   // Load our images
   unsigned char* bufferdata;
@@ -275,10 +275,10 @@ kit::Cubemap::Ptr kit::Cubemap::load(const std::string& zpos, const std::string&
   return returner;
 }
 
-kit::Cubemap::Ptr kit::Cubemap::createDepthmap(glm::uvec2 resolution)
+kit::Cubemap * kit::Cubemap::createDepthmap(glm::uvec2 resolution)
 {
   
-  kit::Cubemap::Ptr returner = std::make_shared<kit::Cubemap>();
+  kit::Cubemap * returner = new kit::Cubemap();
 
   returner->bind();
   
@@ -298,18 +298,16 @@ kit::Cubemap::Ptr kit::Cubemap::createDepthmap(glm::uvec2 resolution)
 }
 
 void kit::Cubemap::bind(){
-  
-        glBindTexture(GL_TEXTURE_CUBE_MAP, this->m_glHandle);
+  glBindTexture(GL_TEXTURE_CUBE_MAP, this->m_glHandle);
 }
 
 void kit::Cubemap::unbind()
 {
-  
-        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+  glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
 
 uint32_t kit::Cubemap::getHandle(){
-    return this->m_glHandle;
+  return this->m_glHandle;
 }
 
 kit::Cubemap::FilteringMode kit::Cubemap::getFilteringMode()
@@ -386,48 +384,12 @@ void kit::Cubemap::setEdgeSamplingMode(kit::Cubemap::EdgeSamplingMode mode)
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_MIRROR_CLAMP_TO_EDGE);
         break;
 #elif _WIN32
-          case ClampMirrored:
-                  KIT_THROW("ClampMirrored not supported on windows platforms.");
-                  break;
+      case ClampMirrored:
+        KIT_THROW("ClampMirrored not supported on windows platforms.");
+        break;
 #endif
     }
     
     kit::Cubemap::unbind();
   }
 }
-/*
- * 
- * 
-float kit::Cubemap::GetAnisotropicLevel()
-{
-  return this->m_AnisotropicLevel;
-}
-
-float kit::Cubemap::GetMaxAnisotropicLevel()
-{
-  float maxaniso = 0;
-  glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxaniso);
-  return maxaniso;
-}
-
-void kit::Cubemap::SetAnisotropicLevel(float level)
-{
-  float maxAnisotropic = this->GetMaxAnisotropicLevel();
-
-  if(level < 0.0)
-  {
-    level = 0.0;
-  }
-  
-  if(level > maxAnisotropic)
-  {
-    level = maxAnisotropic;
-  }
-  
-  this->m_AnisotropicLevel = maxAnisotropic;
-  
-  this->bind();
-  glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_ANISOTROPY_EXT, this->m_AnisotropicLevel);
-  kit::Cubemap::unbind();
-}
-*/

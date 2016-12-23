@@ -10,7 +10,7 @@ uint32_t kit::GridFloor::m_instanceCount = 0;
 uint32_t kit::GridFloor::m_glVertexArray = 0;
 uint32_t kit::GridFloor::m_glVertexIndices = 0;
 uint32_t kit::GridFloor::m_glVertexBuffer = 0;
-kit::Program::Ptr kit::GridFloor::m_program = nullptr;
+kit::Program * kit::GridFloor::m_program = nullptr;
 uint32_t kit::GridFloor::m_indexCount = 0;
 
 kit::GridFloor::GridFloor() : kit::Renderable::Renderable()
@@ -29,11 +29,6 @@ kit::GridFloor::~GridFloor()
   {
     kit::GridFloor::releaseShared();
   }
-}
-
-kit::GridFloor::Ptr kit::GridFloor::create()
-{
-  return std::make_shared<kit::GridFloor>();
 }
 
 void kit::GridFloor::allocateShared()
@@ -215,27 +210,27 @@ void kit::GridFloor::allocateShared()
   glEnableVertexAttribArray(1);
   glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 7, (void*) (sizeof(float) * 3));
   
-  kit::GridFloor::m_program = kit::Program::load({"gridfloor.vert"}, {"gridfloor.frag"});
+  m_program = new kit::Program({"gridfloor.vert"}, {"gridfloor.frag"});
 }
 
 void kit::GridFloor::releaseShared()
 {
   
-  kit::GridFloor::m_program.reset();
+  delete m_program;
   
   glDeleteBuffers(1, &kit::GridFloor::m_glVertexIndices);
   glDeleteBuffers(1, &kit::GridFloor::m_glVertexBuffer);
   glDeleteVertexArrays(1, &kit::GridFloor::m_glVertexArray);
 }
 
-void kit::GridFloor::renderForward(kit::Renderer::Ptr renderer)
+void kit::GridFloor::renderForward(kit::Renderer * renderer)
 {
   
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glEnable(GL_DEPTH_TEST);
   
-  glm::mat4 modelViewProjectionMatrix = renderer->getActiveCamera()->getProjectionMatrix() * renderer->getActiveCamera()->getViewMatrix() * this->getTransformMatrix();
+  glm::mat4 modelViewProjectionMatrix = renderer->getActiveCamera()->getProjectionMatrix() * renderer->getActiveCamera()->getViewMatrix() * getTransformMatrix();
   
   kit::GridFloor::m_program->setUniformMat4("uniform_mvpMatrix", modelViewProjectionMatrix);
   kit::GridFloor::m_program->setUniform1f("uniform_whitepoint", renderer->getActiveCamera()->getWhitepoint());
@@ -247,7 +242,7 @@ void kit::GridFloor::renderForward(kit::Renderer::Ptr renderer)
 void kit::GridFloor::renderGeometry()
 {
   glBindVertexArray(kit::GridFloor::m_glVertexArray);
-  glDrawElements(GL_LINES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0);
+  glDrawElements(GL_LINES, m_indexCount, GL_UNSIGNED_INT, (void*)0);
 }
 
 bool kit::GridFloor::isShadowCaster()

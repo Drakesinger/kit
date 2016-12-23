@@ -13,13 +13,12 @@
 namespace kit
 {
   class Console;
-  typedef std::shared_ptr<kit::Console> ConsolePtr;
+  
 
   class Window;
-  typedef std::shared_ptr<kit::Window> WindowPtr;
+  
 
   class ApplicationState;
-  typedef std::shared_ptr<kit::ApplicationState> ApplicationStatePtr;
 
   class KITAPI Application : public kit::Scriptable
   {
@@ -27,13 +26,13 @@ namespace kit
       Application();
       ~Application();
 
-      void run(ApplicationStatePtr state);
+      void run(ApplicationState * state);
 
-      void pushState(ApplicationStatePtr state);
+      void pushState(ApplicationState * state);
       void popState();
 
-      kit::WindowPtr getWindow();
-      kit::ConsolePtr getConsole();
+      kit::Window  * getWindow();
+      kit::Console * getConsole();
 
       void evaluate(const std::string& code);
       void quit();
@@ -66,27 +65,27 @@ namespace kit
       std::map<kit::Key, std::string> m_keyIndex;
       std::map<kit::MouseButton, std::string> m_mouseIndex;
 
-      bool m_needResize;
-      glm::uvec2 m_resizeSize;
+      bool m_needResize = false;
+      glm::uvec2 m_resizeSize = glm::uvec2(0, 0);
 
       // Window
-      kit::WindowPtr  m_window;       //< Our window (provided by Kit)
+      kit::Window * m_window = nullptr;       //< Our window (provided by Kit)
 
       kit::Timer        m_msSinceUpdate;    //< How many milliseconds since the last frame render _started_ (Add m_lastRenderTime to get the time since last frame render ended)
-      double            m_updateRate;       //< Time delay between update steps in milliseconds. Default 1000 / 90
-      double            m_unfocusedUpdateRate; //< Updaterate when unfocused
-      double            m_lastUpdateTime;   //< How many milliseconds the last update step took.
+      double            m_updateRate = 16.6666667;       //< Time delay between update steps in milliseconds. Default 1000 / 90
+      double            m_unfocusedUpdateRate = 33.333333; //< Updaterate when unfocused
+      double            m_lastUpdateTime = 0.0;   //< How many milliseconds the last update step took.
 
       kit::Timer        m_msSinceRender;    //< How many milliseconds since the last frame render _started_ (Add m_lastRenderTime to get the time since last frame render ended)
-      double            m_renderRate;       //< Time delay between frame renders in milliseconds. Default 1000 / 30
-      double            m_unfocusedRenderRate;    //< Render rate when unfocused
-      double            m_lastRenderTime;   //< How many milliseconds the last frame render took.
+      double            m_renderRate = 16.6666667;       //< Time delay between frame renders in milliseconds. Default 1000 / 30
+      double            m_unfocusedRenderRate = 33.333333;    //< Render rate when unfocused
+      double            m_lastRenderTime = 0.0;   //< How many milliseconds the last frame render took.
 
       // State machine
-      std::stack<kit::ApplicationStatePtr>        m_states;           //< List of game states
+      std::stack<kit::ApplicationState*>        m_states;           //< List of game states
 
       // Console 
-      kit::ConsolePtr m_console;
+      kit::Console * m_console = nullptr;
   };
 
 }

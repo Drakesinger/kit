@@ -9,12 +9,13 @@
 #include "Kit/Texture.hpp"
 #include "Kit/Renderer.hpp"
 #include "Kit/Shader.hpp"
+#include "Kit/Skeleton.hpp"
 
 #include <sstream>
 #include <glm/gtx/transform.hpp>
 
 uint32_t kit::Model::m_instanceCount = 0;
-std::map<kit::Model::ShadowProgramFlags, kit::Program::Ptr> kit::Model::m_shadowPrograms;
+std::map<kit::Model::ShadowProgramFlags, kit::Program*> kit::Model::m_shadowPrograms;
 
 kit::Model::Model() : kit::Renderable::Renderable()
 {
@@ -41,29 +42,32 @@ void kit::Model::allocateShared()
 
 void kit::Model::releaseShared()
 {
-  kit::Model::m_shadowPrograms.clear();
+  for(auto & t : m_shadowPrograms)
+    if(t.second) delete t.second;
+    
+  m_shadowPrograms.clear();
 }
 
-kit::ProgramPtr kit::Model::getShadowProgram(bool skinned, bool opacityMapped, bool instanced)
+kit::Program * kit::Model::getShadowProgram(bool skinned, bool opacityMapped, bool instanced)
 {
   kit::Model::ShadowProgramFlags flags;
   flags.skinned = skinned;
   flags.opacityMapped = opacityMapped;
   flags.instanced = instanced;
   
-  if(kit::Model::m_shadowPrograms.find(flags) != kit::Model::m_shadowPrograms.end())
+  if(m_shadowPrograms.find(flags) != m_shadowPrograms.end())
   {
-    return kit::Model::m_shadowPrograms.at(flags);
+    return m_shadowPrograms.at(flags);
   }
   
   std::cout << "Generating shadow program for flags " << (skinned? "S":"-") << (opacityMapped? "O":"-") << (instanced? "I":"-") << std::endl;
   
   // Create a program and shaders
-  auto newProgram = kit::Program::create();
+  auto newProgram = new kit::Program();
   
   // Vertex shader 
   std::stringstream vertexSource;
-  auto vertexShader = kit::Shader::create(Shader::Type::Vertex);
+  auto vertexShader = new kit::Shader(Shader::Type::Vertex);
   {
     vertexSource << "#version 430 core" << std::endl;
 
@@ -116,7 +120,7 @@ kit::ProgramPtr kit::Model::getShadowProgram(bool skinned, bool opacityMapped, b
   
   // Pixel shader
   std::stringstream pixelSource;
-  auto pixelShader = kit::Shader::create(Shader::Type::Fragment);
+  auto pixelShader = new kit::Shader(Shader::Type::Fragment);
   {
     pixelSource << "#version 430 core" << std::endl;
 
@@ -156,99 +160,98 @@ kit::ProgramPtr kit::Model::getShadowProgram(bool skinned, bool opacityMapped, b
   newProgram->detachShader(pixelShader);
   newProgram->detachShader(vertexShader);
   
+  delete vertexShader;
+  delete pixelShader;
+  
   kit::Model::m_shadowPrograms[flags] = newProgram;
   return kit::Model::m_shadowPrograms.at(flags);
 }
 
 
-kit::Model::Ptr kit::Model::create(const std::string&mesh)
+kit::Model::Model(const std::string&mesh) : kit::Model()
 {
-  kit::Model::Ptr returner = std::make_shared<kit::Model>();
-  returner->m_mesh = kit::Mesh::load(mesh);
-  returner->m_skeleton = nullptr;
-  return returner;
+  m_mesh = new kit::Mesh(mesh);
+  m_ownMesh = true;
+  m_skeleton = nullptr;
 }
 
-kit::Model::Ptr kit::Model::create(kit::Mesh::Ptr mesh)
+kit::Model::Model(kit::Mesh * mesh) : kit::Model()
 {
-  kit::Model::Ptr returner = std::make_shared<kit::Model>();
-  returner->m_mesh = mesh;
-  returner->m_skeleton = nullptr;
-  return returner;
+  m_mesh = mesh;
+  m_ownMesh = false;
+  m_skeleton = nullptr;
 }
 
-kit::Model::Ptr kit::Model::create(const std::string&mesh, const std::string& skeleton)
+kit::Model::Model(const std::string&mesh, const std::string& skeleton) : kit::Model()
 {
-  kit::Model::Ptr returner = std::make_shared<kit::Model>();
-  returner->m_mesh = kit::Mesh::load(mesh);
-  returner->m_skeleton = kit::Skeleton::load(skeleton);
-  return returner;
+  m_mesh = new kit::Mesh(mesh);
+  m_skeleton = new kit::Skeleton(skeleton);
 }
 
-kit::Mesh::Ptr kit::Model::getMesh()
+kit::Mesh * kit::Model::getMesh()
 {
-  return this->m_mesh;
+  return m_mesh;
 }
 
-kit::Skeleton::Ptr kit::Model::getSkeleton()
+kit::Skeleton * kit::Model::getSkeleton()
 {
-  return this->m_skeleton;
+  return m_skeleton;
 }
 
 void kit::Model::setInstancing(bool enabled, std::vector< glm::mat4 > transforms)
 {
-  this->m_instanced = enabled;
-  this->m_instanceTransform = transforms;
+  m_instanced = enabled;
+  m_instanceTransform = transforms;
 }
 
 
 void kit::Model::update(const double & ms)
 {
-  if(this->m_skeleton != nullptr)
+  if(m_skeleton != nullptr)
   {
-    this->m_skeleton->update(ms);
+    m_skeleton->update(ms);
   }
 }
 
-void kit::Model::renderDeferred(kit::Renderer::Ptr renderer)
+void kit::Model::renderDeferred(kit::Renderer* renderer)
 {
   std::vector<glm::mat4> skinTransform;
   std::vector<glm::mat4> instanceTransform;
   
-  if(this->m_skeleton)
+  if(m_skeleton)
   {
-    skinTransform = this->m_skeleton->getSkin();
+    skinTransform = m_skeleton->getSkin();
   }
   
-  if(this->m_instanced)
+  if(m_instanced)
   {
-    instanceTransform = this->m_instanceTransform;
+    instanceTransform = m_instanceTransform;
   }
 
-  this->m_mesh->render(renderer->getActiveCamera(), this->getTransformMatrix(), false, skinTransform, instanceTransform);
+  m_mesh->render(renderer->getActiveCamera(), getTransformMatrix(), false, skinTransform, instanceTransform);
 }
 
-void kit::Model::renderForward(kit::Renderer::Ptr renderer)
+void kit::Model::renderForward(kit::Renderer* renderer)
 {
   std::vector<glm::mat4> skinTransform;
   std::vector<glm::mat4> instanceTransform;
   
-  if(this->m_skeleton)
+  if(m_skeleton)
   {
-    skinTransform = this->m_skeleton->getSkin();
+    skinTransform = m_skeleton->getSkin();
   }
   
-  if(this->m_instanced)
+  if(m_instanced)
   {
-    instanceTransform = this->m_instanceTransform;
+    instanceTransform = m_instanceTransform;
   }
 
-  this->m_mesh->render(renderer->getActiveCamera(), this->getTransformMatrix(), true, skinTransform, instanceTransform);
+  m_mesh->render(renderer->getActiveCamera(), getTransformMatrix(), true, skinTransform, instanceTransform);
 }
 
 void kit::Model::renderShadows(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
 {
-  for (auto &currSubmeshIndex : this->m_mesh->getSubmeshEntries())
+  for (auto &currSubmeshIndex : m_mesh->getSubmeshEntries())
   {
     auto & currMaterial = currSubmeshIndex.second.m_material;
     auto & currSubmesh = currSubmeshIndex.second.m_submesh;
@@ -269,12 +272,12 @@ void kit::Model::renderShadows(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
     }
 
     bool O = (currMaterial->getOpacityMask() != nullptr);
-    bool S = (this->m_skeleton != nullptr);
-    bool I = this->m_instanced;
+    bool S = (m_skeleton != nullptr);
+    bool I = m_instanced;
 
     auto currProgram = kit::Model::getShadowProgram(S, O, I);
 
-    currProgram->setUniformMat4("uniform_mvpMatrix", projectionMatrix * viewMatrix * this->getTransformMatrix());
+    currProgram->setUniformMat4("uniform_mvpMatrix", projectionMatrix * viewMatrix * getTransformMatrix());
 
     if(O)
     {
@@ -283,13 +286,13 @@ void kit::Model::renderShadows(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
 
     if(S)
     {
-      currProgram->setUniformMat4v("uniform_bones", this->m_skeleton->getSkin());
+      currProgram->setUniformMat4v("uniform_bones", m_skeleton->getSkin());
     }
     
     if(I)
     {
-      currProgram->setUniformMat4v("uniform_instanceTransform", this->m_instanceTransform);
-      currSubmesh->renderGeometryInstanced(this->m_instanceTransform.size());
+      currProgram->setUniformMat4v("uniform_instanceTransform", m_instanceTransform);
+      currSubmesh->renderGeometryInstanced(m_instanceTransform.size());
     }
     else
     {
@@ -300,52 +303,52 @@ void kit::Model::renderShadows(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
 
 void kit::Model::renderGeometry()
 {
-  this->m_mesh->renderGeometry();
+  m_mesh->renderGeometry();
 }
 
 bool kit::Model::isSkinned()
 {
-  return (this->m_skeleton != nullptr);
+  return (m_skeleton != nullptr);
 }
 
 std::vector<glm::mat4> kit::Model::getSkin()
 {
-  if (this->m_skeleton == nullptr)
+  if (m_skeleton == nullptr)
   {
     KIT_ERR("Warning: tried to get skin from non-skinned model");
     return std::vector<glm::mat4>();
   }
 
-  return this->m_skeleton->getSkin();
+  return m_skeleton->getSkin();
 }
 
 glm::vec3 kit::Model::getBoneWorldPosition(const std::string&bone)
 {
-  if (!this->m_skeleton)
+  if (!m_skeleton)
   {
     KIT_ERR("Warning: tried to get bone position from non-skinned model");
     return glm::vec3();
   }
 
-  kit::Skeleton::Bone::Ptr currBone = this->m_skeleton->getBone(bone);
+  kit::Skeleton::Bone * currBone = m_skeleton->getBone(bone);
   if (!currBone)
   {
     KIT_ERR("Warning: tried to get bone position from non-existent bone");
     return glm::vec3();
   }
 
-  return glm::vec3( this->getTransformMatrix() * currBone->m_globalTransform * glm::vec4(0.0, 0.0, 0.0, 1.0));
+  return glm::vec3( getTransformMatrix() * currBone->m_globalTransform * glm::vec4(0.0, 0.0, 0.0, 1.0));
 }
 
 glm::quat kit::Model::getBoneWorldRotation(const std::string&bone)
 {
-  if (!this->m_skeleton)
+  if (!m_skeleton)
   {
     KIT_ERR("Warning: tried to get bone rotation from non-skinned model");
     return glm::quat();
   }
 
-  kit::Skeleton::Bone::Ptr currBone = this->m_skeleton->getBone(bone);
+  kit::Skeleton::Bone* currBone = m_skeleton->getBone(bone);
   if (!currBone)
   {
     KIT_ERR("Warning: tried to get bone rotation from non-existent bone");
@@ -357,5 +360,5 @@ glm::quat kit::Model::getBoneWorldRotation(const std::string&bone)
   fodderFix = glm::rotate(fodderFix, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
   //fodderFix = glm::rotate(fodderFix, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
-  return glm::quat_cast(this->getTransformMatrix() * currBone->m_globalTransform) * fodderFix;
+  return glm::quat_cast(getTransformMatrix() * currBone->m_globalTransform) * fodderFix;
 }

@@ -1,42 +1,36 @@
-#ifndef KIT_SKYBOX_HPP
-#define KIT_SKYBOX_HPP
+#pragma once
 
 #include "Kit/Types.hpp"
 
-
-#include <memory>
 #include <map>
 
 namespace kit
 {
 
   class Cubemap;
-  typedef std::shared_ptr<Cubemap> CubemapPtr;
+  
 
   class Camera;
-  typedef std::shared_ptr<Camera> CameraPtr;
+  
 
   class Program;
-  typedef std::shared_ptr<Program> ProgramPtr;
+  
 
   class Renderer;
-  typedef std::shared_ptr<Renderer> RendererPtr;
+  
 
   class KITAPI Skybox
   {
     public:
       
-      typedef std::shared_ptr<Skybox> Ptr;
-      
+      Skybox(std::string environment);
+      Skybox(glm::vec3 color, float strength = 1.0f);
       ~Skybox();
 
-      void render(kit::RendererPtr renderer);
+      void render(kit::Renderer * renderer);
       void renderGeometry();
-      static kit::Skybox::Ptr create( kit::CubemapPtr cubemaptexture = nullptr );
       
-      kit::CubemapPtr getTexture(); 
-      void setTexture(kit::CubemapPtr cubemaptexture);
-      Skybox(kit::CubemapPtr cubemaptexture);
+      kit::Cubemap * getTexture();
 
       void setStrength(float);
       void setColor(glm::vec3 color);
@@ -50,8 +44,8 @@ namespace kit
       static void allocateShared();
       static void releaseShared();
       static uint32_t m_instanceCount;
-      static kit::ProgramPtr m_program;
-      static kit::ProgramPtr m_programNoTexture;
+      static kit::Program* m_program;
+      static kit::Program* m_programNoTexture;
 
       static uint32_t m_glVertexArray;
       static uint32_t m_glVertexIndices;
@@ -59,9 +53,7 @@ namespace kit
       
       glm::vec3        m_color;
       float             m_strength;
-      kit::CubemapPtr m_texture;
+      kit::Cubemap* m_texture = nullptr;
   };
 
 }
-
-#endif

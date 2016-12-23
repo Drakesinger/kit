@@ -1,42 +1,31 @@
-#ifndef KIT_GRIDFLOOR_HPP
-#define KIT_GRIDFLOOR_HPP
-
+#pragma once
 
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
 #include "Kit/Renderable.hpp"
 
-#include <memory>
-
 namespace kit
 {
   class Program;
-  typedef std::shared_ptr<Program> ProgramPtr;
-
+  
   class Camera;
-  typedef std::shared_ptr<Camera> CameraPtr;
-
+  
   class Texture;
-  typedef std::shared_ptr<Texture> TexturePtr;
-
+  
   class Renderer;
-  typedef std::shared_ptr<Renderer> RendererPtr;
-
 
   class KITAPI GridFloor : public kit::Renderable
   {
   public:
-    typedef std::shared_ptr<kit::GridFloor> Ptr;
+    
 
     GridFloor();
     ~GridFloor();
 
-    static kit::GridFloor::Ptr create();
-
-    void renderForward(kit::RendererPtr renderer) override;
+    void renderForward(kit::Renderer * renderer) override;
     void renderGeometry() override;
     
-    bool isShadowCaster();
+    bool isShadowCaster() override;
     
   private:
 
@@ -50,10 +39,8 @@ namespace kit
     static uint32_t m_glVertexIndices;
     static uint32_t m_glVertexBuffer;
 
-    static kit::ProgramPtr m_program;
+    static kit::Program * m_program;
     
     static uint32_t m_indexCount;
   };
 }
-
-#endif // KIT_SPHERE_HPP

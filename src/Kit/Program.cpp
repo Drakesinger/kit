@@ -32,129 +32,114 @@ kit::Program::~Program()
   glGetError();
 }
 
-kit::Program::Ptr kit::Program::create()
-{
-  return std::make_shared<kit::Program>();
-}
-
-void kit::Program::addShaders(kit::Program::Ptr program, kit::Shader::Type type, std::vector<std::string> const & sources, std::vector<kit::Shader::Ptr> & outShaders, kit::DataSource source)
+void kit::Program::addShaders(kit::Shader::Type type, std::vector<std::string> const & sources, std::vector<kit::Shader*> & outShaders, kit::DataSource source)
 {
   static const std::string dataDir = kit::getDataDirectory(source) + std::string("shaders/");
   
   for(auto & currSource : sources)
   {
-    program->m_fileIdentifier += typeToShort[type] + currSource + std::string(";");
-    kit::Shader::Ptr currShader = kit::Shader::create(type);
+    m_fileIdentifier += typeToShort[type] + currSource + std::string(";");
+    kit::Shader* currShader = new kit::Shader(type);
     currShader->sourceFromFile(dataDir + currSource);
     currShader->compile();
     outShaders.push_back(currShader);
-    program->attachShader(currShader);
+    attachShader(currShader);
   }
 }
 
-kit::Program::Ptr kit::Program::load(SourceList c, kit::DataSource source)
+kit::Program::Program(SourceList c, kit::DataSource source) : kit::Program()
 {
-  kit::Program::Ptr returner = kit::Program::create();
-  std::vector<kit::Shader::Ptr> shaders;
-  returner->m_fileIdentifier = "";
+  std::vector<kit::Shader*> shaders;
+  m_fileIdentifier = "";
 
-  kit::Program::addShaders(returner, kit::Shader::Type::Compute, c, shaders, source);
+  addShaders(kit::Shader::Type::Compute, c, shaders, source);
 
-  returner->link();
+  link();
 
   // Detach shaders 
   for(auto & currShader : shaders)
   {
-    returner->detachShader(currShader);
+    detachShader(currShader);
+    delete currShader;
   }
-
-  return returner;
 }
 
-kit::Program::Ptr kit::Program::load(SourceList v, SourceList f, kit::DataSource source)
+kit::Program::Program(SourceList v, SourceList f, kit::DataSource source) : kit::Program()
 {
-  kit::Program::Ptr returner = kit::Program::create();
-  std::vector<kit::Shader::Ptr> shaders;
-  returner->m_fileIdentifier = "";
+  std::vector<kit::Shader*> shaders;
+  m_fileIdentifier = "";
 
-  kit::Program::addShaders(returner, kit::Shader::Type::Vertex, v, shaders, source);
-  kit::Program::addShaders(returner, kit::Shader::Type::Fragment, f, shaders, source);
+  addShaders(kit::Shader::Type::Vertex, v, shaders, source);
+  addShaders(kit::Shader::Type::Fragment, f, shaders, source);
 
-  returner->link();
+  link();
 
   // Detach shaders 
   for(auto & currShader : shaders)
   {
-    returner->detachShader(currShader);
+    detachShader(currShader);
+    delete currShader;
   }
-
-  return returner;
 }
 
-kit::Program::Ptr kit::Program::load(SourceList v, SourceList g, SourceList f, kit::DataSource source)
+kit::Program::Program(SourceList v, SourceList g, SourceList f, kit::DataSource source) : kit::Program()
 {
-  kit::Program::Ptr returner = kit::Program::create();
-  std::vector<kit::Shader::Ptr> shaders;
-  returner->m_fileIdentifier = "";
+  std::vector<kit::Shader*> shaders;
+  m_fileIdentifier = "";
 
-  kit::Program::addShaders(returner, kit::Shader::Type::Vertex, v, shaders, source);
-  kit::Program::addShaders(returner, kit::Shader::Type::Geometry, g, shaders, source);
-  kit::Program::addShaders(returner, kit::Shader::Type::Fragment, f, shaders, source);
+  addShaders(kit::Shader::Type::Vertex, v, shaders, source);
+  addShaders(kit::Shader::Type::Geometry, g, shaders, source);
+  addShaders(kit::Shader::Type::Fragment, f, shaders, source);
 
-  returner->link();
+  link();
 
   // Detach shaders 
   for(auto & currShader : shaders)
   {
-    returner->detachShader(currShader);
+    detachShader(currShader);
+    delete currShader;
   }
-
-  return returner;
 }
 
-kit::Program::Ptr kit::Program::load(SourceList v, SourceList tc, SourceList te, SourceList f, kit::DataSource source)
+kit::Program::Program(SourceList v, SourceList tc, SourceList te, SourceList f, kit::DataSource source) : kit::Program()
 {
-  kit::Program::Ptr returner = kit::Program::create();
-  std::vector<kit::Shader::Ptr> shaders;
-  returner->m_fileIdentifier = "";
+  std::vector<kit::Shader*> shaders;
+  m_fileIdentifier = "";
 
-  kit::Program::addShaders(returner, kit::Shader::Type::Vertex, v, shaders, source);
-  kit::Program::addShaders(returner, kit::Shader::Type::TessControl, tc, shaders, source);
-  kit::Program::addShaders(returner, kit::Shader::Type::TessEvaluation, te, shaders, source);
-  kit::Program::addShaders(returner, kit::Shader::Type::Fragment, f, shaders, source);
+  addShaders(kit::Shader::Type::Vertex, v, shaders, source);
+  addShaders(kit::Shader::Type::TessControl, tc, shaders, source);
+  addShaders(kit::Shader::Type::TessEvaluation, te, shaders, source);
+  addShaders(kit::Shader::Type::Fragment, f, shaders, source);
 
-  returner->link();
+  link();
 
   // Detach shaders 
   for(auto & currShader : shaders)
   {
-    returner->detachShader(currShader);
+    detachShader(currShader);
+    delete currShader;
   }
-
-  return returner;
 }
 
-kit::Program::Ptr kit::Program::load(SourceList v, SourceList tc, SourceList te, SourceList g, SourceList f, kit::DataSource source)
+kit::Program::Program(SourceList v, SourceList tc, SourceList te, SourceList g, SourceList f, kit::DataSource source) : kit::Program()
 {
-  kit::Program::Ptr returner = kit::Program::create();
-  std::vector<kit::Shader::Ptr> shaders;
-  returner->m_fileIdentifier = "";
+  std::vector<kit::Shader*> shaders;
+  m_fileIdentifier = "";
+  
+  addShaders(kit::Shader::Type::Vertex, v, shaders, source);
+  addShaders(kit::Shader::Type::TessControl, tc, shaders, source);
+  addShaders(kit::Shader::Type::TessEvaluation, te, shaders, source);
+  addShaders(kit::Shader::Type::Geometry, g, shaders, source);
+  addShaders(kit::Shader::Type::Fragment, f, shaders, source);
 
-  kit::Program::addShaders(returner, kit::Shader::Type::Vertex, v, shaders, source);
-  kit::Program::addShaders(returner, kit::Shader::Type::TessControl, tc, shaders, source);
-  kit::Program::addShaders(returner, kit::Shader::Type::TessEvaluation, te, shaders, source);
-  kit::Program::addShaders(returner, kit::Shader::Type::Geometry, g, shaders, source);
-  kit::Program::addShaders(returner, kit::Shader::Type::Fragment, f, shaders, source);
-
-  returner->link();
+  link();
 
   // Detach shaders 
   for(auto & currShader : shaders)
   {
-    returner->detachShader(currShader);
+    detachShader(currShader);
+    delete currShader;
   }
-
-  return returner;
 }
 
 
@@ -206,7 +191,7 @@ uint32_t kit::Program::getHandle()
   return this->m_glHandle;
 }
 
-void kit::Program::setUniformTexture(const std::string & name, kit::Texture::WPtr texture )
+void kit::Program::setUniformTexture(const std::string & name, kit::Texture * texture)
 {
   glUseProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
@@ -236,7 +221,7 @@ void kit::Program::setUniformTexture(const std::string & name, kit::Texture::WPt
   }
 }
 
-void kit::Program::setUniformCubemap(const std::string & name, kit::Cubemap::WPtr texture )
+void kit::Program::setUniformCubemap(const std::string & name, kit::Cubemap * texture )
 {
   glUseProgram(this->m_glHandle);
   uint32_t loc = this->getUniformLocation(name);
@@ -420,15 +405,14 @@ uint32_t kit::Program::getUniformLocation(const std::string & name)
 
   for(auto & it : this->m_textures)
   {
-    kit::Texture::Ptr t = it.second.lock();
-    if(t)
+    if(it.second)
     {
       glUniform1i(it.first, i);
 #ifndef KIT_SHITTY_INTEL
-      glBindTextureUnit(i, t->getHandle());
+      glBindTextureUnit(i, it.second->getHandle());
 #else
       glActiveTexture(GL_TEXTURE0 + i);
-      t->bind();
+      it.second->bind();
 #endif 
       i++;
     }
@@ -436,15 +420,14 @@ uint32_t kit::Program::getUniformLocation(const std::string & name)
   
   for(auto & it : this->m_cubemaps)
   {
-    kit::Cubemap::Ptr t = it.second.lock();
-    if(t)
+    if(it.second)
     {
       glUniform1i(it.first, i);
 #ifndef KIT_SHITTY_INTEL
-      glBindTextureUnit(i, t->getHandle());
+      glBindTextureUnit(i, it.second->getHandle());
 #else 
       glActiveTexture(GL_TEXTURE0 + i);
-      t->bind();
+      it.second->bind();
 #endif
       i++;
     }
@@ -458,13 +441,13 @@ int32_t kit::Program::getMaxTextureUnits()
   return returner;
 }
 
-void kit::Program::attachShader(kit::Shader::Ptr s)
+void kit::Program::attachShader(kit::Shader * s)
 {
   glAttachShader(this->m_glHandle, s->getHandle());
   this->m_fileIdentifier += "dynamic;";
 }
 
-void kit::Program::detachShader(kit::Shader::Ptr s)
+void kit::Program::detachShader(kit::Shader * s)
 {
   glDetachShader(this->m_glHandle, s->getHandle());
 }

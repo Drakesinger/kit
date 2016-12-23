@@ -23,16 +23,20 @@ kit::Skeleton::Skeleton()
 
 kit::Skeleton::~Skeleton()
 {
-
+  for(auto c : m_boneIndexId)
+  {
+    if(c) delete c;
+  }
+  
+  for(auto c : m_animations)
+  {
+    if(c.second) delete c.second;
+  }
 }
 
-kit::Skeleton::Ptr kit::Skeleton::load(const std::string&filename)
+kit::Skeleton::Skeleton(const std::string&filename)
 {
-  kit::Skeleton::Ptr returner = std::make_shared<kit::Skeleton>();
-
   std::ifstream s(std::string(std::string("./data/skeletons/") + filename).c_str(), std::ios::in | std::ios::binary);
-  
-  std::cout << "Loading skeleton " << filename.c_str() << std::endl;
 
   if(!s)
   {
@@ -46,18 +50,18 @@ kit::Skeleton::Ptr kit::Skeleton::load(const std::string&filename)
 
   
   uint32_t numBones = kit::readUint32(s);
-  returner->m_boneIndexId = std::vector<Bone::Ptr>(numBones);
-  returner->m_inverseBindPose = std::vector<glm::mat4>(numBones);
-  returner->m_skin = std::vector<glm::mat4>(numBones);
+  m_boneIndexId = std::vector<Bone*>(numBones);
+  m_inverseBindPose = std::vector<glm::mat4>(numBones);
+  m_skin = std::vector<glm::mat4>(numBones);
 
   uint32_t numAnimations = kit::readUint32(s);
   
-  returner->m_globalInverseTransform = kit::readMat4(s);
+  m_globalInverseTransform = kit::readMat4(s);
   
   // ... Bones
   for(uint32_t i = 0; i < numBones; i++)
   {
-    kit::Skeleton::Bone::Ptr newBone = std::make_shared<Bone>();
+    kit::Skeleton::Bone * newBone = new Bone();
 
     newBone->m_id              = kit::readUint32(s);
     newBone->m_parentId        = kit::readUint32(s);
@@ -65,24 +69,24 @@ kit::Skeleton::Ptr kit::Skeleton::load(const std::string&filename)
     newBone->m_localTransform  = kit::readMat4(s);
     newBone->m_globalTransform = glm::mat4(1.0);
 
-    returner->m_inverseBindPose[newBone->m_id]  = kit::readMat4(s);
-    returner->m_boneIndexId[newBone->m_id] = newBone;
-    returner->m_boneIndexName[newBone->m_name] = newBone;
+    m_inverseBindPose[newBone->m_id]  = kit::readMat4(s);
+    m_boneIndexId[newBone->m_id] = newBone;
+    m_boneIndexName[newBone->m_name] = newBone;
   }
 
   // Fill in parents, rootbones and children
-  for (auto & currBone : returner->m_boneIndexId)
+  for (auto & currBone : m_boneIndexId)
   {
     if (currBone->m_parentId == 1337)
     {
-      returner->m_rootBones.push_back(currBone);
+      m_rootBones.push_back(currBone);
     }
     else
     {
-      currBone->m_parent = returner->getBone(currBone->m_parentId);
+      currBone->m_parent = getBone(currBone->m_parentId);
     }
 
-    for (auto & currBoneB : returner->m_boneIndexId)
+    for (auto & currBoneB : m_boneIndexId)
     {
       if (currBoneB->m_parentId == currBone->m_id)
       {
@@ -95,7 +99,7 @@ kit::Skeleton::Ptr kit::Skeleton::load(const std::string&filename)
   // .. Animations
   for(uint32_t i = 0; i < numAnimations; i++)
   {
-    kit::Skeleton::Animation::Ptr newAnimation = std::make_shared<Animation>();
+    kit::Skeleton::Animation* newAnimation = new kit::Skeleton::Animation();
 
     newAnimation->m_name = kit::readString(s);
     uint32_t numChannels = kit::readUint32(s);
@@ -134,44 +138,42 @@ kit::Skeleton::Ptr kit::Skeleton::load(const std::string&filename)
       newAnimation->m_channels[boneId] = newChannel;
     }
     
-    returner->m_animations[newAnimation->m_name] = newAnimation;
+    m_animations[newAnimation->m_name] = newAnimation;
   }
   
   s.close();
-
-  return returner;
 }
 
 void kit::Skeleton::update(const double & ms)
 {
-  if (this->m_isPlaying)
+  if (m_isPlaying)
   {
-    float totalAnimTime = this->m_currentAnimation->m_frameDuration * this->m_currentAnimation->m_framesPerSecond;
-    float currDelta = float(this->m_currentTime) / totalAnimTime;
-    this->m_currentFrame = currDelta * this->m_currentAnimation->m_frameDuration;
+    float totalAnimTime = m_currentAnimation->m_frameDuration * m_currentAnimation->m_framesPerSecond;
+    float currDelta = float(m_currentTime) / totalAnimTime;
+    m_currentFrame = currDelta * m_currentAnimation->m_frameDuration;
 
-    this->m_currentTime += ms;
-    if (this->m_currentTime >= totalAnimTime) {
-      if (this->m_isLooping)
+    m_currentTime += ms;
+    if (m_currentTime >= totalAnimTime) {
+      if (m_isLooping)
       {
-        while (this->m_currentTime >= totalAnimTime)
+        while (m_currentTime >= totalAnimTime)
         {
-          this->m_currentTime -= totalAnimTime;
+          m_currentTime -= totalAnimTime;
         }
       }
       else
       {
-        this->stop();
-        if(this->m_callbackOnDone)
+        stop();
+        if(m_callbackOnDone)
         {
-          this->m_callback();
-          this->m_callback = nullptr;
-          this->m_callbackOnDone = false;
+          m_callback();
+          m_callback = nullptr;
+          m_callbackOnDone = false;
         }
       }
     }
 
-    this->updateSkin();
+    updateSkin();
 
   }
 }
@@ -183,7 +185,7 @@ glm::quat kit::Skeleton::Bone::getCurrentRotation()
   glm::vec3 scale, translation, skew;
   glm::vec4 perspective;
   glm::quat orientation;
-  glm::decompose(this->m_globalTransform, scale, orientation, translation, skew, perspective);
+  glm::decompose(m_globalTransform, scale, orientation, translation, skew, perspective);
 
   return glm::inverse(orientation);
 }
@@ -195,7 +197,7 @@ glm::vec3 kit::Skeleton::Bone::getCurrentPosition()
   glm::vec3 scale, translation, skew;
   glm::vec4 perspective;
   glm::quat orientation;
-  glm::decompose(this->m_globalTransform, scale, orientation, translation, skew, perspective);
+  glm::decompose(m_globalTransform, scale, orientation, translation, skew, perspective);
 
   return translation;
 }
@@ -204,7 +206,7 @@ void kit::Skeleton::updateSkin()
 {
   // Create a workload and fill it with the rootnodes
   std::queue<WorkPair> workload;
-  for (auto & currBone : this->m_rootBones)
+  for (auto & currBone : m_rootBones)
   {
     workload.push(WorkPair(glm::mat4(1.0), currBone));
   }
@@ -217,21 +219,21 @@ void kit::Skeleton::updateSkin()
     workload.pop();
 
     glm::mat4 parentTransform = currPair.first;
-    Bone::Ptr currBone = currPair.second;
+    Bone* currBone = currPair.second;
 
     //std::cout << "Updating bone " << currBone->m_name << ", son of " << (currBone->m_parent ? currBone->m_parent->m_name : "nobody") << ", has " << currBone->m_children.size() << " children" << std::endl;
 
     // Animate the current bones local transformation
-    if (this->m_currentAnimation)
+    if (m_currentAnimation)
     {
-      currBone->m_localTransform = this->m_currentAnimation->getBoneTransform(currBone->m_id, this->m_currentFrame);
+      currBone->m_localTransform = m_currentAnimation->getBoneTransform(currBone->m_id, m_currentFrame);
     }
 
     // Inherit the global transformation
     currBone->m_globalTransform = parentTransform * currBone->m_localTransform;
 
     // Update the skin for this bone
-    this->m_skin[currBone->m_id] = this->m_globalInverseTransform * currBone->m_globalTransform * this->m_inverseBindPose[currBone->m_id];
+    m_skin[currBone->m_id] = m_globalInverseTransform * currBone->m_globalTransform * m_inverseBindPose[currBone->m_id];
 
     // Add the children of this bone to the workload
     for (auto & currChild : currBone->m_children)
@@ -243,41 +245,41 @@ void kit::Skeleton::updateSkin()
 
 void kit::Skeleton::pause()
 {
-  this->m_isPlaying = false;
+  m_isPlaying = false;
 }
 
 void kit::Skeleton::play(bool loop)
 {
-  this->m_isPlaying = true;
-  this->m_isLooping = loop;
+  m_isPlaying = true;
+  m_isLooping = loop;
 }
 
 void kit::Skeleton::setAnimation(const std::string&name)
 {
-  auto newAnim = this->getAnimation(name);
-  if (newAnim != this->m_currentAnimation)
+  auto newAnim = getAnimation(name);
+  if (newAnim != m_currentAnimation)
   {
-    this->m_currentAnimation = newAnim;
-    this->stop();
+    m_currentAnimation = newAnim;
+    stop();
   }
 }
 
 void kit::Skeleton::stop()
 {
-  this->m_isPlaying = false;
-  this->m_currentTime = 0.0;
+  m_isPlaying = false;
+  m_currentTime = 0.0;
 }
 
 std::vector< glm::mat4 > kit::Skeleton::getSkin()
 {
-  return this->m_skin;
+  return m_skin;
 }
 
-kit::Skeleton::Bone::Ptr kit::Skeleton::getBone(const std::string&name)
+kit::Skeleton::Bone * kit::Skeleton::getBone(const std::string&name)
 {
-  if (this->m_boneIndexName.find(name) != this->m_boneIndexName.end())
+  if (m_boneIndexName.find(name) != m_boneIndexName.end())
   {
-    return this->m_boneIndexName.at(name);
+    return m_boneIndexName.at(name);
   }
   else
   {
@@ -286,16 +288,16 @@ kit::Skeleton::Bone::Ptr kit::Skeleton::getBone(const std::string&name)
   }
 }
 
-kit::Skeleton::Bone::Ptr kit::Skeleton::getBone(uint32_t id)
+kit::Skeleton::Bone * kit::Skeleton::getBone(uint32_t id)
 {
-  return this->m_boneIndexId[id];
+  return m_boneIndexId[id];
 }
 
-kit::Skeleton::Animation::Ptr kit::Skeleton::getAnimation(const std::string&animationname)
+kit::Skeleton::Animation * kit::Skeleton::getAnimation(const std::string&animationname)
 {
-  if (this->m_animations.find(animationname) != this->m_animations.end())
+  if (m_animations.find(animationname) != m_animations.end())
   {
-    return this->m_animations.at(animationname);
+    return m_animations.at(animationname);
   }
   else
   {
@@ -306,29 +308,29 @@ kit::Skeleton::Animation::Ptr kit::Skeleton::getAnimation(const std::string&anim
 
 glm::quat kit::Skeleton::AnimationChannel::getRotationAt(float mstime)
 {
-  if(this->m_rotationKeys.size() == 0)
+  if(m_rotationKeys.size() == 0)
   {
     return glm::quat();
   }
   
-  if(this->m_rotationKeys.size() == 1)
+  if(m_rotationKeys.size() == 1)
   {
-    return this->m_rotationKeys.begin()->second;
+    return m_rotationKeys.begin()->second;
   }
   
   glm::quat a, b;
   float ad;//, bd;
-  std::map<float, glm::quat>::iterator curr = this->m_rotationKeys.find(mstime);
+  std::map<float, glm::quat>::iterator curr = m_rotationKeys.find(mstime);
   
-  if(curr != this->m_rotationKeys.end())
+  if(curr != m_rotationKeys.end())
   {
     a = curr->second;
     ad = curr->first;
   }
   else
   {
-    std::map<float, glm::quat>::iterator lwr = this->m_rotationKeys.lower_bound(mstime);
-    if(lwr != this->m_rotationKeys.begin())
+    std::map<float, glm::quat>::iterator lwr = m_rotationKeys.lower_bound(mstime);
+    if(lwr != m_rotationKeys.begin())
     {
     lwr--; 
     }
@@ -337,14 +339,14 @@ glm::quat kit::Skeleton::AnimationChannel::getRotationAt(float mstime)
     ad =  lwr->first;
   }
   
-  std::map<float, glm::quat>::iterator hgr = this->m_rotationKeys.upper_bound(mstime);
-  if (hgr != this->m_rotationKeys.end())
+  std::map<float, glm::quat>::iterator hgr = m_rotationKeys.upper_bound(mstime);
+  if (hgr != m_rotationKeys.end())
   {
     b = hgr->second;
   }
   else
   {
-    b = this->m_rotationKeys.at(this->m_rotationKeys.rbegin()->first);
+    b = m_rotationKeys.at(m_rotationKeys.rbegin()->first);
   }
   //bd = hgr->first;
   
@@ -355,29 +357,29 @@ glm::quat kit::Skeleton::AnimationChannel::getRotationAt(float mstime)
 glm::vec3 kit::Skeleton::AnimationChannel::getScaleAt(float mstime)
 {
 
-  if(this->m_scaleKeys.size() == 0)
+  if(m_scaleKeys.size() == 0)
   {
     return glm::vec3(1.0f, 1.0f, 1.0f);
   }
   
-  if(this->m_scaleKeys.size() == 1)
+  if(m_scaleKeys.size() == 1)
   {
-    return this->m_scaleKeys.begin()->second;
+    return m_scaleKeys.begin()->second;
   }
   
   glm::vec3 a, b;
   float ad;//, bd;
-  std::map<float, glm::vec3>::iterator curr = this->m_scaleKeys.find(mstime);
+  std::map<float, glm::vec3>::iterator curr = m_scaleKeys.find(mstime);
 
-  if (curr != this->m_scaleKeys.end())
+  if (curr != m_scaleKeys.end())
   {
     a = curr->second;
     ad = curr->first;
   }
   else
   {
-    std::map<float, glm::vec3>::iterator lwr = this->m_scaleKeys.lower_bound(mstime);
-    if (lwr != this->m_scaleKeys.begin())
+    std::map<float, glm::vec3>::iterator lwr = m_scaleKeys.lower_bound(mstime);
+    if (lwr != m_scaleKeys.begin())
     {
       lwr--;
     }
@@ -386,14 +388,14 @@ glm::vec3 kit::Skeleton::AnimationChannel::getScaleAt(float mstime)
     ad = lwr->first;
   }
 
-  std::map<float, glm::vec3>::iterator hgr = this->m_scaleKeys.upper_bound(mstime);
-  if (hgr != this->m_scaleKeys.end())
+  std::map<float, glm::vec3>::iterator hgr = m_scaleKeys.upper_bound(mstime);
+  if (hgr != m_scaleKeys.end())
   {
     b = hgr->second;
   }
   else
   {
-    b = this->m_scaleKeys.at(this->m_scaleKeys.rbegin()->first);
+    b = m_scaleKeys.at(m_scaleKeys.rbegin()->first);
   }
   //bd = hgr->first;
 
@@ -403,16 +405,16 @@ glm::vec3 kit::Skeleton::AnimationChannel::getScaleAt(float mstime)
 
 glm::mat4 kit::Skeleton::Animation::getBoneTransform(uint32_t id, float mstime)
 {
-  auto channel = this->m_channels.at(id);
+  auto channel = m_channels.at(id);
   return channel.getTransformMatrix(mstime);
 }
 
 glm::mat4 kit::Skeleton::AnimationChannel::getTransformMatrix(float mstime)
 {
   
-  glm::mat4 S = glm::scale(glm::mat4(1.0f), this->getScaleAt(mstime));
-  glm::mat4 R = glm::mat4_cast(this->getRotationAt(mstime));
-  glm::mat4 T = glm::translate(glm::mat4(1.0f), this->getTranslationAt(mstime));
+  glm::mat4 S = glm::scale(glm::mat4(1.0f), getScaleAt(mstime));
+  glm::mat4 R = glm::mat4_cast(getRotationAt(mstime));
+  glm::mat4 T = glm::translate(glm::mat4(1.0f), getTranslationAt(mstime));
 
   glm::mat4 M = T * R * S;
   return M;
@@ -420,29 +422,29 @@ glm::mat4 kit::Skeleton::AnimationChannel::getTransformMatrix(float mstime)
 
 glm::vec3 kit::Skeleton::AnimationChannel::getTranslationAt(float mstime)
 {
-  if(this->m_translationKeys.size() == 0)
+  if(m_translationKeys.size() == 0)
   {
     return glm::vec3(0.0f, 0.0f, 0.0f);
   }
   
-  if(this->m_translationKeys.size() == 1)
+  if(m_translationKeys.size() == 1)
   {
-    return this->m_translationKeys.begin()->second;
+    return m_translationKeys.begin()->second;
   }
   
   glm::vec3 a, b;
   float ad;//, bd;
-  std::map<float, glm::vec3>::iterator curr = this->m_translationKeys.find(mstime);
+  std::map<float, glm::vec3>::iterator curr = m_translationKeys.find(mstime);
   
-  if(curr != this->m_translationKeys.end())
+  if(curr != m_translationKeys.end())
   {
     a = curr->second;
     ad = curr->first;
   }
   else
   {
-    std::map<float, glm::vec3>::iterator lwr = this->m_translationKeys.lower_bound(mstime);
-    if(lwr != this->m_translationKeys.begin())
+    std::map<float, glm::vec3>::iterator lwr = m_translationKeys.lower_bound(mstime);
+    if(lwr != m_translationKeys.begin())
     {
     lwr--; 
     }
@@ -451,14 +453,14 @@ glm::vec3 kit::Skeleton::AnimationChannel::getTranslationAt(float mstime)
     ad =  lwr->first;
   }
   
-  std::map<float, glm::vec3>::iterator hgr = this->m_translationKeys.upper_bound(mstime);
-  if (hgr != this->m_translationKeys.end())
+  std::map<float, glm::vec3>::iterator hgr = m_translationKeys.upper_bound(mstime);
+  if (hgr != m_translationKeys.end())
   {
     b = hgr->second;
   }
   else
   {
-    b = this->m_translationKeys.at(this->m_translationKeys.rbegin()->first);
+    b = m_translationKeys.at(m_translationKeys.rbegin()->first);
   }
   
   return glm::mix(a, b, mstime -  ad);
@@ -467,14 +469,14 @@ glm::vec3 kit::Skeleton::AnimationChannel::getTranslationAt(float mstime)
 
 bool kit::Skeleton::isPlaying()
 {
-  return this->m_isPlaying;
+  return m_isPlaying;
 }
 
 void kit::Skeleton::playAnimation(const std::string& name, kit::Skeleton::PlaybackDoneCallback callback)
 {
-  this->setAnimation(name);
-  this->play(false);
-  this->m_callbackOnDone = true;
-  this->m_callback = callback;
+  setAnimation(name);
+  play(false);
+  m_callbackOnDone = true;
+  m_callback = callback;
 }
 

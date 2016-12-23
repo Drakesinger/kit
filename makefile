@@ -1,7 +1,7 @@
 DEBUG        ?= 0
 PREFIX       := /usr
 CXX          := g++
-CXXFLAGS     := -std=c++14 -Wall -Wextra -Wpedantic -Wno-unused-parameter -fPIC -DKIT_SHITTY_INTEL
+CXXFLAGS     := -std=c++14 -Wall -Wextra -Wpedantic -Wno-unused-parameter -fPIC
 LDFLAGS      := -ldl -pthread -shared 
 REQLIBS      := glfw3 freetype2 chaiscript gl
 LIBS         := $(shell pkg-config --libs $(REQLIBS))
@@ -19,7 +19,7 @@ PCFILE       := pkgconfig/kit.pc
 ifeq ($(DEBUG), 1)
 	CXXFLAGS += -DKIT_DEBUG -g
 else
-	CXXFLAGS += -O3
+	CXXFLAGS += -O2 -g
 endif
 
 all: $(OUT_LIBRARY)

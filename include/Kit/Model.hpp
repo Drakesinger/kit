@@ -1,47 +1,36 @@
-#ifndef KIT_MODEL_HPP
-#define KIT_MODEL_HPP
+#pragma once
 
 #include "Kit/Export.hpp"
 #include "Kit/Renderable.hpp"
-
-#include "Kit/Skeleton.hpp"
-
-#include <memory>
 
 namespace kit 
 {
 
   class Camera;
-  typedef std::shared_ptr<Camera> CameraPtr;
-
   class Program;
-  typedef std::shared_ptr<Program> ProgramPtr;
-
   class Mesh;
-  typedef std::shared_ptr<Mesh> MeshPtr;
-
   class Texture;
-  typedef std::shared_ptr<Texture> TexturePtr;
+  class Skeleton;
 
   class KITAPI Model : public kit::Renderable
   {
     public:
-      typedef std::shared_ptr<Model> Ptr;
       
+      Model();
       ~Model();
       
-      static kit::Model::Ptr create(kit::MeshPtr mesh);
-      static kit::Model::Ptr create(const std::string& mesh);
-      static kit::Model::Ptr create(const std::string& mesh, const std::string& skeleton);
+      Model(kit::Mesh * mesh);
+      Model(const std::string& mesh);
+      Model(const std::string& mesh, const std::string& skeleton);
       
-      kit::MeshPtr getMesh();
-      kit::Skeleton::Ptr getSkeleton();
+      kit::Mesh * getMesh();
+      kit::Skeleton * getSkeleton();
       
       void setInstancing(bool enabled, std::vector<glm::mat4> transforms);
       
       void update(double const & ms);
-      void renderDeferred(kit::RendererPtr renderer) override;
-      void renderForward(kit::RendererPtr renderer) override;
+      void renderDeferred(kit::Renderer * renderer) override;
+      void renderForward(kit::Renderer * renderer) override;
       void renderShadows(glm::mat4 v, glm::mat4 p) override;
       void renderGeometry() override;
       
@@ -51,9 +40,7 @@ namespace kit
       glm::vec3 getBoneWorldPosition(const std::string& bone);
       glm::quat getBoneWorldRotation(const std::string& bone);
       
-      static kit::ProgramPtr getShadowProgram(bool skinned, bool opacityMapped, bool instanced);
-
-      Model();
+      static kit::Program* getShadowProgram(bool skinned, bool opacityMapped, bool instanced);
     private:
       
       struct ShadowProgramFlags
@@ -67,8 +54,9 @@ namespace kit
         }
       };
       
-      kit::MeshPtr m_mesh = nullptr;
-      kit::Skeleton::Ptr m_skeleton = nullptr;
+      bool m_ownMesh = false;
+      kit::Mesh* m_mesh = nullptr;
+      kit::Skeleton* m_skeleton = nullptr;
       bool m_instanced = false;
       std::vector<glm::mat4> m_instanceTransform;
       
@@ -78,9 +66,7 @@ namespace kit
       static void allocateShared();
       static void releaseShared();
 
-      static std::map<ShadowProgramFlags, kit::ProgramPtr> m_shadowPrograms;
+      static std::map<ShadowProgramFlags, kit::Program*> m_shadowPrograms;
   };
 
 }
-
-#endif

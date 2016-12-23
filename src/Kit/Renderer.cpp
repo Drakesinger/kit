@@ -24,17 +24,17 @@
 
 uint32_t kit::Renderer::m_instanceCount = 0;
 
-std::vector<kit::Light::Ptr> & kit::RenderPayload::getLights()
+std::vector<kit::Light *> & kit::RenderPayload::getLights()
 {
-  return this->m_lights;
+  return m_lights;
 }
 
-std::vector<kit::Renderable::Ptr> & kit::RenderPayload::getRenderables()
+std::vector<kit::Renderable *> & kit::RenderPayload::getRenderables()
 {
-  return this->m_renderables;
+  return m_renderables;
 }
 
-void kit::RenderPayload::addRenderable(kit::Renderable::Ptr renderable)
+void kit::RenderPayload::addRenderable(kit::Renderable * renderable)
 {
   if(renderable == nullptr)
   {
@@ -42,7 +42,7 @@ void kit::RenderPayload::addRenderable(kit::Renderable::Ptr renderable)
     return;
   }
   
-  for(auto & currRenderable : this->m_renderables)
+  for(auto & currRenderable : m_renderables)
   {
     if(currRenderable == renderable)
     {
@@ -50,11 +50,11 @@ void kit::RenderPayload::addRenderable(kit::Renderable::Ptr renderable)
     }
   }
   
-  this->m_renderables.push_back(renderable);
-  this->m_isSorted = false;
+  m_renderables.push_back(renderable);
+  m_isSorted = false;
 }
 
-void kit::RenderPayload::removeRenderable(kit::Renderable::Ptr renderable)
+void kit::RenderPayload::removeRenderable(kit::Renderable * renderable)
 {
   if(renderable == nullptr)
   {
@@ -62,10 +62,10 @@ void kit::RenderPayload::removeRenderable(kit::Renderable::Ptr renderable)
     return;
   }
   
-  this->m_renderables.erase(std::remove(this->m_renderables.begin(), this->m_renderables.end(), renderable), this->m_renderables.end());
+  m_renderables.erase(std::remove(m_renderables.begin(), m_renderables.end(), renderable), m_renderables.end());
 }
 
-void kit::RenderPayload::addLight(kit::Light::Ptr lightptr)
+void kit::RenderPayload::addLight(kit::Light * lightptr)
 {
   if(lightptr == nullptr)
   {
@@ -73,7 +73,7 @@ void kit::RenderPayload::addLight(kit::Light::Ptr lightptr)
     return;
   }
   
-  for(auto & currLight : this->m_lights)
+  for(auto & currLight : m_lights)
   {
     if(currLight == lightptr)
     {
@@ -81,10 +81,10 @@ void kit::RenderPayload::addLight(kit::Light::Ptr lightptr)
     }
   }
   
-  this->m_lights.push_back(lightptr);
+  m_lights.push_back(lightptr);
 }
 
-void kit::RenderPayload::removeLight(kit::Light::Ptr lightptr)
+void kit::RenderPayload::removeLight(kit::Light * lightptr)
 {
   if(lightptr == nullptr)
   {
@@ -92,7 +92,7 @@ void kit::RenderPayload::removeLight(kit::Light::Ptr lightptr)
     return;
   }
   
-  this->m_lights.erase(std::remove(this->m_lights.begin(), this->m_lights.end(), lightptr), this->m_lights.end());
+  m_lights.erase(std::remove(m_lights.begin(), m_lights.end(), lightptr), m_lights.end());
 }
 
 kit::Renderer::Renderer(glm::uvec2 resolution)
@@ -103,126 +103,156 @@ kit::Renderer::Renderer(glm::uvec2 resolution)
     kit::Renderer::allocateShared();
   }
   
-  this->m_resolution = resolution;
-  this->m_internalResolution = 1.0f;
-  this->m_activeCamera = nullptr;
-  this->m_skybox = nullptr;
-  this->m_metricsEnabled = false;
+  m_resolution = resolution;
+  m_internalResolution = 1.0f;
+  m_activeCamera = nullptr;
+  m_skybox = nullptr;
+  m_metricsEnabled = false;
   
-  glm::uvec2 effectiveResolution(uint32_t(float(resolution.x) * this->m_internalResolution), uint32_t(float(resolution.y) * this->m_internalResolution));
+  glm::uvec2 effectiveResolution(uint32_t(float(resolution.x) * m_internalResolution), uint32_t(float(resolution.y) * m_internalResolution));
   
   // create a screen quad to render fullscreen stuff
-  this->m_screenQuad = kit::Quad::create();
+  m_screenQuad = new kit::Quad();
   
   // Setup light programs
-  this->m_programEmissive = kit::Program::load({"screenquad.vert"}, {"lighting/emissive-light.frag"}, kit::DataSource::Static);
-  this->m_programIBL = kit::Program::load({"lighting/directional-light.vert"}, {"normals.glsl", "lighting/ibl-light.frag"}, kit::DataSource::Static);
-  this->m_integratedBRDF = kit::Texture::create2DFromFile(kit::getDataDirectory(kit::DataSource::Static) + "/textures/brdf.tga", kit::Texture::RGBA8, kit::Texture::ClampToEdge, kit::Texture::Linear, kit::Texture::Linear);
-  this->m_integratedBRDF->generateMipmap();
+  m_programEmissive = new kit::Program({"screenquad.vert"}, {"lighting/emissive-light.frag"}, kit::DataSource::Static);
+  m_programIBL = new kit::Program({"lighting/directional-light.vert"}, {"normals.glsl", "lighting/ibl-light.frag"}, kit::DataSource::Static);
+  m_integratedBRDF = new kit::Texture(kit::getDataDirectory(kit::DataSource::Static) + "/textures/brdf.tga", kit::Texture::RGBA8, kit::Texture::ClampToEdge, kit::Texture::Linear, kit::Texture::Linear);
+  m_integratedBRDF->generateMipmap();
   
-  this->m_programDirectional = kit::Program::load({"lighting/directional-light.vert"}, {"lighting/cooktorrance.glsl", "normals.glsl", "lighting/directional-light.frag"}, kit::DataSource::Static);
-  this->m_programDirectionalNS = kit::Program::load({"lighting/directional-light.vert"}, {"lighting/cooktorrance.glsl", "normals.glsl", "lighting/directional-light-ns.frag"}, kit::DataSource::Static);
+  m_programDirectional = new kit::Program({"lighting/directional-light.vert"}, {"lighting/cooktorrance.glsl", "normals.glsl", "lighting/directional-light.frag"}, kit::DataSource::Static);
+  m_programDirectionalNS = new kit::Program({"lighting/directional-light.vert"}, {"lighting/cooktorrance.glsl", "normals.glsl", "lighting/directional-light-ns.frag"}, kit::DataSource::Static);
   
-  this->m_programSpot = kit::Program::load({"lighting/spot-light.vert"}, {"lighting/attenuation.glsl", "lighting/spotattenuation.glsl", "normals.glsl", "lighting/cooktorrance.glsl", "lighting/spot-light.frag"}, kit::DataSource::Static);
-  this->m_programSpotNS = kit::Program::load({"lighting/spot-light.vert"}, {"lighting/attenuation.glsl", "lighting/spotattenuation.glsl", "normals.glsl", "lighting/cooktorrance.glsl", "lighting/spot-light-ns.frag"}, kit::DataSource::Static);
+  m_programSpot = new kit::Program({"lighting/spot-light.vert"}, {"lighting/attenuation.glsl", "lighting/spotattenuation.glsl", "normals.glsl", "lighting/cooktorrance.glsl", "lighting/spot-light.frag"}, kit::DataSource::Static);
+  m_programSpotNS = new kit::Program({"lighting/spot-light.vert"}, {"lighting/attenuation.glsl", "lighting/spotattenuation.glsl", "normals.glsl", "lighting/cooktorrance.glsl", "lighting/spot-light-ns.frag"}, kit::DataSource::Static);
   
-  this->m_programPoint = kit::Program::load({"lighting/point-light.vert"}, {"lighting/attenuation.glsl", "lighting/spotattenuation.glsl",  "normals.glsl", "lighting/cooktorrance.glsl", "lighting/point-light.frag"}, kit::DataSource::Static);
-  this->m_programPointNS = kit::Program::load({"lighting/point-light.vert"}, {"lighting/attenuation.glsl", "lighting/spotattenuation.glsl",  "normals.glsl", "lighting/cooktorrance.glsl", "lighting/point-light-ns.frag"}, kit::DataSource::Static);
-  this->m_pointGeometry = kit::Sphere::create(32, 24);
+  m_programPoint = new kit::Program({"lighting/point-light.vert"}, {"lighting/attenuation.glsl", "lighting/spotattenuation.glsl",  "normals.glsl", "lighting/cooktorrance.glsl", "lighting/point-light.frag"}, kit::DataSource::Static);
+  m_programPointNS = new kit::Program({"lighting/point-light.vert"}, {"lighting/attenuation.glsl", "lighting/spotattenuation.glsl",  "normals.glsl", "lighting/cooktorrance.glsl", "lighting/point-light-ns.frag"}, kit::DataSource::Static);
+  m_pointGeometry = new kit::Sphere(32, 24);
  
-  this->m_programIBL->setUniformTexture("uniform_brdf", this->m_integratedBRDF);
+  m_programIBL->setUniformTexture("uniform_brdf", m_integratedBRDF);
   
   // Setup buffers
-  this->updateBuffers();
+  updateBuffers();
 
   // --- Setup HDR bloom
   
   // Setup default variables
-  this->m_bloomEnabled      = true;
-  this->m_bloomQuality      = High;
-  this->m_bloomTresholdBias = 0.0f;
-  this->m_bloomBlurLevel2   = 1;
-  this->m_bloomBlurLevel4   = 2;
-  this->m_bloomBlurLevel8   = 4;
-  this->m_bloomBlurLevel16  = 8;
-  this->m_bloomBlurLevel32  = 16;
-  this->m_bloomDirtMultiplier = 3.0;
-  this->m_bloomDirtTexture = nullptr;
+  m_bloomEnabled      = true;
+  m_bloomQuality      = High;
+  m_bloomTresholdBias = 0.0f;
+  m_bloomBlurLevel2   = 1;
+  m_bloomBlurLevel4   = 2;
+  m_bloomBlurLevel8   = 4;
+  m_bloomBlurLevel16  = 8;
+  m_bloomBlurLevel32  = 16;
+  m_bloomDirtMultiplier = 3.0;
+  m_bloomDirtTexture = nullptr;
     
   // Load and set programs
-  this->m_hdrTonemap         = kit::Program::load({"screenquad.vert"}, {"hdr-tonemap.frag"}, kit::DataSource::Static);
-  this->m_hdrTonemapBloomHigh    = kit::Program::load({"screenquad.vert"}, {"hdr-tonemapBloom.frag"}, kit::DataSource::Static);
-  this->m_hdrTonemapBloomHighDirt= kit::Program::load({"screenquad.vert"}, {"hdr-tonemapBloomDirt.frag"}, kit::DataSource::Static);
-  this->m_hdrTonemapBloomLow    = kit::Program::load({"screenquad.vert"}, {"hdr-tonemapBloomLow.frag"}, kit::DataSource::Static);
-  this->m_hdrTonemapBloomLowDirt= kit::Program::load({"screenquad.vert"}, {"hdr-tonemapBloomLowDirt.frag"}, kit::DataSource::Static);
-  this->m_bloomBrightProgram = kit::Program::load({"screenquad.vert"}, {"hdr-brightpass.frag"}, kit::DataSource::Static);
-  this->m_bloomBlurProgram   = kit::Program::load({"screenquad.vert"}, {"hdr-blur.frag"}, kit::DataSource::Static);
+  m_hdrTonemap         = new kit::Program({"screenquad.vert"}, {"hdr-tonemap.frag"}, kit::DataSource::Static);
+  m_hdrTonemapBloomHigh    = new kit::Program({"screenquad.vert"}, {"hdr-tonemapBloom.frag"}, kit::DataSource::Static);
+  m_hdrTonemapBloomHighDirt= new kit::Program({"screenquad.vert"}, {"hdr-tonemapBloomDirt.frag"}, kit::DataSource::Static);
+  m_hdrTonemapBloomLow    = new kit::Program({"screenquad.vert"}, {"hdr-tonemapBloomLow.frag"}, kit::DataSource::Static);
+  m_hdrTonemapBloomLowDirt= new kit::Program({"screenquad.vert"}, {"hdr-tonemapBloomLowDirt.frag"}, kit::DataSource::Static);
+  m_bloomBrightProgram = new kit::Program({"screenquad.vert"}, {"hdr-brightpass.frag"}, kit::DataSource::Static);
+  m_bloomBlurProgram   = new kit::Program({"screenquad.vert"}, {"hdr-blur.frag"}, kit::DataSource::Static);
   
-  this->m_bloomBlurProgram->setUniform1f("uniform_radius", 1.0f);
-  this->m_bloomBrightProgram->setUniform1f("uniform_exposure", 1.0f);
-  this->m_bloomBrightProgram->setUniform1f("uniform_whitepoint", 1.0f);
-  this->m_bloomBrightProgram->setUniform1f("uniform_tresholdBias", this->m_bloomTresholdBias);
-  this->m_hdrTonemap->setUniform1f("uniform_exposure", 1.0f);
-  this->m_hdrTonemap->setUniform1f("uniform_whitepoint", 1.0f);
-  this->m_hdrTonemapBloomHigh->setUniform1f("uniform_exposure", 1.0f);
-  this->m_hdrTonemapBloomHigh->setUniform1f("uniform_whitepoint", 1.0f);
-  this->m_hdrTonemapBloomHighDirt->setUniform1f("uniform_exposure", 1.0f);
-  this->m_hdrTonemapBloomHighDirt->setUniform1f("uniform_whitepoint", 1.0f);
-  this->m_hdrTonemapBloomHighDirt->setUniform1f("uniform_bloomDirtMultiplier", this->m_bloomDirtMultiplier);
-  this->m_hdrTonemapBloomHighDirt->setUniformTexture("uniform_bloomDirtTexture", this->m_bloomDirtTexture);
-  this->m_hdrTonemapBloomLow->setUniform1f("uniform_exposure", 1.0f);
-  this->m_hdrTonemapBloomLow->setUniform1f("uniform_whitepoint", 1.0f);
-  this->m_hdrTonemapBloomLowDirt->setUniform1f("uniform_exposure", 1.0f);
-  this->m_hdrTonemapBloomLowDirt->setUniform1f("uniform_whitepoint", 1.0f);
-  this->m_hdrTonemapBloomLowDirt->setUniform1f("uniform_bloomDirtMultiplier", this->m_bloomDirtMultiplier);
-  this->m_hdrTonemapBloomLowDirt->setUniformTexture("uniform_bloomDirtTexture", this->m_bloomDirtTexture);
+  m_bloomBlurProgram->setUniform1f("uniform_radius", 1.0f);
+  m_bloomBrightProgram->setUniform1f("uniform_exposure", 1.0f);
+  m_bloomBrightProgram->setUniform1f("uniform_whitepoint", 1.0f);
+  m_bloomBrightProgram->setUniform1f("uniform_tresholdBias", m_bloomTresholdBias);
+  m_hdrTonemap->setUniform1f("uniform_exposure", 1.0f);
+  m_hdrTonemap->setUniform1f("uniform_whitepoint", 1.0f);
+  m_hdrTonemapBloomHigh->setUniform1f("uniform_exposure", 1.0f);
+  m_hdrTonemapBloomHigh->setUniform1f("uniform_whitepoint", 1.0f);
+  m_hdrTonemapBloomHighDirt->setUniform1f("uniform_exposure", 1.0f);
+  m_hdrTonemapBloomHighDirt->setUniform1f("uniform_whitepoint", 1.0f);
+  m_hdrTonemapBloomHighDirt->setUniform1f("uniform_bloomDirtMultiplier", m_bloomDirtMultiplier);
+  m_hdrTonemapBloomHighDirt->setUniformTexture("uniform_bloomDirtTexture", m_bloomDirtTexture);
+  m_hdrTonemapBloomLow->setUniform1f("uniform_exposure", 1.0f);
+  m_hdrTonemapBloomLow->setUniform1f("uniform_whitepoint", 1.0f);
+  m_hdrTonemapBloomLowDirt->setUniform1f("uniform_exposure", 1.0f);
+  m_hdrTonemapBloomLowDirt->setUniform1f("uniform_whitepoint", 1.0f);
+  m_hdrTonemapBloomLowDirt->setUniform1f("uniform_bloomDirtMultiplier", m_bloomDirtMultiplier);
+  m_hdrTonemapBloomLowDirt->setUniformTexture("uniform_bloomDirtTexture", m_bloomDirtTexture);
   
   // --- Setup FXAA
-  this->m_fxaaEnabled = true;
-  this->m_fxaaProgram = kit::Program::load({"screenquad.vert"}, {"fxaa.frag"}, kit::DataSource::Static);
+  m_fxaaEnabled = true;
+  m_fxaaProgram = new kit::Program({"screenquad.vert"}, {"fxaa.frag"}, kit::DataSource::Static);
   
   // --- Setup color correction
-  this->m_ccEnabled = false;
-  this->m_ccProgram = kit::Program::load({ "screenquad.vert" }, { "cc.frag" }, kit::DataSource::Static);
-  this->m_ccLookupTable = nullptr; // kit::Texture::create3DFromFile("./data/luts/test.tga", kit::Texture::RGB8);
+  m_ccEnabled = false;
+  m_ccProgram = new kit::Program({ "screenquad.vert" }, { "cc.frag" }, kit::DataSource::Static);
+  m_ccLookupTable = nullptr; // kit::Texture::create3DFromFile("./data/luts/test.tga", kit::Texture::RGB8);
 
   // --- Setup sRGB correction
-  this->m_srgbProgram = kit::Program::load({ "screenquad.vert" }, { "srgb.frag" }, kit::DataSource::Static);
-  this->m_srgbEnabled = true;
+  m_srgbProgram = new kit::Program({ "screenquad.vert" }, { "srgb.frag" }, kit::DataSource::Static);
+  m_srgbEnabled = true;
 
   // --- Setup shadows
-  this->m_shadowsEnabled = true;
+  m_shadowsEnabled = true;
 
   // --- Setup scene fringe
-  this->m_fringeEnabled = false;
-  this->m_fringeExponential = 1.5f;
-  this->m_fringeScale = 0.01f;
-  this->m_fringeProgram = kit::Program::load({"screenquad.vert"}, {"fringe.frag"}, kit::DataSource::Static);
-  this->m_fringeProgram->setUniform1f("uniform_exponential", this->m_fringeExponential);
-  this->m_fringeProgram->setUniform1f("uniform_scale",       this->m_fringeScale);
+  m_fringeEnabled = false;
+  m_fringeExponential = 1.5f;
+  m_fringeScale = 0.01f;
+  m_fringeProgram = new kit::Program({"screenquad.vert"}, {"fringe.frag"}, kit::DataSource::Static);
+  m_fringeProgram->setUniform1f("uniform_exponential", m_fringeExponential);
+  m_fringeProgram->setUniform1f("uniform_scale",       m_fringeScale);
   
   // Setup debug metrics
-  this->m_metrics = kit::Text::create(kit::Font::getSystemFont(), 16.0f, L"", glm::vec2(4.0f, 4.0f));
-  this->m_metrics->setAlignment(Text::Left, Text::Top);
-  this->m_metricsTimer = kit::GLTimer::create();
-  this->m_framesCount = 0;
-  this->m_metricsFPS = 0;
-  this->m_metricsFPSCalibrated = 0;
-  this->m_metricsEnabled = true;
+  m_metrics = new kit::Text(kit::Font::getSystemFont(), 16.0f, L"", glm::vec2(4.0f, 4.0f));
+  m_metrics->setAlignment(Text::Left, Text::Top);
+  m_metricsTimer = new kit::GLTimer();
+  m_framesCount = 0;
+  m_metricsFPS = 0;
+  m_metricsFPSCalibrated = 0;
+  m_metricsEnabled = true;
 }
 
 kit::Renderer::~Renderer()
 {
+    if(m_screenQuad) delete m_screenQuad;
+    if(m_geometryBuffer) delete m_geometryBuffer;    
+    if(m_accumulationBuffer) delete m_accumulationBuffer;
+    if(m_compositionBuffer) delete m_compositionBuffer; 
+    if(m_accumulationCopy) delete m_accumulationCopy;
+    if(m_integratedBRDF) delete m_integratedBRDF;
+    if(m_programEmissive) delete m_programEmissive;
+    if(m_programIBL) delete m_programIBL;
+    if(m_programDirectional) delete m_programDirectional;
+    if(m_programDirectionalNS) delete m_programDirectionalNS;
+    if(m_programSpot) delete m_programSpot;
+    if(m_programSpotNS) delete m_programSpotNS;
+    if(m_programPoint) delete m_programPoint;
+    if(m_programPointNS) delete m_programPointNS;
+    if(m_pointGeometry) delete m_pointGeometry;
+    if(m_bloomBrightProgram) delete m_bloomBrightProgram;
+    if(m_bloomBlurProgram) delete m_bloomBlurProgram;
+    if(m_bloomBrightBuffer) delete m_bloomBrightBuffer;
+    if(m_bloomBlurBuffer2) delete m_bloomBlurBuffer2;
+    if(m_bloomBlurBuffer4) delete m_bloomBlurBuffer4;
+    if(m_bloomBlurBuffer8) delete m_bloomBlurBuffer8;
+    if(m_bloomBlurBuffer16) delete m_bloomBlurBuffer16;
+    if(m_bloomBlurBuffer32) delete m_bloomBlurBuffer32;
+    if(m_hdrTonemap) delete m_hdrTonemap;
+    if(m_hdrTonemapBloomHigh) delete m_hdrTonemapBloomHigh;
+    if(m_hdrTonemapBloomLow) delete m_hdrTonemapBloomLow;
+    if(m_hdrTonemapBloomHighDirt) delete m_hdrTonemapBloomHighDirt;
+    if(m_hdrTonemapBloomLowDirt) delete m_hdrTonemapBloomLowDirt;
+    if(m_fringeProgram) delete m_fringeProgram;
+    if(m_fxaaProgram) delete m_fxaaProgram;
+    if(m_ccProgram) delete m_ccProgram;
+    if(m_srgbProgram) delete m_srgbProgram;
+    if(m_metrics) delete m_metrics;
+    if(m_metricsTimer) delete m_metricsTimer;
+  
   kit::Renderer::m_instanceCount--;
   if(kit::Renderer::m_instanceCount == 0)
   {
     kit::Renderer::releaseShared();
   }
-}
-
-kit::Renderer::Ptr kit::Renderer::create(glm::uvec2 resolution)
-{
-  return std::make_shared<kit::Renderer>(resolution);
 }
 
 void kit::Renderer::allocateShared()
@@ -235,9 +265,9 @@ void kit::Renderer::releaseShared()
 
 }
 
-void kit::Renderer::renderLight(kit::Light::Ptr currLight)
+void kit::Renderer::renderLight(kit::Light * currLight)
 {
-  kit::Camera::Ptr c = this->m_activeCamera;
+  kit::Camera * c = m_activeCamera;
   glm::mat4 m = currLight->getTransformMatrix();
   glm::mat4 v = c->getViewMatrix();
   glm::mat4 p = c->getProjectionMatrix();
@@ -253,16 +283,16 @@ void kit::Renderer::renderLight(kit::Light::Ptr currLight)
   
   if(currLight->getType() == kit::Light::Directional)
   {
-    kit::Program::Ptr currProgram;
-    if(currLight->isShadowMapped() && this->m_shadowsEnabled)
+    kit::Program * currProgram;
+    if(currLight->isShadowMapped() && m_shadowsEnabled)
     {
-      currProgram = this->m_programDirectional;
+      currProgram = m_programDirectional;
       currProgram->setUniformTexture("uniform_shadowmap", currLight->getShadowBuffer()->getDepthAttachment());
       currProgram->setUniformMat4("uniform_lightViewProjMatrix", currLight->getDirectionalProjectionMatrix() * currLight->getDirectionalViewMatrix() * currLight->getDirectionalModelMatrix(c->getPosition(), c->getForward()));
     }
     else
     {
-      currProgram = this->m_programDirectionalNS;
+      currProgram = m_programDirectionalNS;
     }
     
     currProgram->use(); 
@@ -274,20 +304,20 @@ void kit::Renderer::renderLight(kit::Light::Ptr currLight)
     currProgram->setUniformMat4("uniform_invProjMatrix", glm::inverse(p));
     
     //glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    this->m_screenQuad->render(currProgram);
+    m_screenQuad->render(currProgram);
   }
   else if (currLight->getType() == kit::Light::Spot)
   {
-    kit::Program::Ptr currProgram;
-    if(currLight->isShadowMapped() && this->m_shadowsEnabled)
+    kit::Program * currProgram;
+    if(currLight->isShadowMapped() && m_shadowsEnabled)
     {
-      currProgram = this->m_programSpot;
+      currProgram = m_programSpot;
       currProgram->setUniformTexture("uniform_shadowmap", currLight->getShadowBuffer()->getDepthAttachment());
       currProgram->setUniformMat4("uniform_lightViewProjMatrix", currLight->getSpotProjectionMatrix() * currLight->getSpotViewMatrix());
     }
     else
     {
-      currProgram = this->m_programSpotNS;
+      currProgram = m_programSpotNS;
     }
     
     currProgram->use();
@@ -307,16 +337,16 @@ void kit::Renderer::renderLight(kit::Light::Ptr currLight)
   }
   else if(currLight->getType() == kit::Light::Point)
   {
-    kit::Program::Ptr currProgram;
+    kit::Program * currProgram;
     //if(currLight->m_shadowMapped)TODO
     //{
-    //  currProgram = this->m_programPoint;
+    //  currProgram = m_programPoint;
     //  currProgram->setUniformCubemap("uniform_shadowmap", currLight->getShadowBuffer()->getCubemap());
     //  currProgram->setUniformMat4("uniform_invViewMatrix", glm::inverse(kit::Light::m_cameraCache->getTransformMatrix()));
     //}
     //else
     //{
-      currProgram = this->m_programPointNS;
+      currProgram = m_programPointNS;
     //}
     
     currProgram->use();
@@ -331,49 +361,46 @@ void kit::Renderer::renderLight(kit::Light::Ptr currLight)
     
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
-    this->m_pointGeometry->renderGeometry();
+    m_pointGeometry->renderGeometry();
     glDisable(GL_CULL_FACE);
   }
   else if(currLight->getType() == kit::Light::IBL)
   {
-    this->m_programIBL->use();
-    this->m_programIBL->setUniform3f("uniform_lightColor", currLight->getColor());
-    this->m_programIBL->setUniformCubemap("uniform_lightIrradiance", currLight->getIrradianceMap());
-    this->m_programIBL->setUniformCubemap("uniform_lightRadiance", currLight->getRadianceMap());
-    //this->m_programIBL->setUniformCubemap("uniform_lightReflection", currLight->getReflectionMap());
-    this->m_programIBL->setUniform2f("uniform_projConst", glm::vec2(px, py));
+    m_programIBL->use();
+    m_programIBL->setUniform3f("uniform_lightColor", currLight->getColor());
+    m_programIBL->setUniformCubemap("uniform_lightIrradiance", currLight->getIrradianceMap());
+    m_programIBL->setUniformCubemap("uniform_lightRadiance", currLight->getRadianceMap());
+    //m_programIBL->setUniformCubemap("uniform_lightReflection", currLight->getReflectionMap());
+    m_programIBL->setUniform2f("uniform_projConst", glm::vec2(px, py));
     
-    this->m_programIBL->setUniformMat4("uniform_invProjMatrix", glm::inverse(p));
+    m_programIBL->setUniformMat4("uniform_invProjMatrix", glm::inverse(p));
     
     //glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    this->m_screenQuad->render(this->m_programIBL);
+    m_screenQuad->render(m_programIBL);
     
   }
 }
 
-void kit::Renderer::setSkybox(kit::Skybox::Ptr skybox)
+void kit::Renderer::setSkybox(kit::Skybox * skybox)
 {
-  this->m_skybox = skybox;
+  m_skybox = skybox;
 }
 
-kit::RenderPayload::Ptr kit::RenderPayload::create()
+kit::RenderPayload::RenderPayload()
 {
-  auto returner = std::make_shared<kit::RenderPayload>();
-  returner->m_isSorted = false;
-  return returner;
 }
 
 void kit::RenderPayload::assertSorted()
 {
-  if (!this->m_isSorted)
+  if (!m_isSorted)
   {
     // Sort payload by render priority
-    std::sort(this->m_renderables.begin(), this->m_renderables.end(), [](kit::Renderable::Ptr const & a, kit::Renderable::Ptr const & b) {return a->getRenderPriority() < b->getRenderPriority(); });
-    this->m_isSorted = true;
+    std::sort(m_renderables.begin(), m_renderables.end(), [](kit::Renderable * const & a, kit::Renderable * const & b) {return a->getRenderPriority() < b->getRenderPriority(); });
+    m_isSorted = true;
   }
 }
 
-void kit::Renderer::registerPayload(kit::RenderPayload::Ptr payload)
+void kit::Renderer::registerPayload(kit::RenderPayload * payload)
 {
   if(payload == nullptr)
   {
@@ -381,7 +408,7 @@ void kit::Renderer::registerPayload(kit::RenderPayload::Ptr payload)
     return;
   }
   
-  for(auto & currPayload : this->m_payload)
+  for(auto & currPayload : m_payload)
   {
     if(payload == currPayload)
     {
@@ -390,10 +417,10 @@ void kit::Renderer::registerPayload(kit::RenderPayload::Ptr payload)
     }
   }
   
-  this->m_payload.push_back(payload);
+  m_payload.push_back(payload);
 }
 
-void kit::Renderer::unregisterPayload(kit::RenderPayload::Ptr payload)
+void kit::Renderer::unregisterPayload(kit::RenderPayload * payload)
 {
   if(payload == nullptr)
   {
@@ -403,88 +430,88 @@ void kit::Renderer::unregisterPayload(kit::RenderPayload::Ptr payload)
   
   std::cout << "Removing payload " << payload << std::endl;
   
-  if(this->m_payload.size() == 0)
+  if(m_payload.size() == 0)
   {
     std::cout << "Warning: tried to remove payload when no payload existed" << std::endl;
     return;
   }
   
-  this->m_payload.erase(std::remove(this->m_payload.begin(), this->m_payload.end(), payload), this->m_payload.end());
+  m_payload.erase(std::remove(m_payload.begin(), m_payload.end(), payload), m_payload.end());
 }
 
-kit::Texture::Ptr kit::Renderer::getBuffer()
+kit::Texture * kit::Renderer::getBuffer()
 {
-  return this->m_compositionBuffer->getFrontBuffer()->getColorAttachment(0);
+  return m_compositionBuffer->getFrontBuffer()->getColorAttachment(0);
 }
 
 void kit::Renderer::onResize()
 {
-  this->updateBuffers();
+  updateBuffers();
 
-  if (this->m_activeCamera)
+  if (m_activeCamera)
   {
-    this->m_activeCamera->setAspectRatio((float)this->m_resolution.x / (float)this->m_resolution.y);
+    m_activeCamera->setAspectRatio((float)m_resolution.x / (float)m_resolution.y);
   }
 }
 
 void kit::Renderer::renderFrame()
 {
-  if (this->m_metricsEnabled)
+  if (m_metricsEnabled)
   {
-    this->renderFrameWithMetrics();
+    renderFrameWithMetrics();
   }
   else
   {
-    this->renderFrameWithoutMetrics();
+    renderFrameWithoutMetrics();
   }
 }
 
 void kit::Renderer::renderFrameWithoutMetrics()
 {
-  if (this->m_activeCamera == nullptr)
+  if (m_activeCamera == nullptr)
   {
     return;
   }
 
   // render geometry pass
-  this->geometryPass();
+  geometryPass();
 
   // render shadow pass
-  this->shadowPass();
+  shadowPass();
 
   // render light pass
-  this->lightPass();
+  lightPass();
 
   // render forward pass
-  this->forwardPass();
+  forwardPass();
 
   // render HDR pass
-  this->hdrPass();
+  hdrPass();
 
   // render postfx pass
-  this->postFXPass();
+  postFXPass();
 
   kit::PixelBuffer::unbind();
   kit::Program::useFixed();
   
-  this->m_framesCount++;
-  double milli = (double)this->m_metricsFPSTimer.timeSinceStart().asMilliseconds();
+  m_framesCount++;
+  double milli = (double)m_metricsFPSTimer.timeSinceStart().asMilliseconds();
   if (milli >= 1000.0)
   {
-    double fps = this->m_framesCount;
+    double fps = m_framesCount;
     double fpsCalibrated = fps * (1000.0 / milli);
-    this->m_metricsFPS = (uint32_t)fps;
-    this->m_metricsFPSCalibrated = (uint32_t)fpsCalibrated;
-    this->m_framesCount = 0;
+    m_metricsFPS = (uint32_t)fps;
+    m_metricsFPSCalibrated = (uint32_t)fpsCalibrated;
+    m_framesCount = 0;
     
     std::wstringstream s;
     s << std::setprecision(3) << std::fixed << std::right;
-    s << L"Timed FPS:     " << std::setw(7) << this->m_metricsFPS << " fps" << std::endl;
-    s << L"Calibrated FPS:    " << std::setw(7) << this->m_metricsFPSCalibrated << " fps" << std::endl;
+    s << L"Timed FPS:     " << std::setw(7) << m_metricsFPS << " fps" << std::endl;
+    s << L"Calibrated FPS:    " << std::setw(7) << m_metricsFPSCalibrated << " fps" << std::endl;
     
-    this->m_metrics->setText(s.str());
+    m_metrics->setText(s.str());
     
-    this->m_metricsFPSTimer.restart();
+    m_metricsFPSTimer.restart();
   }
 
 
@@ -493,7 +520,7 @@ void kit::Renderer::renderFrameWithoutMetrics()
 
 void kit::Renderer::renderFrameWithMetrics()
 {
-  if(this->m_activeCamera == nullptr)
+  if(m_activeCamera == nullptr)
   {
     return;
   }
@@ -501,55 +528,55 @@ void kit::Renderer::renderFrameWithMetrics()
   uint64_t geometryPassTime, shadowPassTime, lightPassTime, forwardPassTime, hdrPassTime, postFxPassTime;
   
   // render geometry pass
-  this->m_metricsTimer->start();
-  this->geometryPass();
-  geometryPassTime = this->m_metricsTimer->end();
+  m_metricsTimer->start();
+  geometryPass();
+  geometryPassTime = m_metricsTimer->end();
 
   // render shadow pass
-  this->m_metricsTimer->start();
-  this->shadowPass();
-  shadowPassTime = this->m_metricsTimer->end();
+  m_metricsTimer->start();
+  shadowPass();
+  shadowPassTime = m_metricsTimer->end();
   
   // render light pass
-  this->m_metricsTimer->start();
-  this->lightPass();
-  lightPassTime = this->m_metricsTimer->end();
+  m_metricsTimer->start();
+  lightPass();
+  lightPassTime = m_metricsTimer->end();
   
   // render forward pass
-  this->m_metricsTimer->start();
-  this->forwardPass();
-  forwardPassTime = this->m_metricsTimer->end();
+  m_metricsTimer->start();
+  forwardPass();
+  forwardPassTime = m_metricsTimer->end();
 
   // render HDR pass
-  this->m_metricsTimer->start();
-  this->hdrPass();
-  hdrPassTime = this->m_metricsTimer->end();
+  m_metricsTimer->start();
+  hdrPass();
+  hdrPassTime = m_metricsTimer->end();
   
   // render postfx pass
-  this->m_metricsTimer->start();
-  this->postFXPass();
-  postFxPassTime = this->m_metricsTimer->end();
+  m_metricsTimer->start();
+  postFXPass();
+  postFxPassTime = m_metricsTimer->end();
 
   uint64_t totalTime = geometryPassTime + lightPassTime + forwardPassTime + shadowPassTime + hdrPassTime + postFxPassTime;
   
-  this->m_framesCount++;
-  double milli = (double)this->m_metricsFPSTimer.timeSinceStart().asMilliseconds();
+  m_framesCount++;
+  double milli = (double)m_metricsFPSTimer.timeSinceStart().asMilliseconds();
   if (milli >= 1000.0)
   {
-    double fps = this->m_framesCount;
+    double fps = m_framesCount;
     double fpsCalibrated = fps * (1000.0 / milli);
-    this->m_metricsFPS = (uint32_t)fps;
-    this->m_metricsFPSCalibrated = (uint32_t)fpsCalibrated;
-    this->m_framesCount = 0;
-    this->m_metricsFPSTimer.restart();
+    m_metricsFPS = (uint32_t)fps;
+    m_metricsFPSCalibrated = (uint32_t)fpsCalibrated;
+    m_framesCount = 0;
+    m_metricsFPSTimer.restart();
   }
 
   std::wstringstream s;
   s << std::setprecision(3) << std::fixed << std::right;
   s << L"Rendertime:    " << std::setw(7) << (((double)totalTime        /1000.0)/1000.0) << " ms" << std::endl;
   s << L"Potential FPS: " << std::setw(7) << 1000.0/(((double)totalTime / 1000.0) / 1000.0) << " fps" << std::endl;
-  s << L"Timed FPS:     " << std::setw(7) << this->m_metricsFPS << " fps" << std::endl;
-  s << L"Actual FPS:    " << std::setw(7) << this->m_metricsFPSCalibrated << " fps" << std::endl;
+  s << L"Timed FPS:     " << std::setw(7) << m_metricsFPS << " fps" << std::endl;
+  s << L"Actual FPS:    " << std::setw(7) << m_metricsFPSCalibrated << " fps" << std::endl;
   s << std::endl;
   s << L"-Passes--------" << std::endl;
   s << L"--Geometry:    " << std::setw(7) << (((double)geometryPassTime /1000.0)/1000.0) << " ms" << std::endl;
@@ -559,7 +586,7 @@ void kit::Renderer::renderFrameWithMetrics()
   s << L"--HDR:         " << std::setw(7) << (((double)hdrPassTime      /1000.0)/1000.0) << " ms" << std::endl;
   s << L"--Composition: " << std::setw(7) << (((double)postFxPassTime   /1000.0)/1000.0) << " ms" << std::endl;
   
-  this->m_metrics->setText(s.str());
+  m_metrics->setText(s.str());
  
   kit::PixelBuffer::unbind();
   kit::Program::useFixed();
@@ -573,10 +600,10 @@ void kit::Renderer::geometryPass()
   glEnable(GL_DEPTH_TEST);
 
   // Clear and bind the geometry buffer
-  this->m_geometryBuffer->clear({ glm::vec4(0.0, 0.0, 0.0, 0.0), glm::vec4(0.0, 0.0, 0.0, 0.0), glm::vec4(0.0, 0.0, 0.0, 0.0) }, 1.0f);
+  m_geometryBuffer->clear({ glm::vec4(0.0, 0.0, 0.0, 0.0), glm::vec4(0.0, 0.0, 0.0, 0.0), glm::vec4(0.0, 0.0, 0.0, 0.0) }, 1.0f);
 
   // For each payload ...
-  for (auto & currPayload : this->m_payload)
+  for (auto & currPayload : m_payload)
   {
     currPayload->assertSorted();
 
@@ -584,14 +611,14 @@ void kit::Renderer::geometryPass()
     for (auto & currRenderable : currPayload->getRenderables())
     {
       // Render the renderable in deferred mode
-      currRenderable->renderDeferred(shared_from_this());
+      currRenderable->renderDeferred(this);
     }
   }
 }
 
 void kit::Renderer::shadowPass()
 {
-  if (!this->m_shadowsEnabled) return;
+  if (!m_shadowsEnabled) return;
 
   glDepthMask(GL_TRUE);
   glEnable(GL_DEPTH_TEST);
@@ -599,10 +626,10 @@ void kit::Renderer::shadowPass()
 
   // For each payload ...
   // (note that all payloads are isolated from each other in terms of shadows)
-  for (kit::RenderPayload::Ptr & currPayload : this->m_payload)
+  for (kit::RenderPayload * & currPayload : m_payload)
   {
     // For each light in current payload ...
-    for (kit::Light::Ptr & currLight : currPayload->getLights())
+    for (kit::Light * & currLight : currPayload->getLights())
     {
       // Ignore light if its not shadowmapped
       if (!currLight->isShadowMapped())
@@ -617,7 +644,7 @@ void kit::Renderer::shadowPass()
         currLight->getShadowBuffer()->clearDepth(1.0f);
 
         // For each renderable in current payload ...
-        for (kit::Renderable::Ptr & currRenderable : currPayload->getRenderables())
+        for (kit::Renderable * & currRenderable : currPayload->getRenderables())
         {
           // Ignore renderable if its not a shadowcaster
           if (!currRenderable->isShadowCaster())
@@ -637,7 +664,7 @@ void kit::Renderer::shadowPass()
         currLight->getShadowBuffer()->clearDepth(1.0f);
 
         // For each renderable in current payload ...
-        for (kit::Renderable::Ptr & currRenderable : currPayload->getRenderables())
+        for (kit::Renderable * & currRenderable : currPayload->getRenderables())
         {
           // Ignore renderable if its not a shadowcaster
           if (!currRenderable->isShadowCaster())
@@ -646,7 +673,7 @@ void kit::Renderer::shadowPass()
           }
 
           // Render the renderable to the shadowmap
-          currRenderable->renderShadows(currLight->getDirectionalViewMatrix() * currLight->getDirectionalModelMatrix(this->m_activeCamera->getPosition(), this->m_activeCamera->getForward()), currLight->getDirectionalProjectionMatrix());
+          currRenderable->renderShadows(currLight->getDirectionalViewMatrix() * currLight->getDirectionalModelMatrix(m_activeCamera->getPosition(), m_activeCamera->getForward()), currLight->getDirectionalProjectionMatrix());
         }
       }
 
@@ -670,27 +697,27 @@ void kit::Renderer::lightPass()
   // Clear and bind the light accumulation buffer
   glm::mat4 invViewMatrix;
 
-  this->m_accumulationBuffer->clear({ glm::vec4(0.0, 0.0, 0.0, 1.0) });
-  invViewMatrix = glm::inverse(this->m_activeCamera->getViewMatrix());
+  m_accumulationBuffer->clear({ glm::vec4(0.0, 0.0, 0.0, 1.0) });
+  invViewMatrix = glm::inverse(m_activeCamera->getViewMatrix());
 
   // Update our light programs
-  this->m_programIBL->setUniformMat4("uniform_invViewMatrix", invViewMatrix);
-  this->m_programSpot->setUniformMat4("uniform_invViewMatrix", invViewMatrix);
-  this->m_programDirectional->setUniformMat4("uniform_invViewMatrix", invViewMatrix);
+  m_programIBL->setUniformMat4("uniform_invViewMatrix", invViewMatrix);
+  m_programSpot->setUniformMat4("uniform_invViewMatrix", invViewMatrix);
+  m_programDirectional->setUniformMat4("uniform_invViewMatrix", invViewMatrix);
 
   // For each payload ...
-  for (auto & currPayload : this->m_payload)
+  for (auto & currPayload : m_payload)
   {
     // For each light in current payload ...
     for (auto & currLight : currPayload->getLights())
     {
       // Render the light
-      this->renderLight(currLight);
+      renderLight(currLight);
     }
   }
 
   // Render emissive light
-  this->m_screenQuad->render(this->m_programEmissive);
+  m_screenQuad->render(m_programEmissive);
 }
 
 void kit::Renderer::forwardPass()
@@ -701,18 +728,18 @@ void kit::Renderer::forwardPass()
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   // Bind the accumulation buffer
-  this->m_accumulationBuffer->bind();
+  m_accumulationBuffer->bind();
 
   // If we have a skybox
-  if (this->m_skybox)
+  if (m_skybox)
   {
     glDisable(GL_CULL_FACE);
     // Render the skybox
-    this->m_skybox->render(shared_from_this());
+    m_skybox->render(this);
   }
 
   // For each payload ...
-  for (auto & currPayload : this->m_payload)
+  for (auto & currPayload : m_payload)
   {
     currPayload->assertSorted();
 
@@ -721,18 +748,18 @@ void kit::Renderer::forwardPass()
     {
       if (currRenderable->requestAccumulationCopy())
       {
-       // std::cout << "Handle " << this->m_accumulationBuffer->getHandle() << ": " << this->m_accumulationBuffer->getResolution().x << "x" << this->m_accumulationBuffer->getResolution().y << " to " << this->m_depthCopyBuffer->getHandle() << ": " << this->m_depthCopyBuffer->getResolution().x << "x" << this->m_depthCopyBuffer->getResolution().y << std::endl;
+       // std::cout << "Handle " << m_accumulationBuffer->getHandle() << ": " << m_accumulationBuffer->getResolution().x << "x" << m_accumulationBuffer->getResolution().y << " to " << m_depthCopyBuffer->getHandle() << ": " << m_depthCopyBuffer->getResolution().x << "x" << m_depthCopyBuffer->getResolution().y << std::endl;
         glBlitNamedFramebuffer(
-          this->m_accumulationBuffer->getHandle(), 
-          this->m_accumulationCopy->getHandle(), 
-          0, 0, this->m_accumulationBuffer->getResolution().x, this->m_accumulationBuffer->getResolution().y,
-          0, 0, this->m_accumulationCopy->getResolution().x, this->m_accumulationCopy->getResolution().y,
+          m_accumulationBuffer->getHandle(), 
+          m_accumulationCopy->getHandle(), 
+          0, 0, m_accumulationBuffer->getResolution().x, m_accumulationBuffer->getResolution().y,
+          0, 0, m_accumulationCopy->getResolution().x, m_accumulationCopy->getResolution().y,
           GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT, GL_NEAREST
         );
       }
 
       // Render current renderable in forward mode
-      currRenderable->renderForward(shared_from_this());
+      currRenderable->renderForward(this);
     }
   }
 }
@@ -747,181 +774,181 @@ void kit::Renderer::hdrPass()
 
 
   // If we have bloom enabled
-  if (this->m_bloomEnabled) {
+  if (m_bloomEnabled) {
     // Render brightpass
-    //this->m_bloomBrightBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
-    this->m_bloomBrightBuffer->getBackBuffer()->bind();
-    this->m_bloomBrightProgram->setUniform1f("uniform_whitepoint", this->m_activeCamera->getWhitepoint());
-    this->m_bloomBrightProgram->setUniform1f("uniform_exposure", this->m_activeCamera->getExposure());
-    this->m_bloomBrightProgram->setUniformTexture("uniform_sourceTexture", this->m_accumulationBuffer->getColorAttachment(0));
-    this->m_screenQuad->render(this->m_bloomBrightProgram);
-    this->m_bloomBrightBuffer->flip();
+    //m_bloomBrightBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+    m_bloomBrightBuffer->getBackBuffer()->bind();
+    m_bloomBrightProgram->setUniform1f("uniform_whitepoint", m_activeCamera->getWhitepoint());
+    m_bloomBrightProgram->setUniform1f("uniform_exposure", m_activeCamera->getExposure());
+    m_bloomBrightProgram->setUniformTexture("uniform_sourceTexture", m_accumulationBuffer->getColorAttachment(0));
+    m_screenQuad->render(m_bloomBrightProgram);
+    m_bloomBrightBuffer->flip();
 
     // If bloom quality is high
-    if (this->m_bloomQuality == High)
+    if (m_bloomQuality == High)
     {
       // Blit the bright buffer to the first bloom blur buffer
-      this->m_bloomBlurBuffer2->blitFrom(this->m_bloomBrightBuffer);
-      this->m_bloomBlurBuffer2->flip();
+      m_bloomBlurBuffer2->blitFrom(m_bloomBrightBuffer);
+      m_bloomBlurBuffer2->flip();
 
       // Blur the first bloom blur buffer
-      for (uint32_t i = 0; i < this->m_bloomBlurLevel2; i++)
+      for (uint32_t i = 0; i < m_bloomBlurLevel2; i++)
       {
-        //this->m_bloomBlurBuffer2->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
-        this->m_bloomBlurBuffer2->getBackBuffer()->bind();
-        this->m_bloomBlurProgram->setUniformTexture("uniform_sourceTexture", this->m_bloomBlurBuffer2->getFrontBuffer()->getColorAttachment(0));
-        this->m_bloomBlurProgram->setUniform1f("uniform_resolution", float(this->m_bloomBlurBuffer2->getResolution().x));
-        this->m_bloomBlurProgram->setUniform2f("uniform_dir", glm::vec2(1.0, 0.0));
-        this->m_screenQuad->render(this->m_bloomBlurProgram);
-        this->m_bloomBlurBuffer2->flip();
+        //m_bloomBlurBuffer2->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+        m_bloomBlurBuffer2->getBackBuffer()->bind();
+        m_bloomBlurProgram->setUniformTexture("uniform_sourceTexture", m_bloomBlurBuffer2->getFrontBuffer()->getColorAttachment(0));
+        m_bloomBlurProgram->setUniform1f("uniform_resolution", float(m_bloomBlurBuffer2->getResolution().x));
+        m_bloomBlurProgram->setUniform2f("uniform_dir", glm::vec2(1.0, 0.0));
+        m_screenQuad->render(m_bloomBlurProgram);
+        m_bloomBlurBuffer2->flip();
 
-        //this->m_bloomBlurBuffer2->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
-        this->m_bloomBlurBuffer2->getBackBuffer()->bind(); 
-        this->m_bloomBlurProgram->setUniformTexture("uniform_sourceTexture", this->m_bloomBlurBuffer2->getFrontBuffer()->getColorAttachment(0));
-        this->m_bloomBlurProgram->setUniform1f("uniform_resolution", float(this->m_bloomBlurBuffer2->getResolution().x));
-        this->m_bloomBlurProgram->setUniform2f("uniform_dir", glm::vec2(0.0, 1.0));
-        this->m_screenQuad->render(this->m_bloomBlurProgram);
-        this->m_bloomBlurBuffer2->flip();
+        //m_bloomBlurBuffer2->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+        m_bloomBlurBuffer2->getBackBuffer()->bind(); 
+        m_bloomBlurProgram->setUniformTexture("uniform_sourceTexture", m_bloomBlurBuffer2->getFrontBuffer()->getColorAttachment(0));
+        m_bloomBlurProgram->setUniform1f("uniform_resolution", float(m_bloomBlurBuffer2->getResolution().x));
+        m_bloomBlurProgram->setUniform2f("uniform_dir", glm::vec2(0.0, 1.0));
+        m_screenQuad->render(m_bloomBlurProgram);
+        m_bloomBlurBuffer2->flip();
       }
 
       // Blit the first bloom blur buffer to the second bloom blur buffer
-      this->m_bloomBlurBuffer4->blitFrom(this->m_bloomBlurBuffer2);
-      this->m_bloomBlurBuffer4->flip();
+      m_bloomBlurBuffer4->blitFrom(m_bloomBlurBuffer2);
+      m_bloomBlurBuffer4->flip();
 
       // Blur the second bloom blur buffer
-      for (uint32_t i = 0; i < this->m_bloomBlurLevel4; i++)
+      for (uint32_t i = 0; i < m_bloomBlurLevel4; i++)
       {
-        //this->m_bloomBlurBuffer4->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
-        this->m_bloomBlurBuffer4->getBackBuffer()->bind();
-        this->m_bloomBlurProgram->setUniformTexture("uniform_sourceTexture", this->m_bloomBlurBuffer4->getFrontBuffer()->getColorAttachment(0));
-        this->m_bloomBlurProgram->setUniform1f("uniform_resolution", float(this->m_bloomBlurBuffer4->getResolution().x));
-        this->m_bloomBlurProgram->setUniform2f("uniform_dir", glm::vec2(1.0, 0.0));
-        this->m_screenQuad->render(this->m_bloomBlurProgram);
-        this->m_bloomBlurBuffer4->flip();
+        //m_bloomBlurBuffer4->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+        m_bloomBlurBuffer4->getBackBuffer()->bind();
+        m_bloomBlurProgram->setUniformTexture("uniform_sourceTexture", m_bloomBlurBuffer4->getFrontBuffer()->getColorAttachment(0));
+        m_bloomBlurProgram->setUniform1f("uniform_resolution", float(m_bloomBlurBuffer4->getResolution().x));
+        m_bloomBlurProgram->setUniform2f("uniform_dir", glm::vec2(1.0, 0.0));
+        m_screenQuad->render(m_bloomBlurProgram);
+        m_bloomBlurBuffer4->flip();
 
-        //this->m_bloomBlurBuffer4->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
-        this->m_bloomBlurBuffer4->getBackBuffer()->bind();
-        this->m_bloomBlurProgram->setUniformTexture("uniform_sourceTexture", this->m_bloomBlurBuffer4->getFrontBuffer()->getColorAttachment(0));
-        this->m_bloomBlurProgram->setUniform1f("uniform_resolution", float(this->m_bloomBlurBuffer4->getResolution().x));
-        this->m_bloomBlurProgram->setUniform2f("uniform_dir", glm::vec2(0.0, 1.0));
-        this->m_screenQuad->render(this->m_bloomBlurProgram);
-        this->m_bloomBlurBuffer4->flip();
+        //m_bloomBlurBuffer4->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+        m_bloomBlurBuffer4->getBackBuffer()->bind();
+        m_bloomBlurProgram->setUniformTexture("uniform_sourceTexture", m_bloomBlurBuffer4->getFrontBuffer()->getColorAttachment(0));
+        m_bloomBlurProgram->setUniform1f("uniform_resolution", float(m_bloomBlurBuffer4->getResolution().x));
+        m_bloomBlurProgram->setUniform2f("uniform_dir", glm::vec2(0.0, 1.0));
+        m_screenQuad->render(m_bloomBlurProgram);
+        m_bloomBlurBuffer4->flip();
       }
 
       // Blit the second bloom blur buffer to the third bloom blur buffer
-      this->m_bloomBlurBuffer8->blitFrom(this->m_bloomBlurBuffer4);
-      this->m_bloomBlurBuffer8->flip();
+      m_bloomBlurBuffer8->blitFrom(m_bloomBlurBuffer4);
+      m_bloomBlurBuffer8->flip();
     }
     // .. Or if bloom quality is low
     else
     {
       // Blir the bright buffer directly to the third bloom blur buffer
-      this->m_bloomBlurBuffer8->blitFrom(this->m_bloomBrightBuffer);
-      this->m_bloomBlurBuffer8->flip();
+      m_bloomBlurBuffer8->blitFrom(m_bloomBrightBuffer);
+      m_bloomBlurBuffer8->flip();
     }
 
     // Blur the third bloom blur buffer
-    for (uint32_t i = 0; i < this->m_bloomBlurLevel8; i++)
+    for (uint32_t i = 0; i < m_bloomBlurLevel8; i++)
     {
-      //this->m_bloomBlurBuffer8->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
-      this->m_bloomBlurBuffer8->getBackBuffer()->bind();
-      this->m_bloomBlurProgram->setUniformTexture("uniform_sourceTexture", this->m_bloomBlurBuffer8->getFrontBuffer()->getColorAttachment(0));
-      this->m_bloomBlurProgram->setUniform1f("uniform_resolution", float(this->m_bloomBlurBuffer8->getResolution().x));
-      this->m_bloomBlurProgram->setUniform2f("uniform_dir", glm::vec2(1.0, 0.0));
-      this->m_screenQuad->render(this->m_bloomBlurProgram);
-      this->m_bloomBlurBuffer8->flip();
+      //m_bloomBlurBuffer8->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+      m_bloomBlurBuffer8->getBackBuffer()->bind();
+      m_bloomBlurProgram->setUniformTexture("uniform_sourceTexture", m_bloomBlurBuffer8->getFrontBuffer()->getColorAttachment(0));
+      m_bloomBlurProgram->setUniform1f("uniform_resolution", float(m_bloomBlurBuffer8->getResolution().x));
+      m_bloomBlurProgram->setUniform2f("uniform_dir", glm::vec2(1.0, 0.0));
+      m_screenQuad->render(m_bloomBlurProgram);
+      m_bloomBlurBuffer8->flip();
 
-      //this->m_bloomBlurBuffer8->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
-      this->m_bloomBlurBuffer8->getBackBuffer()->bind();
-      this->m_bloomBlurProgram->setUniformTexture("uniform_sourceTexture", this->m_bloomBlurBuffer8->getFrontBuffer()->getColorAttachment(0));
-      this->m_bloomBlurProgram->setUniform1f("uniform_resolution", float(this->m_bloomBlurBuffer8->getResolution().x));
-      this->m_bloomBlurProgram->setUniform2f("uniform_dir", glm::vec2(0.0, 1.0));
-      this->m_screenQuad->render(this->m_bloomBlurProgram);
-      this->m_bloomBlurBuffer8->flip();
+      //m_bloomBlurBuffer8->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+      m_bloomBlurBuffer8->getBackBuffer()->bind();
+      m_bloomBlurProgram->setUniformTexture("uniform_sourceTexture", m_bloomBlurBuffer8->getFrontBuffer()->getColorAttachment(0));
+      m_bloomBlurProgram->setUniform1f("uniform_resolution", float(m_bloomBlurBuffer8->getResolution().x));
+      m_bloomBlurProgram->setUniform2f("uniform_dir", glm::vec2(0.0, 1.0));
+      m_screenQuad->render(m_bloomBlurProgram);
+      m_bloomBlurBuffer8->flip();
     }
 
     // Blit the third bloom blur buffer to the fourth bloom blur buffer
-    this->m_bloomBlurBuffer16->blitFrom(this->m_bloomBlurBuffer8);
-    this->m_bloomBlurBuffer16->flip();
+    m_bloomBlurBuffer16->blitFrom(m_bloomBlurBuffer8);
+    m_bloomBlurBuffer16->flip();
 
     // Blur the fourth bloom blur buffer
-    for (uint32_t i = 0; i < this->m_bloomBlurLevel16; i++)
+    for (uint32_t i = 0; i < m_bloomBlurLevel16; i++)
     {
-      //this->m_bloomBlurBuffer16->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
-      this->m_bloomBlurBuffer16->getBackBuffer()->bind();
-      this->m_bloomBlurProgram->setUniformTexture("uniform_sourceTexture", this->m_bloomBlurBuffer16->getFrontBuffer()->getColorAttachment(0));
-      this->m_bloomBlurProgram->setUniform1f("uniform_resolution", float(this->m_bloomBlurBuffer16->getResolution().x));
-      this->m_bloomBlurProgram->setUniform2f("uniform_dir", glm::vec2(1.0, 0.0));
-      this->m_screenQuad->render(this->m_bloomBlurProgram);
-      this->m_bloomBlurBuffer16->flip();
+      //m_bloomBlurBuffer16->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+      m_bloomBlurBuffer16->getBackBuffer()->bind();
+      m_bloomBlurProgram->setUniformTexture("uniform_sourceTexture", m_bloomBlurBuffer16->getFrontBuffer()->getColorAttachment(0));
+      m_bloomBlurProgram->setUniform1f("uniform_resolution", float(m_bloomBlurBuffer16->getResolution().x));
+      m_bloomBlurProgram->setUniform2f("uniform_dir", glm::vec2(1.0, 0.0));
+      m_screenQuad->render(m_bloomBlurProgram);
+      m_bloomBlurBuffer16->flip();
 
-      //this->m_bloomBlurBuffer16->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
-      this->m_bloomBlurBuffer16->getBackBuffer()->bind();
-      this->m_bloomBlurProgram->setUniformTexture("uniform_sourceTexture", this->m_bloomBlurBuffer16->getFrontBuffer()->getColorAttachment(0));
-      this->m_bloomBlurProgram->setUniform1f("uniform_resolution", float(this->m_bloomBlurBuffer16->getResolution().x));
-      this->m_bloomBlurProgram->setUniform2f("uniform_dir", glm::vec2(0.0, 1.0));
-      this->m_screenQuad->render(this->m_bloomBlurProgram);
-      this->m_bloomBlurBuffer16->flip();
+      //m_bloomBlurBuffer16->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+      m_bloomBlurBuffer16->getBackBuffer()->bind();
+      m_bloomBlurProgram->setUniformTexture("uniform_sourceTexture", m_bloomBlurBuffer16->getFrontBuffer()->getColorAttachment(0));
+      m_bloomBlurProgram->setUniform1f("uniform_resolution", float(m_bloomBlurBuffer16->getResolution().x));
+      m_bloomBlurProgram->setUniform2f("uniform_dir", glm::vec2(0.0, 1.0));
+      m_screenQuad->render(m_bloomBlurProgram);
+      m_bloomBlurBuffer16->flip();
     }
 
     // Blit the fourth bloom blur buffer to our fifth bloom blur buffer
-    this->m_bloomBlurBuffer32->blitFrom(this->m_bloomBlurBuffer16);
-    this->m_bloomBlurBuffer32->flip();
+    m_bloomBlurBuffer32->blitFrom(m_bloomBlurBuffer16);
+    m_bloomBlurBuffer32->flip();
 
     // Blur the fifth bloom blur buffer
-    for (uint32_t i = 0; i < this->m_bloomBlurLevel32; i++)
+    for (uint32_t i = 0; i < m_bloomBlurLevel32; i++)
     {
-      //this->m_bloomBlurBuffer32->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
-      this->m_bloomBlurBuffer32->getBackBuffer()->bind();
-      this->m_bloomBlurProgram->setUniformTexture("uniform_sourceTexture", this->m_bloomBlurBuffer32->getFrontBuffer()->getColorAttachment(0));
-      this->m_bloomBlurProgram->setUniform1f("uniform_resolution", float(this->m_bloomBlurBuffer32->getResolution().x));
-      this->m_bloomBlurProgram->setUniform2f("uniform_dir", glm::vec2(1.0, 0.0));
-      this->m_screenQuad->render(this->m_bloomBlurProgram);
-      this->m_bloomBlurBuffer32->flip();
+      //m_bloomBlurBuffer32->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+      m_bloomBlurBuffer32->getBackBuffer()->bind();
+      m_bloomBlurProgram->setUniformTexture("uniform_sourceTexture", m_bloomBlurBuffer32->getFrontBuffer()->getColorAttachment(0));
+      m_bloomBlurProgram->setUniform1f("uniform_resolution", float(m_bloomBlurBuffer32->getResolution().x));
+      m_bloomBlurProgram->setUniform2f("uniform_dir", glm::vec2(1.0, 0.0));
+      m_screenQuad->render(m_bloomBlurProgram);
+      m_bloomBlurBuffer32->flip();
 
-      //this->m_bloomBlurBuffer32->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
-      this->m_bloomBlurBuffer32->getBackBuffer()->bind();
-      this->m_bloomBlurProgram->setUniformTexture("uniform_sourceTexture", this->m_bloomBlurBuffer32->getFrontBuffer()->getColorAttachment(0));
-      this->m_bloomBlurProgram->setUniform1f("uniform_resolution", float(this->m_bloomBlurBuffer32->getResolution().x));
-      this->m_bloomBlurProgram->setUniform2f("uniform_dir", glm::vec2(0.0, 1.0));
-      this->m_screenQuad->render(this->m_bloomBlurProgram);
-      this->m_bloomBlurBuffer32->flip();
+      //m_bloomBlurBuffer32->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+      m_bloomBlurBuffer32->getBackBuffer()->bind();
+      m_bloomBlurProgram->setUniformTexture("uniform_sourceTexture", m_bloomBlurBuffer32->getFrontBuffer()->getColorAttachment(0));
+      m_bloomBlurProgram->setUniform1f("uniform_resolution", float(m_bloomBlurBuffer32->getResolution().x));
+      m_bloomBlurProgram->setUniform2f("uniform_dir", glm::vec2(0.0, 1.0));
+      m_screenQuad->render(m_bloomBlurProgram);
+      m_bloomBlurBuffer32->flip();
     }
 
     // Select the right HDR tonemap program to use, based on quality and if we have a dirt texture
-    kit::Program::Ptr hdrProgram = (this->m_bloomQuality == High ? (this->m_bloomDirtTexture ? this->m_hdrTonemapBloomHighDirt : this->m_hdrTonemapBloomHigh) : (this->m_bloomDirtTexture ? this->m_hdrTonemapBloomLowDirt : this->m_hdrTonemapBloomLow));
+    kit::Program * hdrProgram = (m_bloomQuality == High ? (m_bloomDirtTexture ? m_hdrTonemapBloomHighDirt : m_hdrTonemapBloomHigh) : (m_bloomDirtTexture ? m_hdrTonemapBloomLowDirt : m_hdrTonemapBloomLow));
 
-    hdrProgram->setUniform1f("uniform_whitepoint", this->m_activeCamera->getWhitepoint());
-    hdrProgram->setUniform1f("uniform_exposure", this->m_activeCamera->getExposure());
+    hdrProgram->setUniform1f("uniform_whitepoint", m_activeCamera->getWhitepoint());
+    hdrProgram->setUniform1f("uniform_exposure", m_activeCamera->getExposure());
 
     // Setup the tonemap program
-    hdrProgram->setUniformTexture("uniform_sourceTexture", this->m_accumulationBuffer->getColorAttachment(0));
-    if (this->m_bloomQuality == High)
+    hdrProgram->setUniformTexture("uniform_sourceTexture", m_accumulationBuffer->getColorAttachment(0));
+    if (m_bloomQuality == High)
     {
-      hdrProgram->setUniformTexture("uniform_bloom2Texture", this->m_bloomBlurBuffer2->getFrontBuffer()->getColorAttachment(0));
-      hdrProgram->setUniformTexture("uniform_bloom4Texture", this->m_bloomBlurBuffer4->getFrontBuffer()->getColorAttachment(0));
+      hdrProgram->setUniformTexture("uniform_bloom2Texture", m_bloomBlurBuffer2->getFrontBuffer()->getColorAttachment(0));
+      hdrProgram->setUniformTexture("uniform_bloom4Texture", m_bloomBlurBuffer4->getFrontBuffer()->getColorAttachment(0));
     }
-    hdrProgram->setUniformTexture("uniform_bloom8Texture", this->m_bloomBlurBuffer8->getFrontBuffer()->getColorAttachment(0));
-    hdrProgram->setUniformTexture("uniform_bloom16Texture", this->m_bloomBlurBuffer16->getFrontBuffer()->getColorAttachment(0));
-    hdrProgram->setUniformTexture("uniform_bloom32Texture", this->m_bloomBlurBuffer32->getFrontBuffer()->getColorAttachment(0));
+    hdrProgram->setUniformTexture("uniform_bloom8Texture", m_bloomBlurBuffer8->getFrontBuffer()->getColorAttachment(0));
+    hdrProgram->setUniformTexture("uniform_bloom16Texture", m_bloomBlurBuffer16->getFrontBuffer()->getColorAttachment(0));
+    hdrProgram->setUniformTexture("uniform_bloom32Texture", m_bloomBlurBuffer32->getFrontBuffer()->getColorAttachment(0));
 
     // Clear our composition buffer and render our HDR tonemap program
-    //this->m_compositionBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
-    this->m_compositionBuffer->getBackBuffer()->bind();
-    this->m_screenQuad->render(hdrProgram);
-    this->m_compositionBuffer->flip();
+    //m_compositionBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+    m_compositionBuffer->getBackBuffer()->bind();
+    m_screenQuad->render(hdrProgram);
+    m_compositionBuffer->flip();
   }
   // ... Or if bloom is not enabled
   else
   {
     // Do regular HDR tonemapping
-    this->m_hdrTonemap->setUniform1f("uniform_whitepoint", this->m_activeCamera->getWhitepoint());
-    this->m_hdrTonemap->setUniform1f("uniform_exposure", this->m_activeCamera->getExposure());
-    this->m_hdrTonemap->setUniformTexture("uniform_sourceTexture", this->m_accumulationBuffer->getColorAttachment(0));
-    //this->m_compositionBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
-    this->m_compositionBuffer->getBackBuffer()->bind();
-    this->m_screenQuad->render(this->m_hdrTonemap);
-    this->m_compositionBuffer->flip();
+    m_hdrTonemap->setUniform1f("uniform_whitepoint", m_activeCamera->getWhitepoint());
+    m_hdrTonemap->setUniform1f("uniform_exposure", m_activeCamera->getExposure());
+    m_hdrTonemap->setUniformTexture("uniform_sourceTexture", m_accumulationBuffer->getColorAttachment(0));
+    //m_compositionBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+    m_compositionBuffer->getBackBuffer()->bind();
+    m_screenQuad->render(m_hdrTonemap);
+    m_compositionBuffer->flip();
   }
 
 }
@@ -934,303 +961,308 @@ void kit::Renderer::postFXPass()
   glDepthMask(GL_FALSE);
   glDisable(GL_CULL_FACE);
 
-  if (this->m_fringeEnabled)
+  if (m_fringeEnabled)
   {
-    this->m_compositionBuffer->getBackBuffer()->bind();
-    this->m_fringeProgram->setUniformTexture("uniform_sourceTexture", this->m_compositionBuffer->getFrontBuffer()->getColorAttachment(0));
-    this->m_screenQuad->render(this->m_fringeProgram);
-    this->m_compositionBuffer->flip();
+    m_compositionBuffer->getBackBuffer()->bind();
+    m_fringeProgram->setUniformTexture("uniform_sourceTexture", m_compositionBuffer->getFrontBuffer()->getColorAttachment(0));
+    m_screenQuad->render(m_fringeProgram);
+    m_compositionBuffer->flip();
     kit::Program::useFixed();
   }
 
-  if (this->m_fxaaEnabled)
+  if (m_fxaaEnabled)
   {
-    this->m_compositionBuffer->getBackBuffer()->bind();
-    this->m_fxaaProgram->setUniformTexture("uniform_sourceTexture", this->m_compositionBuffer->getFrontBuffer()->getColorAttachment(0));
-    this->m_screenQuad->render(this->m_fxaaProgram);
-    this->m_compositionBuffer->flip();
+    m_compositionBuffer->getBackBuffer()->bind();
+    m_fxaaProgram->setUniformTexture("uniform_sourceTexture", m_compositionBuffer->getFrontBuffer()->getColorAttachment(0));
+    m_screenQuad->render(m_fxaaProgram);
+    m_compositionBuffer->flip();
   }
 
   // sRGB conversion
-  if(this->m_srgbEnabled)
+  if(m_srgbEnabled)
   {
-    this->m_compositionBuffer->getBackBuffer()->bind();
-    this->m_srgbProgram->setUniformTexture("uniform_sourceTexture", this->m_compositionBuffer->getFrontBuffer()->getColorAttachment(0));
-    this->m_screenQuad->render(this->m_srgbProgram);
-    this->m_compositionBuffer->flip();
+    m_compositionBuffer->getBackBuffer()->bind();
+    m_srgbProgram->setUniformTexture("uniform_sourceTexture", m_compositionBuffer->getFrontBuffer()->getColorAttachment(0));
+    m_screenQuad->render(m_srgbProgram);
+    m_compositionBuffer->flip();
   }
   
-  if (this->m_ccEnabled && this->m_ccLookupTable != nullptr)
+  if (m_ccEnabled && m_ccLookupTable != nullptr)
   {
-    this->m_compositionBuffer->getBackBuffer()->bind();
-    this->m_ccProgram->setUniformTexture("uniform_sourceTexture", this->m_compositionBuffer->getFrontBuffer()->getColorAttachment(0));
-    this->m_ccProgram->setUniformTexture("uniform_lut", this->m_ccLookupTable);
-    this->m_screenQuad->render(this->m_ccProgram);
-    this->m_compositionBuffer->flip();
+    m_compositionBuffer->getBackBuffer()->bind();
+    m_ccProgram->setUniformTexture("uniform_sourceTexture", m_compositionBuffer->getFrontBuffer()->getColorAttachment(0));
+    m_ccProgram->setUniformTexture("uniform_lut", m_ccLookupTable);
+    m_screenQuad->render(m_ccProgram);
+    m_compositionBuffer->flip();
   }
 }
 
-void kit::Renderer::setActiveCamera(kit::Camera::Ptr camera)
+void kit::Renderer::setActiveCamera(kit::Camera * camera)
 {
-  this->m_activeCamera = camera;
-  if(this->m_activeCamera)
+  m_activeCamera = camera;
+  if(m_activeCamera)
   {
-    this->m_activeCamera->setAspectRatio((float)this->m_resolution.x / (float)this->m_resolution.y);
-    this->m_hdrTonemap->setUniform1f("uniform_exposure", this->m_activeCamera->getExposure());
-    this->m_hdrTonemapBloomHigh->setUniform1f("uniform_exposure", this->m_activeCamera->getExposure());
-    this->m_hdrTonemapBloomHighDirt->setUniform1f("uniform_exposure", this->m_activeCamera->getExposure());
-    this->m_hdrTonemapBloomLow->setUniform1f("uniform_exposure", this->m_activeCamera->getExposure());
-    this->m_hdrTonemapBloomLowDirt->setUniform1f("uniform_exposure", this->m_activeCamera->getExposure());
-    this->m_bloomBrightProgram->setUniform1f("uniform_exposure", this->m_activeCamera->getExposure());
-    this->m_hdrTonemap->setUniform1f("uniform_whitepoint", this->m_activeCamera->getWhitepoint());
-    this->m_hdrTonemapBloomHigh->setUniform1f("uniform_whitepoint", this->m_activeCamera->getWhitepoint());
-    this->m_hdrTonemapBloomHighDirt->setUniform1f("uniform_whitepoint", this->m_activeCamera->getWhitepoint());
-    this->m_hdrTonemapBloomLow->setUniform1f("uniform_whitepoint", this->m_activeCamera->getWhitepoint());
-    this->m_hdrTonemapBloomLowDirt->setUniform1f("uniform_whitepoint", this->m_activeCamera->getWhitepoint());
-    this->m_bloomBrightProgram->setUniform1f("uniform_whitepoint", this->m_activeCamera->getWhitepoint());
+    m_activeCamera->setAspectRatio((float)m_resolution.x / (float)m_resolution.y);
+    m_hdrTonemap->setUniform1f("uniform_exposure", m_activeCamera->getExposure());
+    m_hdrTonemapBloomHigh->setUniform1f("uniform_exposure", m_activeCamera->getExposure());
+    m_hdrTonemapBloomHighDirt->setUniform1f("uniform_exposure", m_activeCamera->getExposure());
+    m_hdrTonemapBloomLow->setUniform1f("uniform_exposure", m_activeCamera->getExposure());
+    m_hdrTonemapBloomLowDirt->setUniform1f("uniform_exposure", m_activeCamera->getExposure());
+    m_bloomBrightProgram->setUniform1f("uniform_exposure", m_activeCamera->getExposure());
+    m_hdrTonemap->setUniform1f("uniform_whitepoint", m_activeCamera->getWhitepoint());
+    m_hdrTonemapBloomHigh->setUniform1f("uniform_whitepoint", m_activeCamera->getWhitepoint());
+    m_hdrTonemapBloomHighDirt->setUniform1f("uniform_whitepoint", m_activeCamera->getWhitepoint());
+    m_hdrTonemapBloomLow->setUniform1f("uniform_whitepoint", m_activeCamera->getWhitepoint());
+    m_hdrTonemapBloomLowDirt->setUniform1f("uniform_whitepoint", m_activeCamera->getWhitepoint());
+    m_bloomBrightProgram->setUniform1f("uniform_whitepoint", m_activeCamera->getWhitepoint());
   }
 }
 
-kit::Camera::Ptr kit::Renderer::getActiveCamera()
+kit::Camera * kit::Renderer::getActiveCamera()
 {
-  return this->m_activeCamera;
+  return m_activeCamera;
 }
 
-void kit::Renderer::setCCLookupTable(kit::Texture::Ptr tex)
+void kit::Renderer::setCCLookupTable(kit::Texture * tex)
 {
-  this->m_ccLookupTable = tex;
+  m_ccLookupTable = tex;
 }
 
 void kit::Renderer::loadCCLookupTable(const std::string&name)
 {
-  this->m_ccLookupTable = kit::Texture::create3DFromFile("./data/luts/" + name, Texture::RGB8);
+  m_ccLookupTable = new kit::Texture("./data/luts/" + name, Texture::RGB8, Texture::ClampToEdge, Texture::Linear, Texture::Linear, Texture::Texture3D);
 }
 
-kit::Texture::Ptr kit::Renderer::getCCLookupTable()
+kit::Texture * kit::Renderer::getCCLookupTable()
 {
-  return this->m_ccLookupTable;
+  return m_ccLookupTable;
 }
 
 void kit::Renderer::setExposure(float exposure)
 {
-  if (!this->m_activeCamera)
+  if (!m_activeCamera)
   {
     return;
   }
 
-  this->m_activeCamera->setExposure(exposure);
-  this->m_hdrTonemap->setUniform1f("uniform_exposure", exposure);
-  this->m_hdrTonemapBloomHigh->setUniform1f("uniform_exposure", exposure);
-  this->m_hdrTonemapBloomHighDirt->setUniform1f("uniform_exposure", exposure);
-  this->m_hdrTonemapBloomLow->setUniform1f("uniform_exposure", exposure);
-  this->m_hdrTonemapBloomLowDirt->setUniform1f("uniform_exposure", exposure);
-  this->m_bloomBrightProgram->setUniform1f("uniform_exposure", exposure);
+  m_activeCamera->setExposure(exposure);
+  m_hdrTonemap->setUniform1f("uniform_exposure", exposure);
+  m_hdrTonemapBloomHigh->setUniform1f("uniform_exposure", exposure);
+  m_hdrTonemapBloomHighDirt->setUniform1f("uniform_exposure", exposure);
+  m_hdrTonemapBloomLow->setUniform1f("uniform_exposure", exposure);
+  m_hdrTonemapBloomLowDirt->setUniform1f("uniform_exposure", exposure);
+  m_bloomBrightProgram->setUniform1f("uniform_exposure", exposure);
 }
 
 float kit::Renderer::getExposure()
 {
-  if (this->m_activeCamera == nullptr) return 0.0;
-  return this->m_activeCamera->getExposure();
+  if (m_activeCamera == nullptr) return 0.0;
+  return m_activeCamera->getExposure();
 }
 
 void kit::Renderer::setWhitepoint(float whitepoint)
 {
-  if (!this->m_activeCamera)
+  if (!m_activeCamera)
   {
     return;
   }
 
-  this->m_activeCamera->setWhitepoint(whitepoint);
-  this->m_hdrTonemap->setUniform1f("uniform_whitepoint", whitepoint);
-  this->m_hdrTonemapBloomHigh->setUniform1f("uniform_whitepoint", whitepoint);
-  this->m_hdrTonemapBloomHighDirt->setUniform1f("uniform_whitepoint", whitepoint);
-  this->m_hdrTonemapBloomLow->setUniform1f("uniform_whitepoint", whitepoint);
-  this->m_hdrTonemapBloomLowDirt->setUniform1f("uniform_whitepoint", whitepoint);
-  this->m_bloomBrightProgram->setUniform1f("uniform_whitepoint", whitepoint);
+  m_activeCamera->setWhitepoint(whitepoint);
+  m_hdrTonemap->setUniform1f("uniform_whitepoint", whitepoint);
+  m_hdrTonemapBloomHigh->setUniform1f("uniform_whitepoint", whitepoint);
+  m_hdrTonemapBloomHighDirt->setUniform1f("uniform_whitepoint", whitepoint);
+  m_hdrTonemapBloomLow->setUniform1f("uniform_whitepoint", whitepoint);
+  m_hdrTonemapBloomLowDirt->setUniform1f("uniform_whitepoint", whitepoint);
+  m_bloomBrightProgram->setUniform1f("uniform_whitepoint", whitepoint);
 }
 
 float kit::Renderer::getWhitepoint()
 {
-  if (this->m_activeCamera == nullptr) return 0.0;
-  return this->m_activeCamera->getWhitepoint();
+  if (m_activeCamera == nullptr) return 0.0;
+  return m_activeCamera->getWhitepoint();
 }
 
 void kit::Renderer::setBloom(bool enabled)
 {
-  this->m_bloomEnabled = enabled;
+  m_bloomEnabled = enabled;
 }
 
 bool const & kit::Renderer::getBloom()
 {
-  return this->m_bloomEnabled;
+  return m_bloomEnabled;
 }
 
 void kit::Renderer::setFXAA(bool enabled)
 {
-  this->m_fxaaEnabled = enabled;
+  m_fxaaEnabled = enabled;
 }
 
 bool const & kit::Renderer::getFXAA()
 {
-  return this->m_fxaaEnabled;
+  return m_fxaaEnabled;
 }
 
 void kit::Renderer::setInternalResolution(float size)
 {
-  this->m_internalResolution = size;
-  this->onResize();
+  m_internalResolution = size;
+  onResize();
 }
 
 float const & kit::Renderer::getInternalResolution()
 {
-  return this->m_internalResolution;
+  return m_internalResolution;
 }
 
 void kit::Renderer::setResolution(glm::uvec2 resolution)
 {
-  this->m_resolution = resolution;
-  this->onResize();
+  m_resolution = resolution;
+  onResize();
+}
+
+glm::uvec2 const & kit::Renderer::getResolution()
+{
+  return m_resolution;
 }
 
 void kit::Renderer::setShadows(bool enabled)
 {
-  this->m_shadowsEnabled = enabled;
+  m_shadowsEnabled = enabled;
 }
 
 bool const & kit::Renderer::getShadows()
 {
-  return this->m_shadowsEnabled;
+  return m_shadowsEnabled;
 }
 
 void kit::Renderer::setSceneFringe(bool enabled)
 {
-  this->m_fringeEnabled = enabled;
+  m_fringeEnabled = enabled;
 }
 
 bool const & kit::Renderer::getSceneFringe()
 {
-  return this->m_fringeEnabled;
+  return m_fringeEnabled;
 }
 
 void kit::Renderer::setSceneFringeExponential(float e)
 {
-  this->m_fringeExponential = e;
-  this->m_fringeProgram->setUniform1f("uniform_exponential", e);
+  m_fringeExponential = e;
+  m_fringeProgram->setUniform1f("uniform_exponential", e);
 }
 
 float const & kit::Renderer::getSceneFringeExponential()
 {
-  return this->m_fringeExponential;
+  return m_fringeExponential;
 }
 
 void kit::Renderer::setSceneFringeScale(float s)
 {
-  this->m_fringeScale = s;
-  this->m_fringeProgram->setUniform1f("uniform_scale", s);
+  m_fringeScale = s;
+  m_fringeProgram->setUniform1f("uniform_scale", s);
 }
 
 float const & kit::Renderer::getSceneFringeScale()
 {
-  return this->m_fringeScale;
+  return m_fringeScale;
 }
 
 void kit::Renderer::setBloomQuality(kit::Renderer::BloomQuality q)
 {
-  this->m_bloomQuality = q;
+  m_bloomQuality = q;
 }
 
 kit::Renderer::BloomQuality const & kit::Renderer::getBloomQuality()
 {
-  return this->m_bloomQuality;
+  return m_bloomQuality;
 }
 
 void kit::Renderer::setBloomBlurLevels(uint32_t b2, uint32_t b4, uint32_t b8, uint32_t b16, uint32_t b32)
 {
-  this->m_bloomBlurLevel2 = b2;
-  this->m_bloomBlurLevel4 = b4;
-  this->m_bloomBlurLevel8 = b8;
-  this->m_bloomBlurLevel16 = b16;
-  this->m_bloomBlurLevel32 = b32;
+  m_bloomBlurLevel2 = b2;
+  m_bloomBlurLevel4 = b4;
+  m_bloomBlurLevel8 = b8;
+  m_bloomBlurLevel16 = b16;
+  m_bloomBlurLevel32 = b32;
 }
 
-void kit::Renderer::setBloomDirtMask(kit::Texture::Ptr m)
+void kit::Renderer::setBloomDirtMask(kit::Texture * m)
 {
-  this->m_bloomDirtTexture = m;
-  this->m_hdrTonemapBloomHighDirt->setUniformTexture("uniform_bloomDirtTexture", this->m_bloomDirtTexture);
-  this->m_hdrTonemapBloomLowDirt->setUniformTexture("uniform_bloomDirtTexture", this->m_bloomDirtTexture);
+  m_bloomDirtTexture = m;
+  m_hdrTonemapBloomHighDirt->setUniformTexture("uniform_bloomDirtTexture", m_bloomDirtTexture);
+  m_hdrTonemapBloomLowDirt->setUniformTexture("uniform_bloomDirtTexture", m_bloomDirtTexture);
 }
 
-kit::Texture::Ptr kit::Renderer::getBloomDirtMask()
+kit::Texture * kit::Renderer::getBloomDirtMask()
 {
-  return this->m_bloomDirtTexture;
+  return m_bloomDirtTexture;
 }
 
 bool const & kit::Renderer::getColorCorrection()
 {
-  return this->m_ccEnabled;
+  return m_ccEnabled;
 }
 
 void kit::Renderer::setColorCorrection(bool b)
 {
-  this->m_ccEnabled = b;
+  m_ccEnabled = b;
 }
 
 void kit::Renderer::setBloomDirtMaskMultiplier(float m)
 {
-  this->m_bloomDirtMultiplier = m;
-  this->m_hdrTonemapBloomHighDirt->setUniform1f("uniform_bloomDirtMultiplier", this->m_bloomDirtMultiplier);
-  this->m_hdrTonemapBloomLowDirt->setUniformTexture("uniform_bloomDirtTexture", this->m_bloomDirtTexture);
+  m_bloomDirtMultiplier = m;
+  m_hdrTonemapBloomHighDirt->setUniform1f("uniform_bloomDirtMultiplier", m_bloomDirtMultiplier);
+  m_hdrTonemapBloomLowDirt->setUniformTexture("uniform_bloomDirtTexture", m_bloomDirtTexture);
 }
 
 float const & kit::Renderer::getBloomDirtMaskMultiplier()
 {
-  return this->m_bloomDirtMultiplier;
+  return m_bloomDirtMultiplier;
 }
 
 void kit::Renderer::setBloomTresholdBias(float t)
 {
-  this->m_bloomTresholdBias = t;
-  this->m_bloomBrightProgram->setUniform1f("uniform_tresholdBias", this->m_bloomTresholdBias);
+  m_bloomTresholdBias = t;
+  m_bloomBrightProgram->setUniform1f("uniform_tresholdBias", m_bloomTresholdBias);
 }
 
 float const & kit::Renderer::getBloomTresholdBias()
 {
-  return this->m_bloomTresholdBias;
+  return m_bloomTresholdBias;
 }
 
-kit::Text::Ptr kit::Renderer::getMetricsText()
+kit::Text * kit::Renderer::getMetricsText()
 {
-  return this->m_metrics;
+  return m_metrics;
 }
 
 void kit::Renderer::setGPUMetrics(bool enabled)
 {
-  this->m_metricsEnabled = enabled;
-  if (!this->m_metricsEnabled)
+  m_metricsEnabled = enabled;
+  if (!m_metricsEnabled)
   {
-    this->m_metrics->setText(L"");
+    m_metrics->setText(L"");
   }
 }
 
 bool const & kit::Renderer::getGPUMetrics()
 {
-  return this->m_metricsEnabled;
+  return m_metricsEnabled;
 }
 
 void kit::Renderer::updateBuffers()
 {
-  glm::uvec2 effectiveResolution(uint32_t(float(this->m_resolution.x) * this->m_internalResolution), uint32_t(float(this->m_resolution.y) * this->m_internalResolution));
+  glm::uvec2 effectiveResolution(uint32_t(float(m_resolution.x) * m_internalResolution), uint32_t(float(m_resolution.y) * m_internalResolution));
 
   // create rendering buffers
-  this->m_compositionBuffer = kit::DoubleBuffer::create(
+  m_compositionBuffer = new kit::DoubleBuffer(
     effectiveResolution,
     {
       kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB16F)
     }
   );
-  this->m_compositionBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+  m_compositionBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
 
-  this->m_geometryBuffer = kit::PixelBuffer::create(
+  m_geometryBuffer = new kit::PixelBuffer(
     effectiveResolution,
     {
       kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA8),
@@ -1239,101 +1271,101 @@ void kit::Renderer::updateBuffers()
     },
     kit::PixelBuffer::AttachmentInfo(Texture::DepthComponent24)
     );
-  this->m_geometryBuffer->clear({ glm::vec4(0.0, 0.0, 0.0, 0.0), glm::vec4(0.0, 0.0, 0.0, 0.0), glm::vec4(0.0, 0.0, 0.0, 0.0) }, 1.0f);
+  m_geometryBuffer->clear({ glm::vec4(0.0, 0.0, 0.0, 0.0), glm::vec4(0.0, 0.0, 0.0, 0.0), glm::vec4(0.0, 0.0, 0.0, 0.0) }, 1.0f);
 
-  this->m_accumulationBuffer = kit::PixelBuffer::create(
+  m_accumulationBuffer = new kit::PixelBuffer(
     effectiveResolution,
     {
       kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA16F)
     },
-    kit::PixelBuffer::AttachmentInfo(this->m_geometryBuffer->getDepthAttachment())
+    kit::PixelBuffer::AttachmentInfo(m_geometryBuffer->getDepthAttachment())
     );
-  this->m_accumulationBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) }, 1.0f);
+  m_accumulationBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) }, 1.0f);
 
-  this->m_accumulationCopy = kit::PixelBuffer::create(
+  m_accumulationCopy = new kit::PixelBuffer(
     effectiveResolution,
     {
       kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA16F)
     },
     kit::PixelBuffer::AttachmentInfo(kit::Texture::DepthComponent24)
   );
-  this->m_accumulationCopy->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) }, 1.0f);
+  m_accumulationCopy->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) }, 1.0f);
 
-  this->m_bloomBrightBuffer = kit::DoubleBuffer::create(effectiveResolution, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
-  this->m_bloomBrightBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+  m_bloomBrightBuffer = new kit::DoubleBuffer(effectiveResolution, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
+  m_bloomBrightBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
 
   glm::uvec2 bloom2Res(uint32_t(float(effectiveResolution.x) * (1.0f / 2.0f)), uint32_t(float(effectiveResolution.y) * (1.0f / 2.0f)));
-  this->m_bloomBlurBuffer2 = kit::DoubleBuffer::create(bloom2Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
-  this->m_bloomBlurBuffer2->clear({glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)});
+  m_bloomBlurBuffer2 = new kit::DoubleBuffer(bloom2Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
+  m_bloomBlurBuffer2->clear({glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)});
 
   glm::uvec2 bloom4Res(uint32_t(float(effectiveResolution.x) * (1.0f / 4.0f)), uint32_t(float(effectiveResolution.y) * (1.0f / 4.0f)));
-  this->m_bloomBlurBuffer4 = kit::DoubleBuffer::create(bloom4Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
-  this->m_bloomBlurBuffer4->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+  m_bloomBlurBuffer4 = new kit::DoubleBuffer(bloom4Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
+  m_bloomBlurBuffer4->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
 
   glm::uvec2 bloom8Res(uint32_t(float(effectiveResolution.x) * (1.0f / 8.0f)), uint32_t(float(effectiveResolution.y) * (1.0f / 8.0f)));
-  this->m_bloomBlurBuffer8 = kit::DoubleBuffer::create(bloom8Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
-  this->m_bloomBlurBuffer8->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+  m_bloomBlurBuffer8 = new kit::DoubleBuffer(bloom8Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
+  m_bloomBlurBuffer8->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
 
   glm::uvec2 bloom16Res(uint32_t(float(effectiveResolution.x) * (1.0f / 16.0f)), uint32_t(float(effectiveResolution.y) * (1.0f / 16.0f)));
-  this->m_bloomBlurBuffer16 = kit::DoubleBuffer::create(bloom16Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
-  this->m_bloomBlurBuffer16->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+  m_bloomBlurBuffer16 = new kit::DoubleBuffer(bloom16Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
+  m_bloomBlurBuffer16->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
 
   glm::uvec2 bloom32Res(uint32_t(float(effectiveResolution.x) * (1.0f / 32.0f)), uint32_t(float(effectiveResolution.y) * (1.0f / 32.0f)));
-  this->m_bloomBlurBuffer32 = kit::DoubleBuffer::create(bloom32Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
-  this->m_bloomBlurBuffer32->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+  m_bloomBlurBuffer32 = new kit::DoubleBuffer(bloom32Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
+  m_bloomBlurBuffer32->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
 
-  this->m_programDirectional->setUniformTexture("uniform_textureA", this->m_geometryBuffer->getColorAttachment(0));
-  this->m_programDirectional->setUniformTexture("uniform_textureB", this->m_geometryBuffer->getColorAttachment(1));
-  this->m_programDirectional->setUniformTexture("uniform_textureC", this->m_geometryBuffer->getColorAttachment(2));
-  this->m_programDirectional->setUniformTexture("uniform_textureDepth", this->m_geometryBuffer->getDepthAttachment());
-  this->m_programDirectionalNS->setUniformTexture("uniform_textureA", this->m_geometryBuffer->getColorAttachment(0));
-  this->m_programDirectionalNS->setUniformTexture("uniform_textureB", this->m_geometryBuffer->getColorAttachment(1));
-  this->m_programDirectionalNS->setUniformTexture("uniform_textureC", this->m_geometryBuffer->getColorAttachment(2));
-  this->m_programDirectionalNS->setUniformTexture("uniform_textureDepth", this->m_geometryBuffer->getDepthAttachment());
-  this->m_programSpot->setUniformTexture("uniform_textureA", this->m_geometryBuffer->getColorAttachment(0));
-  this->m_programSpot->setUniformTexture("uniform_textureB", this->m_geometryBuffer->getColorAttachment(1));
-  this->m_programSpot->setUniformTexture("uniform_textureC", this->m_geometryBuffer->getColorAttachment(2));
-  this->m_programSpot->setUniformTexture("uniform_textureDepth", this->m_geometryBuffer->getDepthAttachment());
-  this->m_programSpotNS->setUniformTexture("uniform_textureA", this->m_geometryBuffer->getColorAttachment(0));
-  this->m_programSpotNS->setUniformTexture("uniform_textureB", this->m_geometryBuffer->getColorAttachment(1));
-  this->m_programSpotNS->setUniformTexture("uniform_textureC", this->m_geometryBuffer->getColorAttachment(2));
-  this->m_programSpotNS->setUniformTexture("uniform_textureDepth", this->m_geometryBuffer->getDepthAttachment());
-  this->m_programPoint->setUniformTexture("uniform_textureA", this->m_geometryBuffer->getColorAttachment(0));
-  this->m_programPoint->setUniformTexture("uniform_textureB", this->m_geometryBuffer->getColorAttachment(1));
-  this->m_programPoint->setUniformTexture("uniform_textureC", this->m_geometryBuffer->getColorAttachment(2));
-  this->m_programPoint->setUniformTexture("uniform_textureDepth", this->m_geometryBuffer->getDepthAttachment());
-  this->m_programPointNS->setUniformTexture("uniform_textureA", this->m_geometryBuffer->getColorAttachment(0));
-  this->m_programPointNS->setUniformTexture("uniform_textureB", this->m_geometryBuffer->getColorAttachment(1));
-  this->m_programPointNS->setUniformTexture("uniform_textureC", this->m_geometryBuffer->getColorAttachment(2));
-  this->m_programPointNS->setUniformTexture("uniform_textureDepth", this->m_geometryBuffer->getDepthAttachment());
-  this->m_programIBL->setUniformTexture("uniform_textureA", this->m_geometryBuffer->getColorAttachment(0));
-  this->m_programIBL->setUniformTexture("uniform_textureB", this->m_geometryBuffer->getColorAttachment(1));
-  this->m_programIBL->setUniformTexture("uniform_textureC", this->m_geometryBuffer->getColorAttachment(2));
-  this->m_programIBL->setUniformTexture("uniform_textureDepth", this->m_geometryBuffer->getDepthAttachment());
-  this->m_programEmissive->setUniformTexture("uniform_textureB", this->m_geometryBuffer->getColorAttachment(1));
+  m_programDirectional->setUniformTexture("uniform_textureA", m_geometryBuffer->getColorAttachment(0));
+  m_programDirectional->setUniformTexture("uniform_textureB", m_geometryBuffer->getColorAttachment(1));
+  m_programDirectional->setUniformTexture("uniform_textureC", m_geometryBuffer->getColorAttachment(2));
+  m_programDirectional->setUniformTexture("uniform_textureDepth", m_geometryBuffer->getDepthAttachment());
+  m_programDirectionalNS->setUniformTexture("uniform_textureA", m_geometryBuffer->getColorAttachment(0));
+  m_programDirectionalNS->setUniformTexture("uniform_textureB", m_geometryBuffer->getColorAttachment(1));
+  m_programDirectionalNS->setUniformTexture("uniform_textureC", m_geometryBuffer->getColorAttachment(2));
+  m_programDirectionalNS->setUniformTexture("uniform_textureDepth", m_geometryBuffer->getDepthAttachment());
+  m_programSpot->setUniformTexture("uniform_textureA", m_geometryBuffer->getColorAttachment(0));
+  m_programSpot->setUniformTexture("uniform_textureB", m_geometryBuffer->getColorAttachment(1));
+  m_programSpot->setUniformTexture("uniform_textureC", m_geometryBuffer->getColorAttachment(2));
+  m_programSpot->setUniformTexture("uniform_textureDepth", m_geometryBuffer->getDepthAttachment());
+  m_programSpotNS->setUniformTexture("uniform_textureA", m_geometryBuffer->getColorAttachment(0));
+  m_programSpotNS->setUniformTexture("uniform_textureB", m_geometryBuffer->getColorAttachment(1));
+  m_programSpotNS->setUniformTexture("uniform_textureC", m_geometryBuffer->getColorAttachment(2));
+  m_programSpotNS->setUniformTexture("uniform_textureDepth", m_geometryBuffer->getDepthAttachment());
+  m_programPoint->setUniformTexture("uniform_textureA", m_geometryBuffer->getColorAttachment(0));
+  m_programPoint->setUniformTexture("uniform_textureB", m_geometryBuffer->getColorAttachment(1));
+  m_programPoint->setUniformTexture("uniform_textureC", m_geometryBuffer->getColorAttachment(2));
+  m_programPoint->setUniformTexture("uniform_textureDepth", m_geometryBuffer->getDepthAttachment());
+  m_programPointNS->setUniformTexture("uniform_textureA", m_geometryBuffer->getColorAttachment(0));
+  m_programPointNS->setUniformTexture("uniform_textureB", m_geometryBuffer->getColorAttachment(1));
+  m_programPointNS->setUniformTexture("uniform_textureC", m_geometryBuffer->getColorAttachment(2));
+  m_programPointNS->setUniformTexture("uniform_textureDepth", m_geometryBuffer->getDepthAttachment());
+  m_programIBL->setUniformTexture("uniform_textureA", m_geometryBuffer->getColorAttachment(0));
+  m_programIBL->setUniformTexture("uniform_textureB", m_geometryBuffer->getColorAttachment(1));
+  m_programIBL->setUniformTexture("uniform_textureC", m_geometryBuffer->getColorAttachment(2));
+  m_programIBL->setUniformTexture("uniform_textureDepth", m_geometryBuffer->getDepthAttachment());
+  m_programEmissive->setUniformTexture("uniform_textureB", m_geometryBuffer->getColorAttachment(1));
 }
 
-kit::Skybox::Ptr kit::Renderer::getSkybox()
+kit::Skybox * kit::Renderer::getSkybox()
 {
-  return this->m_skybox;
+  return m_skybox;
 }
 
-kit::PixelBuffer::Ptr kit::Renderer::getAccumulationCopy()
+kit::PixelBuffer * kit::Renderer::getAccumulationCopy()
 {
-  return this->m_accumulationCopy;
+  return m_accumulationCopy;
 }
 
-kit::PixelBufferPtr kit::Renderer::getGeometryBuffer()
+kit::PixelBuffer * kit::Renderer::getGeometryBuffer()
 {
-  return this->m_geometryBuffer;
+  return m_geometryBuffer;
 }
 
 bool kit::Renderer::getSRGBEnabled()
 {
-  return this->m_srgbEnabled;
+  return m_srgbEnabled;
 }
 
 void kit::Renderer::setSRGBEnabled(const bool& v)
 {
-  this->m_srgbEnabled = v;
+  m_srgbEnabled = v;
 }

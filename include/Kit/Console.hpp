@@ -4,7 +4,7 @@
 #include "Kit/WindowEvent.hpp"
 
 #include <list>
-#include <memory>
+#include <deque>
 
 namespace kit {
 
@@ -17,30 +17,28 @@ namespace kit {
   class Application;
   
   class Text;
-  typedef std::shared_ptr<Text> TextPtr;
+  
 
   class Font;
-  typedef std::shared_ptr<Font> FontPtr;
+  
   
   class Quad;
-  typedef std::shared_ptr<Quad> QuadPtr;
+  
 
   struct KITAPI ConsoleLine 
   {
-    std::wstring string;
-    kit::TextPtr text;
+    ConsoleLine(std::wstring const & s);
+    ~ConsoleLine();
+    std::wstring string = L"empty";
+    kit::Text * text = nullptr;
   };
   
   class KITAPI Console
   {
     public:
-      typedef std::shared_ptr<Console> Ptr;
-      typedef std::weak_ptr<Console> WPtr;
       
-      Console(kit::Application* app);
+      Console(kit::Application * app);
       ~Console();
-      
-      static Ptr create(kit::Application* app);
       
       void hide();
       void Show();
@@ -58,20 +56,19 @@ namespace kit {
       
       std::list<std::wstring>::iterator getCurrentBuffer();
       
-      kit::Application* m_application;   //< reference to the application, for evaluation and layout
+      kit::Application* m_application = nullptr;   //< reference to the application, for evaluation and layout
       
       bool m_isActive;                      //< Set to true/false to show/hide the console
       float m_heightCoeff;                  //< Height coefficient for animating console. 1.0 = visible, 0.0 = hidden.
       
-      kit::QuadPtr m_quad;                //< Background quad
-      
-      std::list<ConsoleLine> m_lines;       //< Console output
+      kit::Quad * m_quad = nullptr;                //< Background quad
+      std::deque<ConsoleLine> m_lines;       //< Console output
       uint32_t m_lineOffset;             //< Line offset for browsing the console output
       
       std::list<std::wstring> m_buffer;     //< Command buffer, begin of is the current buffer, the rest is history (no pun intended)
       uint32_t m_bufferPosition;         //< Current position in buffer history, if 0 you are at current
       std::wstring m_bufferSave;            //< Save for the current buffer, when browsing history and returns to 0 again
-      kit::TextPtr m_bufferText;          //< display text object for input buffer
+      kit::Text * m_bufferText;          //< display text object for input buffer
       uint32_t m_cursorPosition;         //< Cursor position for input buffer
       
   };

@@ -1,5 +1,4 @@
-#ifndef KIT_PROGRAM_HEADER
-#define KIT_PROGRAM_HEADER
+#pragma once 
 
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
@@ -7,31 +6,27 @@
 #include "Kit/Shader.hpp"
 
 #include <map>
-#include <memory>
 #include <glm/glm.hpp>
 
 namespace kit {
 
   class Cubemap;
-  typedef std::weak_ptr<Cubemap> CubemapWPtr;
+  
 
   class Texture;
-  typedef std::weak_ptr<Texture> TextureWPtr;
   
   ///
   /// \brief An OpenGL Program
   ///
   class KITAPI Program {
     public:
-      typedef std::shared_ptr<kit::Program> Ptr;
+      
 
       typedef std::vector<std::string > const & SourceList;
       
       ///
-      /// \brief Constructor (FOR INTERNAL USE ONLY)
+      /// \brief Constructor
       /// 
-      /// You should NEVER instance this as usual. ALWAYS use smart pointers (std::shared_ptr), and create them explicitly using the `create` methods!
-      ///
       Program();
 
       ///
@@ -40,69 +35,42 @@ namespace kit {
       ~Program();
 
       /// 
-      /// \brief Creates an empty proram
-      ///
-      /// You should only use the static `create` and `load` methods to create instances. Avoid instancing this class yourself!
-      ///
-      /// \returns A shared pointer pointing to the newly created program
-      ///
-      static kit::Program::Ptr create();
-
-      /// 
       /// \brief Creates, loads, compiles and links a program directly from lists of sourcefiles.
       ///
-      /// You should only use the static `create` and `load` methods to create instances. Avoid instancing this class yourself!
+      /// \param c A list of filepaths to compute sources, relative to ./data/shaders/
       ///
-      /// \param v A list of filepaths to compute sources, relative to ./data/shaders/
-      ///
-      /// \returns A shared pointer pointing to the newly created program
-      ///
-      static kit::Program::Ptr load(SourceList c, kit::DataSource source = kit::DataSource::Data);
+      Program(SourceList c, kit::DataSource source = kit::DataSource::Data);
       
       /// 
       /// \brief Creates, loads, compiles and links a program directly from lists of sourcefiles.
       ///
-      /// You should only use the static `create` and `load` methods to create instances. Avoid instancing this class yourself!
-      ///
       /// \param v A list of filepaths to vertex sources, relative to ./data/shaders/
       /// \param f A list of filepaths to fragment sources, relative to ./data/shaders/
       ///
-      /// \returns A shared pointer pointing to the newly created program
-      ///
-      static kit::Program::Ptr load(SourceList v, SourceList f, kit::DataSource source = kit::DataSource::Data);
+      Program(SourceList v, SourceList f, kit::DataSource source = kit::DataSource::Data);
     
       /// 
       /// \brief Creates, loads, compiles and links a program directly from lists of sourcefiles.
       ///
-      /// You should only use the static `create` and `load` methods to create instances. Avoid instancing this class yourself!
-      ///
       /// \param v A list of filepaths to vertex sources, relative to ./data/shaders/
       /// \param g A list of filepaths to the geometry sources, relative to ./data/shaders/
       /// \param f A list of filepaths to fragment sources, relative to ./data/shaders/
       ///
-      /// \returns A shared pointer pointing to the newly created program
-      ///
-      static kit::Program::Ptr load(SourceList v, SourceList g, SourceList f, kit::DataSource source = kit::DataSource::Data);
+      Program(SourceList v, SourceList g, SourceList f, kit::DataSource source = kit::DataSource::Data);
       
       /// 
       /// \brief Creates, loads, compiles and links a program directly from lists of sourcefiles.
-      ///
-      /// You should only use the static `create` and `load` methods to create instances. Avoid instancing this class yourself!
       ///
       /// \param v A list of filepaths to vertex sources, relative to ./data/shaders/
       /// \param tc A list of filepaths to the tessellation control sources, relative to ./data/shaders/
       /// \param te A list of filepaths to the tesselation evaluation sources, relative to ./data/shaders/
       /// \param f A list of filepaths to fragment sources, relative to ./data/shaders/
       ///
-      /// \returns A shared pointer pointing to the newly created program
-      ///
-      static kit::Program::Ptr load(SourceList v, SourceList tc, SourceList te, SourceList f, kit::DataSource source = kit::DataSource::Data);
+      Program(SourceList v, SourceList tc, SourceList te, SourceList f, kit::DataSource source = kit::DataSource::Data);
       
       
       /// 
       /// \brief Creates, loads, compiles and links a program directly from lists of sourcefiles.
-      ///
-      /// You should only use the static `create` and `load` methods to create instances. Avoid instancing this class yourself!
       ///
       /// \param v A list of filepaths to vertex sources, relative to ./data/shaders/
       /// \param tc A list of filepaths to the tessellation control sources, relative to ./data/shaders/
@@ -110,21 +78,19 @@ namespace kit {
       /// \param g A list of filepaths to the geometry sources, relative to ./data/shaders/
       /// \param f A list of filepaths to fragment sources, relative to ./data/shaders/
       ///
-      /// \returns A shared pointer pointing to the newly created program
-      ///
-      static kit::Program::Ptr load(SourceList v, SourceList tc, SourceList te, SourceList g, SourceList f, kit::DataSource source = kit::DataSource::Data);
+      Program(SourceList v, SourceList tc, SourceList te, SourceList g, SourceList f, kit::DataSource source = kit::DataSource::Data);
       
       ///
       /// \brief Attaches a compiled shader object to this program
       /// \param s The shader object to attach
       ///
-      void attachShader(kit::Shader::Ptr s);
+      void attachShader(kit::Shader * s);
     
       ///
       /// \brief Detaches a compiled shader object from this program
       /// \param s The shader object to detach
       ///
-      void detachShader(kit::Shader::Ptr s);
+      void detachShader(kit::Shader * s);
     
       ///
       /// \brief Attempts to link together the attached shaderobjects, making this program valid on success.
@@ -159,14 +125,14 @@ namespace kit {
       /// \param name The name of the uniform to set 
       /// \param texture The Kit texture to set as uniform
       ///
-      void setUniformTexture(const std::string& name, kit::TextureWPtr texture);
+      void setUniformTexture(const std::string& name, kit::Texture * texture);
       
       ///
       /// \brief Sets a Kit cubemap as a uniform
       /// \param name The name of the uniform to set 
       /// \param cubemap The Kit cubemap to set as uniform
       ///
-      void setUniformCubemap(const std::string& name, kit::CubemapWPtr cubemap);
+      void setUniformCubemap(const std::string& name, kit::Cubemap * cubemap);
 
       ///
       /// \brief Sets a float as a uniform
@@ -246,15 +212,13 @@ namespace kit {
       void prepareTextures();
 
     private:
-      static void addShaders(kit::Program::Ptr program, kit::Shader::Type type, std::vector<std::string> const & sources, std::vector<kit::Shader::Ptr> & outShaders, kit::DataSource source = kit::DataSource::Data);
+      void addShaders(kit::Shader::Type type, std::vector<std::string> const & sources, std::vector<kit::Shader*> & outShaders, kit::DataSource source = kit::DataSource::Data);
       
       std::string                               m_fileIdentifier;
       uint32_t			                        m_glHandle;
       std::map<std::string, uint32_t>           m_locationCache;
-      std::map<uint32_t, kit::TextureWPtr>      m_textures;
-      std::map<uint32_t, kit::CubemapWPtr>      m_cubemaps;
+      std::map<uint32_t, kit::Texture*>      m_textures;
+      std::map<uint32_t, kit::Cubemap*>      m_cubemaps;
   };
 
 }
-
-#endif // KIT_PROGRAM_HEADER

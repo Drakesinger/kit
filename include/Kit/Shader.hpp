@@ -1,12 +1,9 @@
-#ifndef KIT_SHADER_HEADER
-#define KIT_SHADER_HEADER
+#pragma once 
 
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
 
 #include <string>
-#include <memory>
-
 namespace kit{
 
   ///
@@ -29,30 +26,15 @@ namespace kit{
         Compute = GLK_COMPUTE_SHADER
       };
       
-      typedef std::shared_ptr<kit::Shader> Ptr;
-
       ///
-      /// \brief Constructor (FOR INTERNAL USE ONLY)
+      /// \brief Constructor
       /// 
-      /// You should NEVER instance this as usual. ALWAYS use smart pointers (std::shared_ptr), and create them explicitly using the `create` methods!
-      ///
       Shader(Shader::Type type);
 
       ///
       /// \brief Destructor
       ///
       ~Shader();
-
-      /// 
-      /// \brief Creates an empty shader object
-      ///
-      /// \param type The shader type to create
-      ///
-      /// You should only use the static `create` methods to create instances. Avoid instancing this class yourself!
-      ///
-      /// \returns A shared pointer pointing to the newly created shader
-      ///
-      static kit::Shader::Ptr create(Shader::Type type);
 
       ///
       /// \brief Attempt to source from a file
@@ -91,5 +73,3 @@ namespace kit{
   };
 
 }
-
-#endif // KIT_SHADER_HEADER

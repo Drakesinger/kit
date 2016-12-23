@@ -14,9 +14,9 @@
 #include <fstream>
 
 uint32_t kit::Material::m_instanceCount = 0;
-kit::Program::Ptr kit::Material::m_cacheProgram = nullptr;
-std::map<std::string, kit::Material::Ptr> kit::Material::m_cache = std::map<std::string, kit::Material::Ptr>();
-std::map<kit::Material::ProgramFlags, kit::Program::Ptr> kit::Material::m_programCache = std::map<kit::Material::ProgramFlags, kit::Program::Ptr>();
+kit::Program * kit::Material::m_cacheProgram = nullptr;
+std::map<std::string, kit::Material*> kit::Material::m_cache = std::map<std::string, kit::Material*>();
+std::map<kit::Material::ProgramFlags, kit::Program*> kit::Material::m_programCache = std::map<kit::Material::ProgramFlags, kit::Program*>();
 
 static const char * glslVersion = "#version 430 core\n";
 
@@ -96,8 +96,6 @@ uniform sampler2D uniform_mapA;\n\
 uniform vec3      uniform_defaultA;\n\
 uniform sampler2D uniform_mapB;\n\
 uniform float     uniform_defaultB;\n\
-uniform vec2      uniform_inputB;\n\
-uniform vec2      uniform_outputB;\n\
 \n\
 uniform int uniform_usemapA;\n\
 uniform int uniform_usemapB;\n\
@@ -116,32 +114,37 @@ void main()\n\
   \n\
   if(uniform_usemapB == 1)\n\
   {\n\
-    valB = levels(texture(uniform_mapB, in_texCoords).r, uniform_inputB.x, uniform_defaultB, uniform_inputB.y, uniform_outputB.x, uniform_outputB.y);\n\
+    valB = texture(uniform_mapB, in_texCoords).r;\n\
   }\n\
   \n\
   out_color = vec4(valA, valB);\n\
 }\n";
 
-kit::Material::Ptr kit::Material::create()
-{
-  return std::make_shared<kit::Material>();
-}
-
 void kit::Material::clearCache(std::string entry)
 {
   if (entry == "")
   {
-    kit::Material::m_cache.clear();
+    for(auto & t : m_cache)
+    {
+      delete t.second;
+    }
+    
+    m_cache.clear();
   }
   else
   {
-    kit::Material::m_cache.erase(entry);
+    auto t = m_cache.find(entry);
+    if(t != m_cache.end())
+    {
+      delete t->second;
+      m_cache.erase(entry);
+    }
   }
 }
 
-std::map<std::string, kit::Material::Ptr> kit::Material::getCacheList()
+std::map<std::string, kit::Material*> kit::Material::getCacheList()
 {
-  return kit::Material::m_cache;
+  return m_cache;
 }
 
 bool kit::Material::save(const std::string&outfilename)
@@ -154,71 +157,63 @@ bool kit::Material::save(const std::string&outfilename)
   }
 
   fhandle << "# Albedo color properties" << std::endl;
-  if (this->m_albedoMap)
+  if (m_albedoMap)
   {
-    fhandle << "albedomap \"" << this->m_albedoMap->getFilename() << "\"" << std::endl;
+    fhandle << "albedomap \"" << m_albedoMap->getFilename() << "\"" << std::endl;
   }
-  fhandle << "albedo " << this->m_albedo.x << " " << this->m_albedo.y << " " << this->m_albedo.z << std::endl;
+  fhandle << "albedo " << m_albedo.x << " " << m_albedo.y << " " << m_albedo.z << std::endl;
   fhandle << std::endl;
 
   fhandle << "# Occlusion properties" << std::endl;
-  if (this->m_occlusionMap)
+  if (m_occlusionMap)
   {
-    fhandle << "occlusionmap \"" << this->m_occlusionMap->getFilename() << "\"" << std::endl;
-    fhandle << "occlusiongamma " << this->m_occlusionGamma << std::endl;
-    fhandle << "occlusioninput " << this->m_occlusionInput.x << " " << this->m_occlusionInput.y << std::endl;
-    fhandle << "occlusionoutput " << this->m_occlusionOutput.x << " " << this->m_occlusionOutput.y << std::endl;
+    fhandle << "occlusionmap \"" << m_occlusionMap->getFilename() << "\"" << std::endl;
   }
   fhandle << std::endl;
 
   fhandle << "# Normal map properties" << std::endl;
-  if (this->m_normalMap)
+  if (m_normalMap)
   {
-    fhandle << "normalmap \"" << this->m_normalMap->getFilename() << "\"" << std::endl;
+    fhandle << "normalmap \"" << m_normalMap->getFilename() << "\"" << std::endl;
   }
-  fhandle << "normalstrength " << this->m_normalStrength << std::endl;
   fhandle << std::endl;
 
   fhandle << "# Emissive properties" << std::endl;
-  if (this->m_emissiveMap)
+  if (m_emissiveMap)
   {
-    fhandle << "emissivemap \"" << this->m_emissiveMap->getFilename() << "\"" << std::endl;
+    fhandle << "emissivemap \"" << m_emissiveMap->getFilename() << "\"" << std::endl;
   }
-  fhandle << "emissivestrength " << this->m_emissiveStrength << std::endl;
-  fhandle << "emissivecolor " << this->m_emissiveColor.x << " " << this->m_emissiveColor.y << " " << this->m_emissiveColor.z << std::endl;
+  fhandle << "emissivestrength " << m_emissiveStrength << std::endl;
+  fhandle << "emissivecolor " << m_emissiveColor.x << " " << m_emissiveColor.y << " " << m_emissiveColor.z << std::endl;
   fhandle << std::endl;
 
   fhandle << "# Roughness properties" << std::endl;
-  if (this->m_roughnessMap)
+  if (m_roughnessMap)
   {
-    fhandle << "roughnessmap \"" << this->m_roughnessMap->getFilename() << "\"" << std::endl;
+    fhandle << "roughnessmap \"" << m_roughnessMap->getFilename() << "\"" << std::endl;
   }
-  fhandle << "roughness " << this->m_roughness << std::endl;
-  fhandle << "roughnessinput " << this->m_roughnessInput.x << " " << this->m_roughnessInput.y << std::endl;
-  fhandle << "roughnessoutput " << this->m_roughnessOutput.x << " " << this->m_roughnessOutput.y << std::endl;
+  fhandle << "roughness " << m_roughness << std::endl;
   fhandle << std::endl;
 
   fhandle << "# Metalness properties" << std::endl;
-  if (this->m_metalnessMap)
+  if (m_metalnessMap)
   {
-    fhandle << "metalnessmap \"" << this->m_metalnessMap->getFilename() << "\"" << std::endl;
+    fhandle << "metalnessmap \"" << m_metalnessMap->getFilename() << "\"" << std::endl;
   }
-  fhandle << "metalness " << this->m_metalness << std::endl;
-  fhandle << "metalnessinput " << this->m_metalnessInput.x << " " << this->m_metalnessInput.y << std::endl;
-  fhandle << "metalnessoutput " << this->m_metalnessOutput.x << " " << this->m_metalnessOutput.y << std::endl;
+  fhandle << "metalness " << m_metalness << std::endl;
   fhandle << std::endl;
 
   fhandle << "# Other properties" << std::endl;
-  fhandle << "doublesided " << (this->m_doubleSided ? "true" : "false") << std::endl;
-  fhandle << "depthwrite " << (this->m_depthWrite ? "true" : "false") << std::endl;
-  fhandle << "depthread " << (this->m_depthRead ? "true" : "false") << std::endl;
-  fhandle << "castshadows " << (this->m_castShadows ? "true" : "false") << std::endl;
-  fhandle << "opacity " << this->m_opacity << std::endl;
-  if (this->m_opacityMask)
+  fhandle << "doublesided " << (m_doubleSided ? "true" : "false") << std::endl;
+  fhandle << "depthwrite " << (m_depthWrite ? "true" : "false") << std::endl;
+  fhandle << "depthread " << (m_depthRead ? "true" : "false") << std::endl;
+  fhandle << "castshadows " << (m_castShadows ? "true" : "false") << std::endl;
+  fhandle << "opacity " << m_opacity << std::endl;
+  if (m_opacityMask)
   {
-    fhandle << "opacitymask " << this->m_opacityMask->getFilename() << std::endl;
+    fhandle << "opacitymask " << m_opacityMask->getFilename() << std::endl;
   }
-  fhandle << "blendmode " << (this->m_blendMode == None ? "none" : this->m_blendMode == Add ? "add" : "alpha");
+  fhandle << "blendmode " << (m_blendMode == None ? "none" : m_blendMode == Add ? "add" : "alpha");
 
   fhandle << std::endl;
 
@@ -226,81 +221,29 @@ bool kit::Material::save(const std::string&outfilename)
   return true;
 }
 
-kit::Material::Ptr kit::Material::load(const std::string&filename, bool reload)
+kit::Material * kit::Material::load(const std::string&filename, bool use_cache)
 {
-  auto finder = kit::Material::m_cache.find(filename);
-  bool existsInCache = (finder != kit::Material::m_cache.end());
-
-  if(existsInCache)
+  kit::Material * currMaterial = nullptr;
+  
+  if(use_cache)
   {
-    if (!reload)
+    auto finder = kit::Material::m_cache.find(filename);
+    bool existsInCache = (finder != kit::Material::m_cache.end());
+
+    if(existsInCache)
     {
-      // Exists in cache + dont want to reload = return cached
       return finder->second;
     }
-    else
-    {
-      // Exists in cache and we want to reload = first we have to reset the cached copy
-      auto currMaterial = kit::Material::m_cache.at(filename);
-      currMaterial->m_albedo = glm::vec3(1.0, 1.0, 1.0);
-      currMaterial->m_albedoMap = nullptr;
-
-      currMaterial->m_emissiveColor = glm::vec3(0.0f, 0.0f, 0.0f);
-      currMaterial->m_emissiveStrength = 1.0f;
-      currMaterial->m_emissiveMap = nullptr;
-      currMaterial->m_dynamicEO = false;
-      currMaterial->m_dynamicAR = false;
-      currMaterial->m_dynamicNM = false;
-      currMaterial->m_occlusionMap = nullptr;
-      currMaterial->m_occlusionGamma = 1.0f;
-      currMaterial->m_occlusionInput = glm::vec2(0.0, 1.0);
-      currMaterial->m_occlusionOutput = glm::vec2(0.0, 1.0);
-
-      currMaterial->m_metalness = 1.0;
-      currMaterial->m_metalnessMap = nullptr;
-      currMaterial->m_metalnessInput = glm::vec2(0.0, 1.0);
-      currMaterial->m_metalnessOutput = glm::vec2(0.0, 1.0);
-
-      currMaterial->m_roughness = 1.0;
-      currMaterial->m_roughnessMap = nullptr;
-      currMaterial->m_roughnessInput = glm::vec2(0.0, 1.0);
-      currMaterial->m_roughnessOutput = glm::vec2(0.0, 1.0);
-
-      currMaterial->m_normalStrength = 1.0;
-      currMaterial->m_normalMap = nullptr;
-
-      currMaterial->m_depthRead = true;
-      currMaterial->m_depthWrite = true;
-      currMaterial->m_doubleSided = false;
-      currMaterial->m_castShadows = true;
-      currMaterial->m_opacity = 1.0;
-      currMaterial->m_opacityMask = nullptr;
-      currMaterial->m_blendMode = None;
-
-      currMaterial->m_program = nullptr;
-      currMaterial->m_sProgram = nullptr;
-      currMaterial->m_iProgram = nullptr;
-      currMaterial->m_siProgram = nullptr;
-
-      currMaterial->m_arDirty = true;
-      currMaterial->m_nmDirty = true;
-      currMaterial->m_ndDirty = true;
-      currMaterial->m_eoDirty = true;
-      currMaterial->m_dirty = true;
-
-      currMaterial->m_spec_depthMask = nullptr;
-      currMaterial->m_spec_uvScale = 1.0f;
-    }
-  }
-  else
-  {
-    // Doesnt exist in cache, we really want to just load it as usual regardless of reload, so create an empty cache entry
-    kit::Material::m_cache[filename] = kit::Material::create();
   }
   
-  auto currMaterial = kit::Material::m_cache.at(filename);
+  currMaterial = new kit::Material();
   currMaterial->m_filename = filename;
-
+  
+  if(use_cache)
+  {
+    m_cache[filename] = currMaterial;
+  }
+  
   std::ifstream fhandle(std::string("./data/materials/") + filename);
   if(!fhandle)
   {
@@ -335,23 +278,6 @@ kit::Material::Ptr kit::Material::load(const std::string&filename, bool reload)
         KIT_ASSERT(currtokens.size() == 2 /* occlusionmap needs 1 string value (no spaces!) */);
         currMaterial->m_occlusionMap = kit::Texture::load(currtokens[1].c_str(), false);
       }
-      else if (identifier == std::string("occlusiongamma"))
-      {
-        KIT_ASSERT(currtokens.size() == 2 /* occlusionintensity needs 1 float value */);
-        currMaterial->m_occlusionGamma = (float)std::atof(currtokens[1].c_str());
-      }
-      else if (identifier == std::string("occlusioninput"))
-      {
-        KIT_ASSERT(currtokens.size() == 3 /* occlusionInput needs 2 float values */);
-        currMaterial->m_occlusionInput.x = (float)std::atof(currtokens[1].c_str());
-        currMaterial->m_occlusionInput.y = (float)std::atof(currtokens[2].c_str());
-      }
-      else if (identifier == std::string("occlusionoutput"))
-      {
-        KIT_ASSERT(currtokens.size() == 3 /* occlusionOutput needs 2 float values */);
-        currMaterial->m_occlusionOutput.x = (float)std::atof(currtokens[1].c_str());
-        currMaterial->m_occlusionOutput.y = (float)std::atof(currtokens[2].c_str());
-      }
       else if(identifier == std::string("emissivecolor"))
       {
         KIT_ASSERT(currtokens.size() == 4 /* Emissive color needs 3 float values */);
@@ -369,11 +295,6 @@ kit::Material::Ptr kit::Material::load(const std::string&filename, bool reload)
         KIT_ASSERT(currtokens.size() == 2 /* emissivemap needs 1 string value (no spaces!) */);
         currMaterial->m_emissiveMap = kit::Texture::load(currtokens[1].c_str(), true);
       }
-      else if(identifier == std::string("normalstrength"))
-      {
-        KIT_ASSERT(currtokens.size() == 2 /* Normalstrength needs 1 float value */);
-        currMaterial->m_normalStrength = (float)std::atof(currtokens[1].c_str());
-      }
       else if(identifier == std::string("normalmap"))
       {
         KIT_ASSERT(currtokens.size() == 2 /* Normalmap needs 1 string value (no spaces!) */);
@@ -384,18 +305,6 @@ kit::Material::Ptr kit::Material::load(const std::string&filename, bool reload)
         KIT_ASSERT(currtokens.size() == 2 /* Roughness needs 1 float value */);
         currMaterial->m_roughness = (float)std::atof(currtokens[1].c_str());
       }
-      else if (identifier == std::string("roughnessinput"))
-      {
-        KIT_ASSERT(currtokens.size() == 3 /* RoughnessInput needs 2 float values */);
-        currMaterial->m_roughnessInput.x = (float)std::atof(currtokens[1].c_str());
-        currMaterial->m_roughnessInput.y = (float)std::atof(currtokens[2].c_str());
-      }
-      else if (identifier == std::string("roughnessoutput"))
-      {
-        KIT_ASSERT(currtokens.size() == 3 /* RoughnessOutput needs 2 float values */);
-        currMaterial->m_roughnessOutput.x = (float)std::atof(currtokens[1].c_str());
-        currMaterial->m_roughnessOutput.y = (float)std::atof(currtokens[2].c_str());
-      }
       else if(identifier == std::string("roughnessmap"))
       {
         KIT_ASSERT(currtokens.size() == 2 /* Roughnessmap needs 1 string value (no spaces!) */);
@@ -405,18 +314,6 @@ kit::Material::Ptr kit::Material::load(const std::string&filename, bool reload)
       {
         KIT_ASSERT(currtokens.size() == 2 /* Metalness needs 1 float value */);
         currMaterial->m_metalness = (float)std::atof(currtokens[1].c_str());
-      }
-      else if (identifier == std::string("metalnessinput"))
-      {
-        KIT_ASSERT(currtokens.size() == 3 /* MetalnessInput needs 2 float values */);
-        currMaterial->m_metalnessInput.x = (float)std::atof(currtokens[1].c_str());
-        currMaterial->m_metalnessInput.y = (float)std::atof(currtokens[2].c_str());
-      }
-      else if (identifier == std::string("metalnessoutput"))
-      {
-        KIT_ASSERT(currtokens.size() == 3 /* MetalnessOutput needs 2 float values */);
-        currMaterial->m_metalnessOutput.x = (float)std::atof(currtokens[1].c_str());
-        currMaterial->m_metalnessOutput.y = (float)std::atof(currtokens[2].c_str());
       }
       else if(identifier == std::string("metalnessmap"))
       {
@@ -470,7 +367,7 @@ kit::Material::Ptr kit::Material::load(const std::string&filename, bool reload)
       }
       else
       {
-        KIT_THROW(std::string("Unknown material parameter ") + identifier);
+        KIT_ERR(std::string("Warning: Unknown material parameter ") + identifier);
       }
     }
   }
@@ -489,65 +386,29 @@ kit::Material::Material()
   {
     kit::Material::allocateShared();
   }
-    
-  this->m_albedo = glm::vec3(1.0, 1.0, 1.0);
-  this->m_albedoMap = nullptr;
   
-  this->m_emissiveColor = glm::vec3(0.0f, 0.0f, 0.0f);
-  this->m_emissiveStrength = 1.0f;
-  this->m_emissiveMap = nullptr;
-  this->m_dynamicEO = false;
-  this->m_dynamicAR = false;
-  this->m_dynamicNM = false;
+  m_arCache = new kit::PixelBuffer(glm::uvec2(128, 128), {kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA8, Texture::Repeat, Texture::LinearMipmapLinear, Texture::Linear)});
+  m_nmCache = new kit::PixelBuffer(glm::uvec2(128, 128), {kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA8, Texture::Repeat, Texture::LinearMipmapLinear, Texture::Linear)});
+  m_ndCache = new kit::PixelBuffer(glm::uvec2(128, 128), {kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA8, Texture::Repeat, Texture::LinearMipmapLinear, Texture::Linear) });
+  m_eoCache = new kit::PixelBuffer(glm::uvec2(128, 128), {kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA8, Texture::Repeat, Texture::LinearMipmapLinear, Texture::Linear)});
 
-  this->m_occlusionMap = nullptr;
-  this->m_occlusionGamma = 1.0f;
-  this->m_occlusionInput = glm::vec2(0.0f, 1.0f);
-  this->m_occlusionOutput = glm::vec2(0.0f, 1.0f);
-
-  this->m_metalness = 1.0;
-  this->m_metalnessMap = nullptr;
-  this->m_metalnessInput = glm::vec2(0.0, 1.0);
-  this->m_metalnessOutput = glm::vec2(0.0, 1.0);
-  
-  this->m_roughness = 1.0;
-  this->m_roughnessMap = nullptr;
-  this->m_roughnessInput = glm::vec2(0.0, 1.0);
-  this->m_roughnessOutput = glm::vec2(0.0, 1.0);
-  
-  this->m_normalStrength = 1.0;
-  this->m_normalMap = nullptr;
- 
-  this->m_depthRead = true;
-  this->m_depthWrite = true;
-  this->m_doubleSided = false;
-  this->m_castShadows = true;
-  this->m_opacity = 1.0;
-  this->m_opacityMask = nullptr;
-  this->m_blendMode = None;
-
-  this->m_program = nullptr;
-  this->m_sProgram = nullptr;
-  this->m_iProgram = nullptr;
-  this->m_siProgram = nullptr;
-  
-  this->m_arCache = kit::PixelBuffer::create(glm::uvec2(128, 128), {kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA8, Texture::Repeat, Texture::LinearMipmapLinear, Texture::Linear)});
-  this->m_nmCache = kit::PixelBuffer::create(glm::uvec2(128, 128), {kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA8, Texture::Repeat, Texture::LinearMipmapLinear, Texture::Linear)});
-  this->m_ndCache = kit::PixelBuffer::create(glm::uvec2(128, 128), { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA8, Texture::Repeat, Texture::LinearMipmapLinear, Texture::Linear) });
-  this->m_eoCache = kit::PixelBuffer::create(glm::uvec2(128, 128), {kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA8, Texture::Repeat, Texture::LinearMipmapLinear, Texture::Linear)});
-  
-  this->m_arDirty = true;
-  this->m_nmDirty = true;
-  this->m_ndDirty = true;
-  this->m_eoDirty = true;
-  this->m_dirty = true;
-
-  this->m_spec_uvScale = 1.0f;
-  this->m_spec_depthMask = nullptr;
 }
 
 kit::Material::~Material()
 {
+  if(m_arCache) delete m_arCache;
+  if(m_nmCache) delete m_nmCache;
+  if(m_ndCache) delete m_ndCache;
+  if(m_eoCache) delete m_eoCache;
+  if(m_albedoMap) delete m_albedoMap;
+  if(m_opacityMask) delete m_opacityMask;
+  if(m_occlusionMap) delete m_occlusionMap;
+  if(m_emissiveMap) delete m_emissiveMap;
+  if(m_normalMap) delete m_normalMap;
+  if(m_roughnessMap) delete m_roughnessMap;
+  if(m_metalnessMap) delete m_metalnessMap;
+  if(m_spec_depthMask) delete m_spec_depthMask;
+  
   kit::Material::m_instanceCount--;
   if(kit::Material::m_instanceCount == 0)
   {
@@ -557,15 +418,15 @@ kit::Material::~Material()
 
 void kit::Material::allocateShared()
 {
-  kit::Material::m_cacheProgram = kit::Program::create();
+  m_cacheProgram = new kit::Program();
 
-  auto vertexShader = kit::Shader::create(Shader::Type::Vertex);
+  auto vertexShader = new kit::Shader(Shader::Type::Vertex);
   std::stringstream vss;
   vss << glslVersion << glslCacheVertex;
   vertexShader->sourceFromString(vss.str());
   vertexShader->compile();
   
-  auto pixelShader = kit::Shader::create(Shader::Type::Fragment);
+  auto pixelShader = new kit::Shader(Shader::Type::Fragment);
   std::stringstream pss;
   pss << glslVersion << glslCacheUtils << glslCachePixel;
   pixelShader->sourceFromString(pss.str());
@@ -576,42 +437,47 @@ void kit::Material::allocateShared()
   kit::Material::m_cacheProgram->link();
   kit::Material::m_cacheProgram->detachShader(pixelShader);
   kit::Material::m_cacheProgram->detachShader(vertexShader);
+  
+  delete vertexShader;
+  delete pixelShader;
 }
 
 void kit::Material::releaseShared()
 {
-
+  delete m_cacheProgram;
+  for(auto & t : m_programCache)
+  {
+    if(t.second) delete t.second;
+  }
 }
 
 void kit::Material::renderARCache()
 {
   glm::uvec2 mapsize(2048, 2048);
-  this->m_arCache = kit::PixelBuffer::create(mapsize, {kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA8, Texture::Repeat, Texture::LinearMipmapLinear, Texture::Linear)});
-  this->m_arCache->bind();
+  m_arCache = new kit::PixelBuffer(mapsize, {kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA8, Texture::Repeat, Texture::LinearMipmapLinear, Texture::Linear)});
+  m_arCache->bind();
   kit::Material::m_cacheProgram->use();
   
-  kit::Material::m_cacheProgram->setUniform1f("uniform_defaultB", this->m_roughness);
+  kit::Material::m_cacheProgram->setUniform1f("uniform_defaultB", m_roughness);
 
-  if(this->m_roughnessMap != nullptr)
+  if(m_roughnessMap != nullptr)
   {
-    kit::Material::m_cacheProgram->setUniformTexture("uniform_mapB", this->m_roughnessMap);
+    kit::Material::m_cacheProgram->setUniformTexture("uniform_mapB", m_roughnessMap);
     kit::Material::m_cacheProgram->setUniform1i("uniform_usemapB", 1);
-    kit::Material::m_cacheProgram->setUniform2f("uniform_inputB", this->m_roughnessInput);
-    kit::Material::m_cacheProgram->setUniform2f("uniform_outputB", this->m_roughnessOutput);
   }
   else
   {
     kit::Material::m_cacheProgram->setUniform1i("uniform_usemapB", 0);
   }
   
-  if(this->m_albedoMap != nullptr)
+  if(m_albedoMap != nullptr)
   {
-    kit::Material::m_cacheProgram->setUniformTexture("uniform_mapA", this->m_albedoMap);
+    kit::Material::m_cacheProgram->setUniformTexture("uniform_mapA", m_albedoMap);
     kit::Material::m_cacheProgram->setUniform1i("uniform_usemapA", 1);
   }
   else
   {
-    kit::Material::m_cacheProgram->setUniform3f("uniform_defaultA", this->m_albedo);
+    kit::Material::m_cacheProgram->setUniform3f("uniform_defaultA", m_albedo);
     kit::Material::m_cacheProgram->setUniform1i("uniform_usemapA", 0);
   }
 
@@ -622,35 +488,33 @@ void kit::Material::renderARCache()
   kit::Quad::renderGeometry();
   
   kit::PixelBuffer::unbind();
-  this->m_arCache->getColorAttachment(0)->generateMipmap();
+  m_arCache->getColorAttachment(0)->generateMipmap();
 
-  this->m_arDirty = false;
+  m_arDirty = false;
 }
 
 void kit::Material::renderNMCache()
 {
   glm::uvec2 mapsize(2048, 2048);
-  this->m_nmCache = kit::PixelBuffer::create(mapsize, {kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA8, Texture::Repeat, Texture::LinearMipmapLinear, Texture::Linear)});
-  this->m_nmCache->bind();
+  m_nmCache = new kit::PixelBuffer(mapsize, {kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA8, Texture::Repeat, Texture::LinearMipmapLinear, Texture::Linear)});
+  m_nmCache->bind();
   kit::Material::m_cacheProgram->use();
   
-  kit::Material::m_cacheProgram->setUniform1f("uniform_defaultB", this->m_metalness);
+  kit::Material::m_cacheProgram->setUniform1f("uniform_defaultB", m_metalness);
 
-  if(this->m_metalnessMap != nullptr)
+  if(m_metalnessMap != nullptr)
   {
-    kit::Material::m_cacheProgram->setUniformTexture("uniform_mapB", this->m_metalnessMap);
+    kit::Material::m_cacheProgram->setUniformTexture("uniform_mapB", m_metalnessMap);
     kit::Material::m_cacheProgram->setUniform1i("uniform_usemapB", 1);
-    kit::Material::m_cacheProgram->setUniform2f("uniform_inputB", this->m_metalnessInput);
-    kit::Material::m_cacheProgram->setUniform2f("uniform_outputB", this->m_metalnessOutput);
   }
   else
   {
     kit::Material::m_cacheProgram->setUniform1i("uniform_usemapB", 0);
   }
   
-  if(this->m_normalMap != nullptr)
+  if(m_normalMap != nullptr)
   {
-    kit::Material::m_cacheProgram->setUniformTexture("uniform_mapA", this->m_normalMap);
+    kit::Material::m_cacheProgram->setUniformTexture("uniform_mapA", m_normalMap);
     kit::Material::m_cacheProgram->setUniform1i("uniform_usemapA", 1);
   }
   else
@@ -666,24 +530,22 @@ void kit::Material::renderNMCache()
   kit::Quad::renderGeometry();
   
   kit::PixelBuffer::unbind();
-  this->m_nmCache->getColorAttachment(0)->generateMipmap();
+  m_nmCache->getColorAttachment(0)->generateMipmap();
 
-  this->m_nmDirty = false;
+  m_nmDirty = false;
 }
 
 void kit::Material::renderNDCache()
 {
   glm::uvec2 mapsize(2048, 2048);
-  this->m_ndCache = kit::PixelBuffer::create(mapsize, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA8, Texture::Repeat, Texture::LinearMipmapLinear, Texture::Linear) });
-  this->m_ndCache->bind();
+  m_ndCache = new kit::PixelBuffer(mapsize, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA8, Texture::Repeat, Texture::LinearMipmapLinear, Texture::Linear) });
+  m_ndCache->bind();
   kit::Material::m_cacheProgram->use();
 
-  if (this->m_spec_depthMask != nullptr)
+  if (m_spec_depthMask != nullptr)
   {
-    kit::Material::m_cacheProgram->setUniformTexture("uniform_mapB", this->m_spec_depthMask);
+    kit::Material::m_cacheProgram->setUniformTexture("uniform_mapB", m_spec_depthMask);
     kit::Material::m_cacheProgram->setUniform1i("uniform_usemapB", 1);
-    kit::Material::m_cacheProgram->setUniform2f("uniform_inputB", glm::vec2(0.0f, 1.0f));
-    kit::Material::m_cacheProgram->setUniform2f("uniform_outputB", glm::vec2(0.0f, 1.0f));
   }
   else
   {
@@ -691,9 +553,9 @@ void kit::Material::renderNDCache()
     kit::Material::m_cacheProgram->setUniform1f("uniform_defaultB", 1.0f);
   }
 
-  if (this->m_normalMap != nullptr)
+  if (m_normalMap != nullptr)
   {
-    kit::Material::m_cacheProgram->setUniformTexture("uniform_mapA", this->m_normalMap);
+    kit::Material::m_cacheProgram->setUniformTexture("uniform_mapA", m_normalMap);
     kit::Material::m_cacheProgram->setUniform1i("uniform_usemapA", 1);
   }
   else
@@ -709,25 +571,23 @@ void kit::Material::renderNDCache()
   kit::Quad::renderGeometry();
 
   kit::PixelBuffer::unbind();
-  this->m_ndCache->getColorAttachment(0)->generateMipmap();
+  m_ndCache->getColorAttachment(0)->generateMipmap();
 
-  this->m_ndDirty = false;
+  m_ndDirty = false;
 }
 
 void kit::Material::renderEOCache()
 {
   glm::uvec2 mapsize(2048, 2048);
-  this->m_eoCache = kit::PixelBuffer::create(mapsize, {kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA8, Texture::Repeat, Texture::LinearMipmapLinear, Texture::Linear)});
-  this->m_eoCache->bind();
+  m_eoCache = new kit::PixelBuffer(mapsize, {kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA8, Texture::Repeat, Texture::LinearMipmapLinear, Texture::Linear)});
+  m_eoCache->bind();
   kit::Material::m_cacheProgram->use();
   
-  if(this->m_occlusionMap != nullptr)
+  if(m_occlusionMap != nullptr)
   {
-    kit::Material::m_cacheProgram->setUniform1f("uniform_defaultB", this->m_occlusionGamma);
-    kit::Material::m_cacheProgram->setUniformTexture("uniform_mapB", this->m_occlusionMap);
+    kit::Material::m_cacheProgram->setUniform1f("uniform_defaultB", 1.0f);
+    kit::Material::m_cacheProgram->setUniformTexture("uniform_mapB", m_occlusionMap);
     kit::Material::m_cacheProgram->setUniform1i("uniform_usemapB", 1);
-    kit::Material::m_cacheProgram->setUniform2f("uniform_inputB", this->m_occlusionInput);
-    kit::Material::m_cacheProgram->setUniform2f("uniform_outputB", this->m_occlusionOutput);
   }
   else
   {
@@ -735,14 +595,14 @@ void kit::Material::renderEOCache()
     kit::Material::m_cacheProgram->setUniform1i("uniform_usemapB", 0);
   }
   
-  if(this->m_emissiveMap != nullptr)
+  if(m_emissiveMap != nullptr)
   {
-    kit::Material::m_cacheProgram->setUniformTexture("uniform_mapA", this->m_emissiveMap);
+    kit::Material::m_cacheProgram->setUniformTexture("uniform_mapA", m_emissiveMap);
     kit::Material::m_cacheProgram->setUniform1i("uniform_usemapA", 1);
   }
   else
   {
-    kit::Material::m_cacheProgram->setUniform3f("uniform_defaultA", this->m_emissiveColor);
+    kit::Material::m_cacheProgram->setUniform3f("uniform_defaultA", m_emissiveColor);
     kit::Material::m_cacheProgram->setUniform1i("uniform_usemapA", 0);
   }
 
@@ -753,9 +613,9 @@ void kit::Material::renderEOCache()
   kit::Quad::renderGeometry();
   
   kit::PixelBuffer::unbind();
-  this->m_eoCache->getColorAttachment(0)->generateMipmap();
+  m_eoCache->getColorAttachment(0)->generateMipmap();
 
-  this->m_eoDirty = false;
+  m_eoDirty = false;
 }
 
 kit::Material::ProgramFlags kit::Material::getFlags(bool skinned, bool instanced)
@@ -763,21 +623,21 @@ kit::Material::ProgramFlags kit::Material::getFlags(bool skinned, bool instanced
   kit::Material::ProgramFlags flags;
   flags.m_skinned = skinned;
   flags.m_instanced = instanced;
-  flags.m_albedoMap = (this->m_albedoMap != nullptr);
-  flags.m_roughnessMap = (this->m_roughnessMap != nullptr);
-  flags.m_dynamicAR = this->m_dynamicAR;
-  flags.m_normalMap = (this->m_normalMap != nullptr);
-  flags.m_metalnessMap = (this->m_metalnessMap != nullptr);
-  flags.m_dynamicNM = this->m_dynamicNM;
-  flags.m_emissiveMap = (this->m_emissiveMap != nullptr);
-  flags.m_occlusionMap = (this->m_occlusionMap != nullptr);
-  flags.m_dynamicEO = this->m_dynamicEO;
-  flags.m_forward = (this->m_opacity < 1.0f || this->m_blendMode != kit::Material::None);
-  flags.m_opacityMask = (this->m_opacityMask != nullptr);
+  flags.m_albedoMap = (m_albedoMap != nullptr);
+  flags.m_roughnessMap = (m_roughnessMap != nullptr);
+  flags.m_dynamicAR = m_dynamicAR;
+  flags.m_normalMap = (m_normalMap != nullptr);
+  flags.m_metalnessMap = (m_metalnessMap != nullptr);
+  flags.m_dynamicNM = m_dynamicNM;
+  flags.m_emissiveMap = (m_emissiveMap != nullptr);
+  flags.m_occlusionMap = (m_occlusionMap != nullptr);
+  flags.m_dynamicEO = m_dynamicEO;
+  flags.m_forward = (m_opacity < 1.0f || m_blendMode != kit::Material::None);
+  flags.m_opacityMask = (m_opacityMask != nullptr);
   return flags;
 }
 
-kit::Program::Ptr kit::Material::getProgram(kit::Material::ProgramFlags flags)
+kit::Program * kit::Material::getProgram(kit::Material::ProgramFlags flags)
 {
   auto finder = kit::Material::m_programCache.find(flags);
   if(finder != kit::Material::m_programCache.end())
@@ -975,12 +835,6 @@ kit::Program::Ptr kit::Material::getProgram(kit::Material::ProgramFlags flags)
       {
         pixelsource << "uniform sampler2D uniform_NMMap;" << std::endl;
       }
-
-      
-      if(flags.m_normalMap)
-      {
-        pixelsource << "uniform float uniform_normalStrength;" << std::endl;
-      }
     }
 
     if(!flags.m_metalnessMap)
@@ -1169,7 +1023,6 @@ kit::Program::Ptr kit::Material::getProgram(kit::Material::ProgramFlags flags)
       {
         pixelsource << "  vec3 normalTex     = ((NMData.rgb - 0.5)*2.0);" << std::endl;
       }
-      pixelsource << "  normalTex.xy      *= uniform_normalStrength;" << std::endl;
       pixelsource << "  normalTex          = normalize(normalTex);" << std::endl;
       pixelsource << "  vec3 normal        = normalize(normalRotation * normalTex);" << std::endl;
     }
@@ -1202,7 +1055,7 @@ kit::Program::Ptr kit::Material::getProgram(kit::Material::ProgramFlags flags)
     {
       if (flags.m_opacityMask)
       {
-        pixelsource << "  float in_opacity = uniform_opacity * texture(uniform_opacityMask, in_texCoords).r;" << std::endl;
+        pixelsource << "  float in_opacity = uniform_opacity * texture(uniform_opacityMask, in_texCoords).a;" << std::endl;
       }
       else
       {
@@ -1213,7 +1066,7 @@ kit::Program::Ptr kit::Material::getProgram(kit::Material::ProgramFlags flags)
     {
       if (flags.m_opacityMask)
       {
-        pixelsource << "  float in_opacity = texture(uniform_opacityMask, in_texCoords).r;" << std::endl;
+        pixelsource << "  float in_opacity = texture(uniform_opacityMask, in_texCoords).a;" << std::endl;
         pixelsource << "  if(in_opacity < 0.5) discard;" << std::endl;
       }
     }
@@ -1235,30 +1088,34 @@ kit::Program::Ptr kit::Material::getProgram(kit::Material::ProgramFlags flags)
     }
     else
     {
-      pixelsource << "  if(in_opacity < 0.9) discard;" << std::endl;
+      //pixelsource << "  if(in_opacity < 0.9) discard;" << std::endl;
 
       pixelsource << "  out_color.rgb = in_albedo;" << std::endl;
       pixelsource << "  out_color.rgb += in_emissiveColor * in_emissiveStrength;" << std::endl;
       pixelsource << "  out_color.a =  in_opacity;" << std::endl;
+      pixelsource << "  out_color.rgb *= in_opacity;" << std::endl;
     }
 
     pixelsource << "}" << std::endl;
   }
   
-  auto vertexShader = kit::Shader::create(Shader::Type::Vertex);
+  auto vertexShader = new kit::Shader(Shader::Type::Vertex);
   vertexShader->sourceFromString(vertexsource.str());
   vertexShader->compile();
   
-  auto pixelShader = kit::Shader::create(Shader::Type::Fragment);
+  auto pixelShader = new kit::Shader(Shader::Type::Fragment);
   pixelShader->sourceFromString(pixelsource.str());
   pixelShader->compile();
   
-  kit::Program::Ptr returner = kit::Program::create();
+  kit::Program * returner = new kit::Program();
   returner->attachShader(vertexShader);
   returner->attachShader(pixelShader);
   returner->link();
   returner->detachShader(vertexShader);
   returner->detachShader(pixelShader);
+  
+  delete vertexShader;
+  delete pixelShader;
 
   kit::Material::m_programCache[flags] = returner;
   
@@ -1268,132 +1125,127 @@ kit::Program::Ptr kit::Material::getProgram(kit::Material::ProgramFlags flags)
 
 void kit::Material::setDynamicEO(bool eo)
 {
-  if (eo != this->m_dynamicEO)
+  if (eo != m_dynamicEO)
   {
-    this->m_dirty = true;
+    m_dirty = true;
   }
-  this->m_dynamicEO = eo;
+  m_dynamicEO = eo;
 }
 
 void kit::Material::assertCache()
 {
-  if(this->m_arDirty && !this->m_dynamicAR)
+  if(m_arDirty && !m_dynamicAR)
   {
-    this->renderARCache();
+    renderARCache();
   }
   
-  if(this->m_nmDirty && !this->m_dynamicNM)
+  if(m_nmDirty && !m_dynamicNM)
   {
-    this->renderNMCache();
+    renderNMCache();
   }
   
-  if (this->m_eoDirty && !this->m_dynamicEO)
+  if (m_eoDirty && !m_dynamicEO)
   {
-    this->renderEOCache();
+    renderEOCache();
   }
 
-  if (this->m_ndDirty)
+  if (m_ndDirty)
   {
-    this->renderNDCache();
+    renderNDCache();
   }
 
-  if(this->m_dirty)
+  if(m_dirty)
   {
-    kit::Material::ProgramFlags flags = this->getFlags(false, false);
-    kit::Material::ProgramFlags sflags = this->getFlags(true, false);
-    kit::Material::ProgramFlags iflags = this->getFlags(false, true);
-    kit::Material::ProgramFlags siflags = this->getFlags(true, true);
+    kit::Material::ProgramFlags flags = getFlags(false, false);
+    kit::Material::ProgramFlags sflags = getFlags(true, false);
+    kit::Material::ProgramFlags iflags = getFlags(false, true);
+    kit::Material::ProgramFlags siflags = getFlags(true, true);
   
-    this->m_program = kit::Material::getProgram(flags);
-    this->m_sProgram = kit::Material::getProgram(sflags);
-    this->m_iProgram = kit::Material::getProgram(iflags);
-    this->m_siProgram = kit::Material::getProgram(siflags);
+    m_program = kit::Material::getProgram(flags);
+    m_sProgram = kit::Material::getProgram(sflags);
+    m_iProgram = kit::Material::getProgram(iflags);
+    m_siProgram = kit::Material::getProgram(siflags);
     
-    this->m_dirty = false;
+    m_dirty = false;
   }
 }
 
-void kit::Material::use(kit::Camera::Ptr cam, const glm::mat4 & modelMatrix, const std::vector<glm::mat4> & skinTransform, const std::vector<glm::mat4> & instanceTransform)
+void kit::Material::use(kit::Camera * cam, const glm::mat4 & modelMatrix, const std::vector<glm::mat4> & skinTransform, const std::vector<glm::mat4> & instanceTransform)
 {
-  this->assertCache();
-  kit::Material::ProgramFlags flags = this->getFlags(skinTransform.size() > 0, instanceTransform.size() > 0);
+  assertCache();
+  kit::Material::ProgramFlags flags = getFlags(skinTransform.size() > 0, instanceTransform.size() > 0);
 
-  kit::Program::Ptr currProgram;
+  kit::Program * currProgram = nullptr;
   
-  if(flags.m_skinned && flags.m_instanced) currProgram = this->m_siProgram;
-  if(flags.m_skinned && !flags.m_instanced) currProgram = this->m_sProgram;
-  if(!flags.m_skinned && flags.m_instanced) currProgram = this->m_iProgram;
-  if(!flags.m_skinned && !flags.m_instanced) currProgram = this->m_program;
+  if(flags.m_skinned && flags.m_instanced) currProgram = m_siProgram;
+  if(flags.m_skinned && !flags.m_instanced) currProgram = m_sProgram;
+  if(!flags.m_skinned && flags.m_instanced) currProgram = m_iProgram;
+  if(!flags.m_skinned && !flags.m_instanced) currProgram = m_program;
 
   currProgram->use();
-  currProgram->setUniform3f("uniform_albedo", this->m_albedo);
+  currProgram->setUniform3f("uniform_albedo", m_albedo);
   
   if(flags.m_albedoMap || flags.m_roughnessMap)
   {
     if (flags.m_dynamicAR)
     {
-      if (flags.m_albedoMap) currProgram->setUniformTexture("uniform_albedoMap", this->m_albedoMap);
-      if (flags.m_roughnessMap) currProgram->setUniformTexture("uniform_roughnessMap", this->m_roughnessMap);
+      if (flags.m_albedoMap) currProgram->setUniformTexture("uniform_albedoMap", m_albedoMap);
+      if (flags.m_roughnessMap) currProgram->setUniformTexture("uniform_roughnessMap", m_roughnessMap);
     }
     else
     {
-      currProgram->setUniformTexture("uniform_ARMap", this->m_arCache->getColorAttachment(0));
+      currProgram->setUniformTexture("uniform_ARMap", m_arCache->getColorAttachment(0));
     }
   }
 
   if (!flags.m_roughnessMap)
   {
-    currProgram->setUniform1f("uniform_roughness", this->m_roughness);
+    currProgram->setUniform1f("uniform_roughness", m_roughness);
   }
   
-  currProgram->setUniform3f("uniform_emissiveColor", this->m_emissiveColor);
-  currProgram->setUniform1f("uniform_emissiveStrength", this->m_emissiveStrength);
+  currProgram->setUniform3f("uniform_emissiveColor", m_emissiveColor);
+  currProgram->setUniform1f("uniform_emissiveStrength", m_emissiveStrength);
   
   if (flags.m_emissiveMap || flags.m_occlusionMap)
   {
     if (flags.m_dynamicEO)
     {
-      if(flags.m_occlusionMap) currProgram->setUniformTexture("uniform_occlusionMap", this->m_occlusionMap);
-      if(flags.m_emissiveMap) currProgram->setUniformTexture("uniform_emissiveMap", this->m_emissiveMap);
+      if(flags.m_occlusionMap) currProgram->setUniformTexture("uniform_occlusionMap", m_occlusionMap);
+      if(flags.m_emissiveMap) currProgram->setUniformTexture("uniform_emissiveMap", m_emissiveMap);
     }
     else
     {
-      currProgram->setUniformTexture("uniform_EOMap", this->m_eoCache->getColorAttachment(0));
+      currProgram->setUniformTexture("uniform_EOMap", m_eoCache->getColorAttachment(0));
     }
   }
 
   if(flags.m_normalMap || flags.m_metalnessMap)
   {
-    if (flags.m_normalMap)
-    {
-      currProgram->setUniform1f("uniform_normalStrength", this->m_normalStrength);
-    }
-
     if (flags.m_dynamicNM)
     {
-      if (flags.m_normalMap) currProgram->setUniformTexture("uniform_normalMap", this->m_normalMap);
-      if (flags.m_metalnessMap) currProgram->setUniformTexture("uniform_metalnessMap", this->m_metalnessMap);
+      if (flags.m_normalMap) currProgram->setUniformTexture("uniform_normalMap", m_normalMap);
+      if (flags.m_metalnessMap) currProgram->setUniformTexture("uniform_metalnessMap", m_metalnessMap);
     }
     else
     {
-      currProgram->setUniformTexture("uniform_NMMap", this->m_nmCache->getColorAttachment(0));
+      currProgram->setUniformTexture("uniform_NMMap", m_nmCache->getColorAttachment(0));
     }
 
   }
 
   if(!flags.m_metalnessMap)
   {
-    currProgram->setUniform1f("uniform_metalness", this->m_metalness);
+    currProgram->setUniform1f("uniform_metalness", m_metalness);
   }
   
   if (flags.m_forward)
   {
-    currProgram->setUniform1f("uniform_opacity", this->m_opacity);
+    currProgram->setUniform1f("uniform_opacity", m_opacity);
   }
 
   if (flags.m_opacityMask)
   {
-    currProgram->setUniformTexture("uniform_opacityMask", this->m_opacityMask);
+    currProgram->setUniformTexture("uniform_opacityMask", m_opacityMask);
   }
 
   if(flags.m_skinned)
@@ -1418,7 +1270,7 @@ void kit::Material::use(kit::Camera::Ptr cam, const glm::mat4 & modelMatrix, con
   currProgram->setUniformMat4("uniform_mvpMatrix", modelViewProjectionMatrix);
   currProgram->setUniformMat3("uniform_normalMatrix", normalMatrix);
 
-  if (this->m_depthRead)
+  if (m_depthRead)
   {
     glEnable(GL_DEPTH_TEST);
   }
@@ -1426,9 +1278,9 @@ void kit::Material::use(kit::Camera::Ptr cam, const glm::mat4 & modelMatrix, con
   {
     glDisable(GL_DEPTH_TEST);
   }
-  glDepthMask( this->m_depthWrite ? GL_TRUE : GL_FALSE );
+  glDepthMask( m_depthWrite ? GL_TRUE : GL_FALSE );
 
-  if (this->m_doubleSided)
+  if (m_doubleSided)
   {
     glDisable(GL_CULL_FACE);
   }
@@ -1438,14 +1290,14 @@ void kit::Material::use(kit::Camera::Ptr cam, const glm::mat4 & modelMatrix, con
     glCullFace(GL_BACK);
   }
 
-  if (this->m_blendMode == None)
+  if (m_blendMode == None)
   {
     glDisable(GL_BLEND);
   }
   else
   {
     glEnable(GL_BLEND);
-    if (this->m_blendMode == Add)
+    if (m_blendMode == Add)
     {
       glBlendFunc(GL_ONE, GL_ONE);
     }
@@ -1458,391 +1310,280 @@ void kit::Material::use(kit::Camera::Ptr cam, const glm::mat4 & modelMatrix, con
 
 const bool & kit::Material::getCastShadows()
 {
-  return this->m_castShadows;
+  return m_castShadows;
 }
 
 void kit::Material::setCastShadows(bool b)
 {
-  this->m_castShadows = b;
+  m_castShadows = b;
 }
 
 const glm::vec3 & kit::Material::getAlbedo()
 {
-  return this->m_albedo;
+  return m_albedo;
 }
 
 void kit::Material::setAlbedo(glm::vec3 albedo)
 {
-  if (this->m_albedo != albedo)
+  if (m_albedo != albedo)
   {
-    this->m_albedo = albedo;
-    this->m_arDirty = true;
+    m_albedo = albedo;
+    m_arDirty = true;
   }
 }
 
-kit::Texture::Ptr kit::Material::getAlbedoMap()
+kit::Texture * kit::Material::getAlbedoMap()
 {
-  return this->m_albedoMap;
+  return m_albedoMap;
 }
 
-void kit::Material::setAlbedoMap(kit::Texture::Ptr albedoMap)
+void kit::Material::setAlbedoMap(kit::Texture * albedoMap)
 { 
-  if (this->m_albedoMap != albedoMap)
+  if (m_albedoMap != albedoMap)
   {
-    this->m_dirty = true;
+    m_dirty = true;
   }
-  this->m_albedoMap = albedoMap;
-  this->m_arDirty = true;
+  m_albedoMap = albedoMap;
+  m_arDirty = true;
 }
 
-kit::Texture::Ptr kit::Material::getOcclusionMap()
+kit::Texture * kit::Material::getOcclusionMap()
 {
-  return this->m_occlusionMap;
+  return m_occlusionMap;
 }
 
-void kit::Material::setOcclusionMap(kit::Texture::Ptr c)
+void kit::Material::setOcclusionMap(kit::Texture * c)
 {
-  if (c != this->m_occlusionMap)
+  if (c != m_occlusionMap)
   {
-    this->m_dirty = true;
+    m_dirty = true;
   }
-  this->m_occlusionMap = c;
-  this->m_eoDirty = true;
+  m_occlusionMap = c;
+  m_eoDirty = true;
 }
 
-const float & kit::Material::getOcclusionGamma()
+kit::Texture * kit::Material::getNormalMap()
 {
-  return this->m_occlusionGamma;
+  return m_normalMap;
 }
 
-void kit::Material::setOcclusionGamma(float gamma)
+void kit::Material::setNormalMap(kit::Texture * normalMap)
 {
-  if (gamma != this->m_occlusionGamma)
+  if (normalMap != m_normalMap)
   {
-    this->m_occlusionGamma = gamma;
-    this->m_eoDirty = true;
+    m_dirty = true;
   }
-}
-
-const glm::vec2 & kit::Material::getOcclusionInput()
-{
-  return this->m_occlusionInput;
-}
-
-void kit::Material::setOcclusionInput(glm::vec2 input)
-{
-  if (this->m_occlusionInput != input)
-  {
-    this->m_occlusionInput = input;
-    this->m_eoDirty = true;
-  }
-}
-
-const glm::vec2 & kit::Material::getOcclusionOutput()
-{
-  return this->m_occlusionOutput;
-}
-
-void kit::Material::setOcclusionOutput(glm::vec2 output)
-{
-  if (this->m_occlusionOutput != output)
-  {
-    this->m_occlusionOutput = output;
-    this->m_eoDirty = true;
-  }
-}
-
-const float & kit::Material::getNormalStrength()
-{
-  return this->m_normalStrength;
-}
-
-void kit::Material::setNormalStrength(float strength)
-{
-  if (strength != this->m_normalStrength)
-  {
-    this->m_normalStrength = strength;
-  }
-}
-
-kit::Texture::Ptr kit::Material::getNormalMap()
-{
-  return this->m_normalMap;
-}
-
-void kit::Material::setNormalMap(kit::Texture::Ptr normalMap)
-{
-  if (normalMap != this->m_normalMap)
-  {
-    this->m_dirty = true;
-  }
-  this->m_normalMap = normalMap;
-  this->m_nmDirty = true;
-  this->m_ndDirty = true;
+  m_normalMap = normalMap;
+  m_nmDirty = true;
+  m_ndDirty = true;
 }
 
 const float & kit::Material::getRoughness()
 {
-  return this->m_roughness;
+  return m_roughness;
 }
 
 void kit::Material::setRoughness(float roughness)
 {
-  if (this->m_roughness != roughness)
+  if (m_roughness != roughness)
   {
-    this->m_roughness = roughness;
-    this->m_arDirty = true;
+    m_roughness = roughness;
+    m_arDirty = true;
   }
 }
 
-const glm::vec2 & kit::Material::getRoughnessInput()
+kit::Texture * kit::Material::getRoughnessMap()
 {
-  return this->m_roughnessInput;
+  return m_roughnessMap;
 }
 
-void kit::Material::setRoughnessInput(glm::vec2 input)
+void kit::Material::setRoughnessMap(kit::Texture * roughnessMap)
 {
-  if (this->m_roughnessInput != input)
+  if (roughnessMap != m_roughnessMap)
   {
-    this->m_roughnessInput = input;
-    this->m_arDirty = true;
+    m_dirty = true;
   }
-}
-
-const glm::vec2 & kit::Material::getRoughnessOutput()
-{
-  return this->m_roughnessOutput;
-}
-
-void kit::Material::setRoughnessOutput(glm::vec2 output)
-{
-  if (this->m_roughnessOutput != output)
-  {
-    this->m_roughnessOutput = output;
-    this->m_arDirty = true;
-  }
-}
-
-kit::Texture::Ptr kit::Material::getRoughnessMap()
-{
-  return this->m_roughnessMap;
-}
-
-void kit::Material::setRoughnessMap(kit::Texture::Ptr roughnessMap)
-{
-  if (roughnessMap != this->m_roughnessMap)
-  {
-    this->m_dirty = true;
-  }
-  this->m_roughnessMap = roughnessMap;
-  this->m_arDirty = true;
+  m_roughnessMap = roughnessMap;
+  m_arDirty = true;
 }
 
 const float & kit::Material::getMetalness()
 {
-  return this->m_metalness;
+  return m_metalness;
 }
 
 void kit::Material::setMetalness(float metalness)
 {
-  if (metalness != this->m_metalness)
+  if (metalness != m_metalness)
   {
-    this->m_metalness = metalness;
-    this->m_nmDirty = true;
+    m_metalness = metalness;
+    m_nmDirty = true;
   }
 }
 
-const glm::vec2 & kit::Material::getMetalnessInput()
+kit::Texture * kit::Material::getMetalnessMap()
 {
-  return this->m_metalnessInput;
+  return m_metalnessMap;
 }
 
-void kit::Material::setMetalnessInput(glm::vec2 input)
-{
-  if (this->m_metalnessInput != input)
-  {
-    this->m_metalnessInput = input;
-    this->m_nmDirty = true;
-  }
-}
-
-const glm::vec2 & kit::Material::getMetalnessOutput()
-{
-  return this->m_metalnessOutput;
-}
-
-void kit::Material::setMetalnessOutput(glm::vec2 output)
-{
-  if (this->m_metalnessOutput != output)
-  {
-    this->m_metalnessOutput = output;
-    this->m_nmDirty = true;
-  }
-}
-
-kit::Texture::Ptr kit::Material::getMetalnessMap()
-{
-  return this->m_metalnessMap;
-}
-
-void kit::Material::setMetalnessMap(kit::Texture::Ptr metalnessMap)
+void kit::Material::setMetalnessMap(kit::Texture * metalnessMap)
 { 
-  if (this->m_metalnessMap != metalnessMap)
+  if (m_metalnessMap != metalnessMap)
   {
-    this->m_dirty = true;
+    m_dirty = true;
   }
-  this->m_metalnessMap = metalnessMap;
-  this->m_nmDirty = true;
+  m_metalnessMap = metalnessMap;
+  m_nmDirty = true;
 }
 
-kit::Texture::Ptr kit::Material::getARCache()
+kit::Texture * kit::Material::getARCache()
 {
-  return this->m_arCache->getColorAttachment(0);
+  return m_arCache->getColorAttachment(0);
 }
 
-kit::Texture::Ptr kit::Material::getNMCache()
+kit::Texture * kit::Material::getNMCache()
 {
-  return this->m_nmCache->getColorAttachment(0);
+  return m_nmCache->getColorAttachment(0);
 }
 
-kit::Texture::Ptr kit::Material::getNDCache()
+kit::Texture * kit::Material::getNDCache()
 {
-  return this->m_ndCache->getColorAttachment(0);
+  return m_ndCache->getColorAttachment(0);
 }
 
 kit::Material::ProgramFlags::ProgramFlags()
 {
-  this->m_skinned = false;
-  this->m_instanced = false;
-  this->m_dynamicAR = false;
-  this->m_albedoMap = false;
-  this->m_roughnessMap = false;
-  this->m_dynamicNM = false;
-  this->m_normalMap = false;
-  this->m_metalnessMap = false;
-  this->m_dynamicEO = false;
-  this->m_emissiveMap = false;
-  this->m_occlusionMap = false;
+  m_skinned = false;
+  m_instanced = false;
+  m_dynamicAR = false;
+  m_albedoMap = false;
+  m_roughnessMap = false;
+  m_dynamicNM = false;
+  m_normalMap = false;
+  m_metalnessMap = false;
+  m_dynamicEO = false;
+  m_emissiveMap = false;
+  m_occlusionMap = false;
 }
 
 glm::vec3 const & kit::Material::getEmissiveColor()
 {
-  return this->m_emissiveColor;
+  return m_emissiveColor;
 }
 
 void kit::Material::setEmissiveColor(glm::vec3 c)
 {
-  if (c != this->m_emissiveColor)
+  if (c != m_emissiveColor)
   {
-    this->m_emissiveColor = c;
-    this->m_eoDirty = true;
+    m_emissiveColor = c;
+    m_eoDirty = true;
   }
 }
 
 float const & kit::Material::getEmissiveStrength()
 {
-  return this->m_emissiveStrength;
+  return m_emissiveStrength;
 }
 
 void kit::Material::setEmissiveStrength(float v)
 {
-  if (v != this->m_emissiveStrength)
+  if (v != m_emissiveStrength)
   {
-    this->m_emissiveStrength = v;
-    this->m_eoDirty = true;
+    m_emissiveStrength = v;
+    m_eoDirty = true;
   }
 }
 
-kit::Texture::Ptr kit::Material::getEmissiveMap()
+kit::Texture * kit::Material::getEmissiveMap()
 {
-  return this->m_emissiveMap;
+  return m_emissiveMap;
 }
 
-void kit::Material::setEmissiveMap(kit::Texture::Ptr em)
+void kit::Material::setEmissiveMap(kit::Texture * em)
 {
-  if (em != this->m_emissiveMap)
+  if (em != m_emissiveMap)
   {
-    this->m_dirty = true;
+    m_dirty = true;
   }
 
-  this->m_emissiveMap = em;
-  this->m_eoDirty = true;
+  m_emissiveMap = em;
+  m_eoDirty = true;
 }
 
 bool const & kit::Material::getDepthRead()
 {
-  return this->m_depthRead;
+  return m_depthRead;
 }
 
 void kit::Material::setDepthRead(bool enabled)
 {
-  this->m_depthRead = enabled;
+  m_depthRead = enabled;
 }
 
 bool const & kit::Material::getDepthWrite()
 {
-  return this->m_depthWrite;
+  return m_depthWrite;
 }
 
 void kit::Material::setDepthWrite(bool enabled)
 {
-  this->m_depthWrite = enabled;
+  m_depthWrite = enabled;
 }
 
 float const & kit::Material::getOpacity()
 {
-  return this->m_opacity;
+  return m_opacity;
 }
 
 void kit::Material::setOpacity(float v)
 {
-  if (v != this->m_opacity)
+  if (v != m_opacity)
   {
-    this->m_opacity = v;
-    this->m_dirty = true;
+    m_opacity = v;
+    m_dirty = true;
   }
 }
 
-kit::Texture::Ptr kit::Material::getOpacityMask()
+kit::Texture * kit::Material::getOpacityMask()
 {
-  return this->m_opacityMask;
+  return m_opacityMask;
 }
 
 void kit::Material::setDoubleSided(bool e)
 {
-  this->m_doubleSided = e;
+  m_doubleSided = e;
 }
 
 bool const & kit::Material::getDoubleSided()
 {
-  return this->m_doubleSided;
+  return m_doubleSided;
 }
 
 std::string kit::Material::getName()
 {
-  return this->m_filename;
+  return m_filename;
 }
 
-void kit::Material::setDepthMask(kit::Texture::Ptr m)
+void kit::Material::setDepthMask(kit::Texture * m)
 {
-  if (this->m_spec_depthMask != m)
+  if (m_spec_depthMask != m)
   {
-    this->m_spec_depthMask = m;
-    this->m_ndDirty = true;
+    m_spec_depthMask = m;
+    m_ndDirty = true;
   }
 }
 
-kit::Texture::Ptr kit::Material::getDepthMask()
+kit::Texture * kit::Material::getDepthMask()
 {
-  return this->m_spec_depthMask;
+  return m_spec_depthMask;
 }
 
 void kit::Material::setUvScale(float uv)
 {
-  this->m_spec_uvScale = uv;
+  m_spec_uvScale = uv;
 }
 
 float kit::Material::getUvScale()
 {
-  return this->m_spec_uvScale;
+  return m_spec_uvScale;
 }

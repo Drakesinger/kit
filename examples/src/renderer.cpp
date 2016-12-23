@@ -27,36 +27,36 @@ int main(int argc, char **argv)
   winArgs.title = std::string("Sphere example");
   winArgs.resolution = glm::uvec2(1280, 720);
 
-  auto win = kit::Window::create(winArgs);
+  auto win = new kit::Window(winArgs);
 
   // Create our renderer, set it's resolution to fit the windows resolution
-  auto renderer = kit::Renderer::create(glm::uvec2(1280, 720));
+  auto renderer = new kit::Renderer(glm::uvec2(1280, 720));
 
   // Create a render payload, anything we add to this will get rendered in our renderer
-  auto payload = kit::RenderPayload::create();
+  auto payload = new kit::RenderPayload();
   renderer->registerPayload(payload);
 
   // Create a fullscreen quad, so we can blit what the renderer produce to the screen
-  auto screenQuad = kit::Quad::create();
+  auto screenQuad = new kit::Quad();
 
   // Create a camera. fov of 72 degrees, aspect ratio according to resolution, and a short cliprange
   // Position the camera 2 meters backwards (Z- is forward)
-  auto camera = kit::Camera::create(72.0f, 1280.0f / 720.0f, glm::vec2(0.1f, 100.0f));
+  auto camera = new kit::Camera(72.0f, 1280.0f / 720.0f, glm::vec2(0.1f, 100.0f));
   camera->setPosition(glm::vec3(0.0f, 0.0f, 3.0f));
 
   // Create an environment light so that we can see what we render (IBL = Imagebased light)
-  auto light = kit::Light::create(kit::Light::IBL);
+  auto light = new kit::Light(kit::Light::IBL);
   light->setEnvironment("fortpoint");
   light->setColor(glm::vec3(1.0f, 1.0f, 1.0f) * 3.0f);
   payload->addLight(light);
 
   // Create a sphere model
-  auto sphere = kit::Model::create("Sphere.mesh");
+  auto sphere = new kit::Model("Sphere.mesh");
   sphere->rotateX(90.0f); // Rotate it 90 degrees (the sphere model has an ugly UV seam)
   payload->addRenderable(sphere); // Dont forget to add the sphere to the payload
 
   // Create a discrete skybox, base it on the environment light
-  auto skybox = kit::Skybox::create(light->getIrradianceMap());
+  auto skybox = new kit::Skybox("fortpoint");
   skybox->setStrength(0.5f);
   renderer->setSkybox(skybox);
 
@@ -116,4 +116,13 @@ int main(int argc, char **argv)
     // Flip the buffers so that what we just rendered is visible on the window
     win->display();
   }
+  
+  delete skybox;
+  delete sphere;
+  delete light;
+  delete camera;
+  delete screenQuad;
+  delete payload;
+  delete renderer;
+  delete win;
 }

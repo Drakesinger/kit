@@ -1,4 +1,4 @@
-#ifndef KIT_WATER_HPP
+/*#ifndef KIT_WATER_HPP
 #define KIT_WATER_HPP
 
 #include "Kit/Renderable.hpp"
@@ -9,24 +9,24 @@
 namespace kit 
 {
   class Camera;
-  typedef std::shared_ptr<Camera> CameraPtr;
+  
 
   class Program;
-  typedef std::shared_ptr<Program> ProgramPtr;
+  
 
   class Texture;
-  typedef std::shared_ptr<Texture> TexturePtr;
+  
 
   class Cubemap;
-  typedef std::shared_ptr<Cubemap> CubemapPtr;
+  
 
   class Renderer;
-  typedef std::shared_ptr<Renderer> RendererPtr;
+  
 
   class Water : public kit::Renderable
   {
     public:
-      typedef std::shared_ptr<Water> Ptr;
+      
 
       static Ptr create(glm::uvec2 resolution);
 
@@ -73,4 +73,4 @@ namespace kit
   };
 }
 
-#endif
+#endif*/

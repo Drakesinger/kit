@@ -1,10 +1,7 @@
-#ifndef KIT_CAMERA_HPP
-#define KIT_CAMERA_HPP
+#pragma once
 
 #include "Kit/Export.hpp"
 #include "Kit/Transformable.hpp"
-
-#include<memory>
 
 namespace kit 
 {
@@ -14,8 +11,6 @@ namespace kit
   class KITAPI Camera : public kit::Transformable
   {
     public: 
-
-      typedef std::shared_ptr<Camera> Ptr;
 
       ///
       /// \brief Constructor
@@ -30,17 +25,6 @@ namespace kit
       /// \brief Destructor
       ///
       ~Camera();
-
-      /// 
-      /// \brief Creates a camera given a vertical fov, aspect ratio and clip range (near/far)
-      ///
-      /// \param fov Vertical field-of-view
-      /// \param aspect_ratio Aspect ratio
-      /// \param cliprange Cliprange. near in x, far in y.
-      ///
-      /// \returns A shared pointer pointing to the newly created camera
-      ///
-      static kit::Camera::Ptr create(float fov, float aspect_ratio, glm::vec2 cliprange);
 
       ///
       /// \returns The view matrix (inverse camera transform)
@@ -117,7 +101,4 @@ namespace kit
       float             m_exposure;
       float             m_whitepoint;
   };
-  
 }
-
-#endif

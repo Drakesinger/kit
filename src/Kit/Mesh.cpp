@@ -4,7 +4,7 @@
 #include "Kit/Submesh.hpp"
 #include "Kit/Camera.hpp"
 #include "Kit/Material.hpp"
-#include <Kit/ConvexHull.hpp>
+#include "Kit/ConvexHull.hpp"
 
 #include <fstream>
 
@@ -15,28 +15,16 @@ kit::Mesh::Mesh()
 
 kit::Mesh::~Mesh()
 {
-  this->m_submeshEntries.clear();
+  m_submeshEntries.clear();
 }
 
-
-kit::Mesh::Ptr kit::Mesh::create()
+kit::Mesh::Mesh(const std::string&filename)
 {
-  //return kit::Mesh::Ptr(new kit::Mesh());
-  return std::make_shared<kit::Mesh>();
-}
-
-kit::Mesh::Ptr kit::Mesh::load(const std::string&filename)
-{
-  kit::Mesh::Ptr returner = kit::Mesh::create();
-  
-  std::cout << "Attempting to load mesh from file " << filename.c_str() << std::endl;
-
   std::fstream fhandle(std::string("./data/meshes/") + filename);
   if(!fhandle)
   {
     KIT_THROW("Could not open mesh file for reading");
   }
-  
   
   std::string currline = "";
   while(std::getline(fhandle, currline))
@@ -50,7 +38,7 @@ kit::Mesh::Ptr kit::Mesh::load(const std::string&filename)
       if(identifier == std::string("submesh"))
       {
         KIT_ASSERT(currtokens.size() == 4 /* Submesh needs 3 arguments (submesh <name> <geometry-filename> <material-filename>) */);
-        returner->addSubmeshEntry(currtokens[1], kit::Submesh::load(currtokens[2]), kit::Material::load(currtokens[3]));
+        addSubmeshEntry(currtokens[1], kit::Submesh::load(currtokens[2]), kit::Material::load(currtokens[3]));
       }
       else if (identifier == std::string("skeleton"))
       {
@@ -63,37 +51,35 @@ kit::Mesh::Ptr kit::Mesh::load(const std::string&filename)
     }
   }
   
-  fhandle.close();
-  return returner;
-  
+  fhandle.close();  
 }
 
 void kit::Mesh::setSubmeshEnabled(const std::string&name, bool b)
 {
-  this->m_submeshesEnabled.at(name) = b;
+  m_submeshesEnabled.at(name) = b;
 }
 
-void kit::Mesh::addSubmeshEntry(const std::string&name, kit::Submesh::Ptr geometry, kit::Material::Ptr material)
+void kit::Mesh::addSubmeshEntry(const std::string&name, kit::Submesh* geometry, kit::Material* material)
 {
-  this->m_submeshEntries[name].m_material = material;
-  this->m_submeshEntries[name].m_submesh = geometry;
-  this->m_submeshesEnabled[name] = true;
+  m_submeshEntries[name].m_material = material;
+  m_submeshEntries[name].m_submesh = geometry;
+  m_submeshesEnabled[name] = true;
 }
 
 kit::Mesh::SubmeshEntry* kit::Mesh::getSubmeshEntry(const std::string&name)
 {
-  if (this->m_submeshEntries.find(name) == this->m_submeshEntries.end())
+  if (m_submeshEntries.find(name) == m_submeshEntries.end())
   {
     KIT_THROW("No such submesh in mesh");
   }
-  return &this->m_submeshEntries.at(name);
+  return &m_submeshEntries.at(name);
 }
 
-void kit::Mesh::render(kit::Camera::Ptr camera, const glm::mat4 & modelMatrix, bool isForwardPass, const std::vector<glm::mat4> & skinTransform, const std::vector<glm::mat4> & instanceTransform)
+void kit::Mesh::render(kit::Camera * camera, const glm::mat4 & modelMatrix, bool isForwardPass, const std::vector<glm::mat4> & skinTransform, const std::vector<glm::mat4> & instanceTransform)
 {
-  for(auto & currSubmesh : this->m_submeshEntries)
+  for(auto & currSubmesh : m_submeshEntries)
   {
-    if (this->m_submeshesEnabled.at(currSubmesh.first))
+    if (m_submeshesEnabled.at(currSubmesh.first))
     {
       bool materialForward = currSubmesh.second.m_material->getFlags(skinTransform.size() > 0, instanceTransform.size() > 0).m_forward;
       if(isForwardPass != materialForward)
@@ -117,9 +103,9 @@ void kit::Mesh::render(kit::Camera::Ptr camera, const glm::mat4 & modelMatrix, b
 
 void kit::Mesh::renderGeometry()
 {
-  for (auto & currSubmesh : this->m_submeshEntries)
+  for (auto & currSubmesh : m_submeshEntries)
   {
-    if (this->m_submeshesEnabled.at(currSubmesh.first))
+    if (m_submeshesEnabled.at(currSubmesh.first))
     {
       currSubmesh.second.m_submesh->renderGeometry();
     }
@@ -128,5 +114,5 @@ void kit::Mesh::renderGeometry()
 
 std::map< std::string, kit::Mesh::SubmeshEntry > & kit::Mesh::getSubmeshEntries()
 {
-  return this->m_submeshEntries;
+  return m_submeshEntries;
 }

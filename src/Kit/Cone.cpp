@@ -78,12 +78,6 @@ void kit::Cone::renderGeometry()
   glDrawElements(GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0);
 }
 
-kit::Cone::Ptr kit::Cone::create(float radius, float depth, uint32_t sectors)
-{
-  return std::make_shared<kit::Cone>(radius, depth, sectors);
-}
-
-
 void kit::Cone::allocateBuffers()
 {
   glGenVertexArrays(1, &this->m_glVertexArray);

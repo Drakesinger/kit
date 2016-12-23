@@ -29,11 +29,6 @@ kit::Shader::~Shader()
   glDeleteShader(this->m_glHandle);
 }
 
-kit::Shader::Ptr kit::Shader::create(kit::Shader::Type type)
-{
-  return std::make_shared<kit::Shader>(type);
-}
-
 bool kit::Shader::sourceFromFile(std::string const & filename)
 {
   std::string line;

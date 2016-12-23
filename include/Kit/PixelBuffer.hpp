@@ -1,8 +1,6 @@
-#ifndef KIT_RENDERTEXTURE_HPP
-#define KIT_RENDERTEXTURE_HPP
+#pragma once 
 
 #include "Kit/Export.hpp"
-
 #include "Kit/Types.hpp"
 #include "Kit/Texture.hpp"
 
@@ -16,7 +14,7 @@ namespace kit {
   ///
   class KITAPI PixelBuffer {
     public:
-      typedef std::shared_ptr<PixelBuffer> Ptr;
+      
 
       ///
       /// \brief Decides what to target when binding the FBO. Corresponds to GL_FRAMEBUFFER, GL_READ_FRAMEBUFFER, and GL_DRAW_FRAMEBUFFER.
@@ -46,12 +44,12 @@ namespace kit {
         /// \brief Constructor. Uses pre-existing texture
         /// \param texture Texture to use for attachment
         ///
-        AttachmentInfo(kit::Texture::Ptr texture);
+        AttachmentInfo(kit::Texture * texture);
 
         ///
         /// \brief If not null, the attachment will be created using this texture
         /// 
-        kit::Texture::Ptr texture;
+        kit::Texture * texture = nullptr;
 
         ///
         /// \brief If texture is null, the attachment will be created using these parameters
@@ -67,11 +65,6 @@ namespace kit {
       ///
       typedef std::vector<AttachmentInfo> AttachmentList;
 
-      ///
-      /// \brief Constructor (FOR INTERNAL USE ONLY)
-      ///
-      /// You should NEVER instance this as usual. ALWAYS use smart pointers (std::shared_ptr), and create them explicitly using the `create` methods!
-      ///
       PixelBuffer();
 
       ///
@@ -82,43 +75,31 @@ namespace kit {
       /// 
       /// \brief Creates a pixelbuffer given a resolution, a list of color attachments and a depth attachment
       ///
-      /// You should only use the static `create` methods to create instances. Avoid instancing this class yourself!
-      ///
       /// \param resolution Resolution of the pixelbuffer 
       /// \param colorattachments A list of color attachments to use 
       /// \param depthattachment The depth attachment to use
       ///
       /// \throws kit::Exception If any attachment texture has a resolution that does not equal the passed resolution parameter
       /// \throws kit::Exception If the texture format for the depth attachment is not kit::Texture::DepthComponent16, kit::Texture::DepthComponent24 or kit::Texture::DepthComponent32F
-      ///
-      /// \returns A shared pointer to the newly created pixelbuffer
-      ///
-      static kit::PixelBuffer::Ptr create(glm::uvec2 resolution, AttachmentList colorattachments, AttachmentInfo depthattachment);
+      //
+      PixelBuffer(glm::uvec2 resolution, AttachmentList colorattachments, AttachmentInfo depthattachment);
 
       /// 
       /// \brief Creates a pixelbuffer given a resolution and a list of color attachments
-      ///
-      /// You should only use the static `create` methods to create instances. Avoid instancing this class yourself!
       ///
       /// \param resolution Resolution of the pixelbuffer 
       /// \param colorattachments A list of color attachments to use 
       ///
       /// \throws kit::Exception If any attachment texture has a resolution that does not equal the passed resolution parameter
       ///
-      /// \returns A shared pointer to the newly created pixelbuffer
-      ///
-      static kit::PixelBuffer::Ptr create(glm::uvec2 resolution, AttachmentList colorattachments);
+      PixelBuffer(glm::uvec2 resolution, AttachmentList colorattachments);
 
       /// 
       /// \brief Creates a pixelbuffer optimized for shadowmapping
       ///
-      /// You should only use the static `create` methods to create instances. Avoid instancing this class yourself!
-      ///
       /// \param resolution Resolution of the pixelbuffer 
       ///
-      /// \returns A shared pointer to the newly created pixelbuffer
-      ///
-      static kit::PixelBuffer::Ptr createShadowBuffer(glm::uvec2 resolution);
+      static kit::PixelBuffer * createShadowBuffer(glm::uvec2 resolution);
 
       ///
       /// \brief Binds the underlying FBO
@@ -202,12 +183,12 @@ namespace kit {
       /// \param index The attachment index
       /// \throws kit::Exception If index is out of range
       ///
-      kit::Texture::Ptr getColorAttachment(uint32_t index);
+      kit::Texture * getColorAttachment(uint32_t index);
 
       ///
       /// \returns A shared pointer to the texture from the depth attachment
       ///
-      kit::Texture::Ptr getDepthAttachment();
+      kit::Texture * getDepthAttachment();
 
       /// \brief Read a single pixel from a given attachment 
       /// \param index The attachment index
@@ -228,14 +209,23 @@ namespace kit {
       /// \param stencilMask Whether to blit the stencilmask
       /// \throws kit::Exception If the source pixelbuffer doesn't have the same amount of color attachments
       /// \throws kit::Exception If the componentmask doesn't have the same amount of color attachments
-      void blitFrom(kit::PixelBuffer::Ptr source, bool colorMask, std::vector<std::array<bool, 4>> componentMask, bool depthMask, bool stencilMask);
+      void blitFrom(kit::PixelBuffer * source, bool colorMask, std::vector<std::array<bool, 4>> componentMask, bool depthMask, bool stencilMask);
 
     private:
-      uint32_t                         m_glHandle;
-      kit::Texture::Ptr              m_depthAttachment;
-      std::vector<kit::Texture::Ptr> m_colorAttachments;
+      
+      struct AttachmentEntry
+      {
+        AttachmentEntry(kit::Texture *, bool);
+        ~AttachmentEntry();
+        kit::Texture * texture = nullptr;
+        bool ownTexture = false;
+      };
+      
+      uint32_t                         m_glHandle = 0;
+      kit::Texture *              m_depthAttachment = nullptr;
+      bool m_ownDepth = false;
+      std::vector<AttachmentEntry> m_colorAttachments;
       glm::uvec2                   m_resolution;
   };
 }
 
-#endif // KIT_RENDERTEXTURE_HPP

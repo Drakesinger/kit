@@ -4,8 +4,6 @@
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
 
-
-#include <memory>
 #include <map>
 #include <string>
 
@@ -184,30 +182,15 @@ namespace kit{
         UnsignedInt2101010Rev = GLK_UNSIGNED_INT_2_10_10_10_REV
       };
 
-      typedef std::shared_ptr<kit::Texture> Ptr;
-      typedef std::weak_ptr<kit::Texture> WPtr;
-
       ///
-      /// \brief Constructor (FOR INTERNAL USE ONLY)
+      /// \brief Constructor
       /// 
-      /// \param t The texture type to initialize this texture with
-      ///
-      /// You should NEVER instance this as usual. ALWAYS use smart pointers (std::shared_ptr), and create them explicitly using the `create` methods!
+      /// \param t The texture type to initialize this texture as
       ///
       Texture(Type t);
 
-      ///
-      /// \brief Destructor
-      ///
-      ~Texture();
-
-
-      // ---- Primary constructors
-
       /// 
       /// \brief Creates an empty 2D texture
-      ///
-      /// You should only use the static `create` methods to create instances. Avoid instancing this class yourself!
       ///
       /// \param resolution Resolution of the new texture
       /// \param format The internal format of the new texture
@@ -215,12 +198,24 @@ namespace kit{
       /// \param minfilter The minification filtering mode of the new texture.
       /// \param magfilter The magnification filtering mode of the new texture. Valid paramters are Nearest and Linear.
       ///
-      /// \returns A shared pointer pointing to the newly created texture
+      Texture(glm::uvec2 resolution, InternalFormat format, EdgeSamplingMode edgemode = ClampToEdge, FilteringMode minfilter = Linear, FilteringMode magfilter = Linear);
+
+      /// 
+      /// \brief Creates a 2D texture and loads its content from a file
       ///
-      static kit::Texture::Ptr create2D(glm::uvec2 resolution, InternalFormat format, EdgeSamplingMode edgemode = ClampToEdge, FilteringMode minfilter = Linear, FilteringMode magfilter = Linear);
-
-
-      // ---- Convenience constructors
+      /// \param filename Path to the source file, relative to the working directory.
+      /// \param format The internal format of the new texture
+      /// \param edgemode The edge sampling mode of the new texture
+      /// \param minfilter The minification filtering mode of the new texture.
+      /// \param magfilter The magnification filtering mode of the new texture. Valid paramters are Nearest and Linear.
+      ///
+      Texture(const std::string& filename, InternalFormat format = RGBA8, EdgeSamplingMode edgemode = ClampToEdge, FilteringMode minfilter = Linear, FilteringMode magfilter = Linear, Type t = Type::Texture2D);
+      
+      
+      ///
+      /// \brief Destructor
+      ///
+      ~Texture();
 
       /// 
       /// \brief Creates a 2D texture fitting for a shadowmap
@@ -231,39 +226,8 @@ namespace kit{
       ///
       /// \returns A shared pointer pointing to the newly created texture
       ///
-      static kit::Texture::Ptr createShadowmap(glm::uvec2 resolution);
-
-      /// 
-      /// \brief Creates a 2D texture and loads its content from a file
-      ///
-      /// You should only use the static `create` methods to create instances. Avoid instancing this class yourself!
-      ///
-      /// \param filename Path to the source file, relative to the working directory.
-      /// \param format The internal format of the new texture
-      /// \param edgemode The edge sampling mode of the new texture
-      /// \param minfilter The minification filtering mode of the new texture.
-      /// \param magfilter The magnification filtering mode of the new texture. Valid paramters are Nearest and Linear.
-      ///
-      /// \returns A shared pointer pointing to the newly created texture
-      ///
-      static kit::Texture::Ptr create2DFromFile(const std::string& filename, InternalFormat format = RGBA8, EdgeSamplingMode edgemode = ClampToEdge, FilteringMode minfilter = Linear, FilteringMode magfilter = Linear);
-
-      /// 
-      /// \brief Creates a 3D texture and loads its content from a 2D image file. It does this by evenly splicing it on the height. It has to perfectly cubical.
-      ///
-      /// You should only use the static `create` methods to create instances. Avoid instancing this class yourself!
-      ///
-      /// \param filename Path to the source file, relative to the working directory.
-      /// \param format The internal format of the new texture
-      /// \param edgemode The edge sampling mode of the new texture
-      /// \param minfilter The minification filtering mode of the new texture.
-      /// \param magfilter The magnification filtering mode of the new texture. Valid paramters are Nearest and Linear.
-      ///
-      /// \returns A shared pointer pointing to the newly created texture
-      ///
-      static kit::Texture::Ptr create3DFromFile(const std::string& filename, InternalFormat format = RGBA8, EdgeSamplingMode edgemode = ClampToEdge, FilteringMode minfilter = Linear, FilteringMode magfilter = Linear);
-
-
+      static kit::Texture * createShadowmap(glm::uvec2 resolution);
+      
       // ---- Resource-managed constructors
 
       /// 
@@ -276,7 +240,7 @@ namespace kit{
       ///
       /// \returns A shared pointer pointing to the newly created texture
       ///
-      static kit::Texture::Ptr load(const std::string& name, bool srgb = true);
+      static kit::Texture * load(const std::string& name, bool srgb = true);
 
 
       // ---- Operations
@@ -383,7 +347,7 @@ namespace kit{
 
       ///
       /// \brief Set the anisotropic level for this texture
-      /// \param The level to set it to. Has to be at least 1.
+      /// \param l The level to set it to. Has to be at least 1.
       ///
       void setAnisotropicLevel(float l);
 
@@ -428,7 +392,7 @@ namespace kit{
 
       std::string         m_filename = "";
 
-      uint32_t              m_glHandle = 0;
+      uint32_t            m_glHandle = 0;
       Type                m_type = Type::Texture2D;
 
       InternalFormat      m_internalFormat = InternalFormat::RGBA8;
@@ -441,7 +405,7 @@ namespace kit{
       uint32_t            m_arraySize = 0;
       float               m_anisotropicLevel = 4.0f;
 
-      static std::map<std::string, kit::Texture::Ptr> m_cachedTextures;
+      static std::map<std::string, kit::Texture*> m_cachedTextures;
   };
 
 }

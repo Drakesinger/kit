@@ -8,8 +8,8 @@ unsigned int kit::Quad::m_instanceCount = 0;
 uint32_t kit::Quad::m_glVertexIndices = 0;
 uint32_t kit::Quad::m_glVertexArray = 0;
 uint32_t kit::Quad::m_glVertexBuffer = 0;
-kit::Program::Ptr kit::Quad::m_program = nullptr;
-kit::Program::Ptr kit::Quad::m_ProgramTextured = nullptr;
+kit::Program * kit::Quad::m_program = nullptr;
+kit::Program * kit::Quad::m_programTextured = nullptr;
 
 
 static const std::vector<GLushort> indexData { 0, 3, 2, 0, 2, 1 };
@@ -61,29 +61,33 @@ static const char * pixelSourceTextured
   \n\
   uniform vec4 uniform_color;\n\
   uniform sampler2D uniform_texture;\n\
+  uniform vec2 uniform_texSubOffset;\n\
+  uniform vec2 uniform_texSubSize;\n\
   \n\
   out vec4 out_color;\n\
   \n\
   void main()\n\
   {\n\
-    out_color = texture(uniform_texture, in_uv) * uniform_color;\n\
+    out_color = texture(uniform_texture, uniform_texSubOffset + (in_uv * uniform_texSubSize)) * uniform_color;\n\
   }\n";
 
-kit::Quad::Quad(glm::vec2 position, glm::vec2 size, glm::vec4  color, kit::Texture::WPtr texture)
+kit::Quad::Quad(glm::vec2 position, glm::vec2 size, glm::vec4  color, kit::Texture * texture)
 {
   
   kit::Quad::m_instanceCount += 1;
   if(kit::Quad::m_instanceCount == 1)
   {
-    this->allocateShared();
+    allocateShared();
   }
   
-  this->m_position = position;
-  this->m_size = size;
-  this->m_color = color;
-  this->m_texture = texture;
+  m_position = position;
+  m_size = size;
+  m_color = color;
+  m_texture = texture;
+  m_texSubSize = glm::vec2(1.0f, 1.0f);
+  m_texSubOffset = glm::vec2(0.0f, 0.0f);
   
-  this->m_blending = true;
+  m_blending = true;
 }
 
 kit::Quad::~Quad()
@@ -91,22 +95,24 @@ kit::Quad::~Quad()
   kit::Quad::m_instanceCount -= 1;
   if(kit::Quad::m_instanceCount < 1)
   {
-    this->releaseShared();
+    releaseShared();
   }
 }
 
-void kit::Quad::PrepareProgram(kit::Program::Ptr customprogram)
+void kit::Quad::prepareProgram(kit::Program * customprogram)
 {
   
   if(customprogram != nullptr)
   {
     customprogram->use();
-    customprogram->setUniform2f("uniform_size", this->m_size);
-    customprogram->setUniform2f("uniform_position", this->m_position);
+    customprogram->setUniform2f("uniform_size", m_size);
+    customprogram->setUniform2f("uniform_position", m_position);
+    //customprogram->setUniform2f("uniform_texSubOffset", m_texSubOffset);
+    //customprogram->setUniform2f("uniform_texSubSize", m_texSubSize);
   }
-  else if(!this->m_texture.lock())
+  else if(!m_texture)
   {
-      if (this->m_blending)
+      if (m_blending)
       {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -119,13 +125,13 @@ void kit::Quad::PrepareProgram(kit::Program::Ptr customprogram)
       glDepthMask(GL_FALSE);
 
       kit::Quad::m_program->use();
-      kit::Quad::m_program->setUniform4f("uniform_color", kit::srgbDec(this->m_color));
-      kit::Quad::m_program->setUniform2f("uniform_size", this->m_size);
-      kit::Quad::m_program->setUniform2f("uniform_position", this->m_position);
+      kit::Quad::m_program->setUniform4f("uniform_color", kit::srgbDec(m_color));
+      kit::Quad::m_program->setUniform2f("uniform_size", m_size);
+      kit::Quad::m_program->setUniform2f("uniform_position", m_position);
   }
   else
   {
-    if (this->m_blending)
+    if (m_blending)
     {
       glEnable(GL_BLEND);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -136,11 +142,13 @@ void kit::Quad::PrepareProgram(kit::Program::Ptr customprogram)
     }
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
-    kit::Quad::m_ProgramTextured->use();
-    kit::Quad::m_ProgramTextured->setUniformTexture("uniform_texture", this->m_texture);
-    kit::Quad::m_ProgramTextured->setUniform4f("uniform_color", kit::srgbDec(this->m_color));
-    kit::Quad::m_ProgramTextured->setUniform2f("uniform_size", this->m_size);
-    kit::Quad::m_ProgramTextured->setUniform2f("uniform_position", this->m_position);
+    kit::Quad::m_programTextured->use();
+    kit::Quad::m_programTextured->setUniformTexture("uniform_texture", m_texture);
+    kit::Quad::m_programTextured->setUniform2f("uniform_texSubOffset", m_texSubOffset);
+    kit::Quad::m_programTextured->setUniform2f("uniform_texSubSize", m_texSubSize);
+    kit::Quad::m_programTextured->setUniform4f("uniform_color", kit::srgbDec(m_color));
+    kit::Quad::m_programTextured->setUniform2f("uniform_size", m_size);
+    kit::Quad::m_programTextured->setUniform2f("uniform_position", m_position);
   }
 }
 
@@ -157,47 +165,40 @@ void kit::Quad::renderAltGeometry()
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
-void kit::Quad::render(kit::Program::Ptr customprogram)
+void kit::Quad::render(kit::Program * customprogram)
 {
-  this->PrepareProgram(customprogram);
+  prepareProgram(customprogram);
   kit::Quad::renderGeometry();
-}
-
-
-kit::Quad::Ptr kit::Quad::create(glm::vec2 position, glm::vec2 size, glm::vec4 color, kit::Texture::WPtr texture)
-{
-  //return kit::Quad::Ptr(new kit::Quad(position, size, color, texture));
-  return std::make_shared<kit::Quad>(position, size, color, texture);
 }
 
 glm::vec2 const & kit::Quad::getPosition()
 {
-  return this->m_position;
+  return m_position;
 }
 
 glm::vec2 const & kit::Quad::getSize()
 {
-  return this->m_size;
+  return m_size;
 }
 
 void kit::Quad::setPosition(glm::vec2 position)
 {
-  this->m_position = position;
+  m_position = position;
 }
 
 void kit::Quad::setSize(glm::vec2 size)
 {
-  this->m_size = size;
+  m_size = size;
 }
 
 void kit::Quad::setColor(glm::vec4 color)
 {
-  this->m_color = (color);
+  m_color = (color);
 }
 
-void kit::Quad::setTexture(kit::Texture::WPtr texture)
+void kit::Quad::setTexture(kit::Texture * texture)
 {
-  this->m_texture = texture;
+  m_texture = texture;
 }
 
 void kit::Quad::allocateShared()
@@ -222,38 +223,42 @@ void kit::Quad::allocateShared()
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void*) (sizeof(float) * 3));
   
   // allocate our programs!
-  auto vertexShader = kit::Shader::create(Shader::Type::Vertex);
+  auto vertexShader = new kit::Shader(Shader::Type::Vertex);
   vertexShader->sourceFromString(vertexSource);
   vertexShader->compile();
 
-  auto pixelShader = kit::Shader::create(Shader::Type::Fragment);
+  auto pixelShader = new kit::Shader(Shader::Type::Fragment);
   pixelShader->sourceFromString(pixelSource);
   pixelShader->compile();
   
-  auto pixelShaderTextured = kit::Shader::create(Shader::Type::Fragment);
+  auto pixelShaderTextured = new kit::Shader(Shader::Type::Fragment);
   pixelShaderTextured->sourceFromString(pixelSourceTextured);
   pixelShaderTextured->compile();
 
-  kit::Quad::m_program = kit::Program::create();
-  kit::Quad::m_program->attachShader(vertexShader);
-  kit::Quad::m_program->attachShader(pixelShader);
-  kit::Quad::m_program->link();
-  kit::Quad::m_program->detachShader(vertexShader);
-  kit::Quad::m_program->detachShader(pixelShader);
+  m_program = new kit::Program();
+  m_program->attachShader(vertexShader);
+  m_program->attachShader(pixelShader);
+  m_program->link();
+  m_program->detachShader(vertexShader);
+  m_program->detachShader(pixelShader);
   
-  kit::Quad::m_ProgramTextured = kit::Program::create();
-  kit::Quad::m_ProgramTextured->attachShader(vertexShader);
-  kit::Quad::m_ProgramTextured->attachShader(pixelShaderTextured);
-  kit::Quad::m_ProgramTextured->link();
-  kit::Quad::m_ProgramTextured->detachShader(vertexShader);
-  kit::Quad::m_ProgramTextured->detachShader(pixelShaderTextured);
+  m_programTextured = new kit::Program();
+  m_programTextured->attachShader(vertexShader);
+  m_programTextured->attachShader(pixelShaderTextured);
+  m_programTextured->link();
+  m_programTextured->detachShader(vertexShader);
+  m_programTextured->detachShader(pixelShaderTextured);
+  
+  delete vertexShader;
+  delete pixelShader;
+  delete pixelShaderTextured;
 }
 
 void kit::Quad::releaseShared()
 {
   
-  kit::Quad::m_ProgramTextured.reset();
-  kit::Quad::m_program.reset();
+  delete kit::Quad::m_programTextured;
+  delete kit::Quad::m_program;
   
   glDeleteBuffers(1, &kit::Quad::m_glVertexIndices);
   glDeleteBuffers(1, &kit::Quad::m_glVertexBuffer);
@@ -262,15 +267,21 @@ void kit::Quad::releaseShared()
 
 const float & kit::Quad::getDepth()
 {
-  return this->m_depth;
+  return m_depth;
 }
 
 void kit::Quad::setDepth(float d)
 {
-  this->m_depth = d;
+  m_depth = d;
 }
 
 void kit::Quad::setBlending(bool b)
 {
-  this->m_blending = b;
+  m_blending = b;
+}
+
+void kit::Quad::setTextureSubRect(glm::vec2 position, glm::vec2 size)
+{
+  m_texSubOffset = position;
+  m_texSubSize = size;
 }

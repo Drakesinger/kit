@@ -12,9 +12,7 @@ namespace kit
   class KITAPI ApplicationState 
   {
   public:
-      
-      typedef std::shared_ptr<ApplicationState> Ptr;
-      
+            
       virtual ~ApplicationState()=0;
       
       virtual void allocate()=0;      //< Allocates resources just after this state has been added to the stack
@@ -32,11 +30,11 @@ namespace kit
       virtual void update(double const & ms)=0;
       virtual void render()=0;
       
-      void registerApplication(kit::Application* appref);
+      void registerApplication(kit::Application * appref);
       
       kit::Application * getApplication();
   protected:
-      kit::Application* m_application;
+      kit::Application * m_application = nullptr;
   };
 
 }

@@ -2,12 +2,12 @@
 #include "Kit/Camera.hpp"
 #include "Kit/Texture.hpp"
 
-void kit::Renderable::renderDeferred(kit::RendererPtr renderer)
+void kit::Renderable::renderDeferred(kit::Renderer * renderer)
 {
 
 }
 
-void kit::Renderable::renderForward(kit::RendererPtr renderer)
+void kit::Renderable::renderForward(kit::Renderer * renderer)
 {
 
 }
@@ -24,17 +24,17 @@ void kit::Renderable::renderGeometry()
 
 bool kit::Renderable::isShadowCaster()
 {
-  return this->m_shadowCaster;
+  return m_shadowCaster;
 }
 
 void kit::Renderable::setShadowCaster(bool s)
 {
-  this->m_shadowCaster = s;
+  m_shadowCaster = s;
 }
 
 kit::Renderable::Renderable()
 {
-  this->m_shadowCaster = true;
+  m_shadowCaster = true;
 }
 
 kit::Renderable::~Renderable()

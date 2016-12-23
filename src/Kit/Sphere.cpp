@@ -8,8 +8,8 @@
 kit::Sphere::Sphere(uint32_t rings, uint32_t sectors)
 {
   
-  this->allocateBuffers();
-  this->m_indexCount = 0;
+  allocateBuffers();
+  m_indexCount = 0;
   
   // Generate sphere geometry on the cpu
   float const R = 1.0f / float(rings - 1);
@@ -51,17 +51,17 @@ kit::Sphere::Sphere(uint32_t rings, uint32_t sectors)
     }
   }
 
-  this->m_indexCount = (uint32_t)indices.size();
+  m_indexCount = (uint32_t)indices.size();
 
   // Upload sphere geometry to the gpu
-  glBindVertexArray(this->m_glVertexArray);
+  glBindVertexArray(m_glVertexArray);
 
   // Upload indices
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_glVertexIndices);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glVertexIndices);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), &indices[0], GL_STATIC_DRAW);
 
   // Upload vertices 
-  glBindBuffer(GL_ARRAY_BUFFER, this->m_glVertexBuffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
   glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
 
   // Total size
@@ -82,36 +82,28 @@ kit::Sphere::Sphere(uint32_t rings, uint32_t sectors)
 
 kit::Sphere::~Sphere()
 {
-  this->releaseBuffers();
+  releaseBuffers();
 }
 
 void kit::Sphere::renderGeometry()
 {
   
-  glBindVertexArray(this->m_glVertexArray);
-  glDrawElements(GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0);
+  glBindVertexArray(m_glVertexArray);
+  glDrawElements(GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, (void*)0);
 }
-
-kit::Sphere::Ptr kit::Sphere::create(uint32_t rings, uint32_t sectors)
-{
-  return std::make_shared<kit::Sphere>(rings, sectors);
-}
-
 
 void kit::Sphere::allocateBuffers()
 {
   
-  glGenVertexArrays(1, &this->m_glVertexArray);
-  glGenBuffers(1, &this->m_glVertexIndices);
-  glGenBuffers(1, &this->m_glVertexBuffer);
+  glGenVertexArrays(1, &m_glVertexArray);
+  glGenBuffers(1, &m_glVertexIndices);
+  glGenBuffers(1, &m_glVertexBuffer);
 }
 
 void kit::Sphere::releaseBuffers()
 {
-  
-
-  glDeleteBuffers(1, &this->m_glVertexIndices);
-  glDeleteBuffers(1, &this->m_glVertexBuffer);
-  glDeleteVertexArrays(1, &this->m_glVertexArray);
+  glDeleteBuffers(1, &m_glVertexIndices);
+  glDeleteBuffers(1, &m_glVertexBuffer);
+  glDeleteVertexArrays(1, &m_glVertexArray);
   glGetError();
 }

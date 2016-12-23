@@ -5,7 +5,7 @@ kit::ApplicationState::~ApplicationState()
   
 }
 
-void kit::ApplicationState::registerApplication(kit::Application* appref)
+void kit::ApplicationState::registerApplication(kit::Application * appref)
 {
   this->m_application = appref;
 }

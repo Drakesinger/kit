@@ -7,23 +7,15 @@
 
 kit::Application::Application() : kit::Scriptable()
 {
-  // initialize variables with sane defaults
-  this->m_window = nullptr;
-  this->m_lastRenderTime = 0.0;
-  this->m_lastUpdateTime = 0.0;
-  
-  // Configurable runtime variables
-  this->m_renderRate = 1000.0 / 120.0;
-  this->m_updateRate = 1000.0 / 120.0;
-  this->m_unfocusedRenderRate = 1000.0 / 30.0;
-  this->m_unfocusedUpdateRate = 1000.0 / 30.0;
-  
-
 }
 
 kit::Application::~Application()
 {
-
+  if(m_console)
+    delete m_console;
+  
+  if(m_window)
+    delete m_window;
 }
 
 void kit::Application::fillKeyIndex()
@@ -174,9 +166,9 @@ void kit::Application::initialize()
   args.resolution = glm::uvec2(1366, 768);
   args.resizable = true;
   args.title = "Kit Engine";
-  this->m_window = kit::Window::create( args);
+  this->m_window = new kit::Window( args);
   
-  this->m_console = kit::Console::create(this);
+  this->m_console = new kit::Console(this);
   
   this->m_scriptEngine.add_global(chaiscript::var(this), "self");
   
@@ -213,8 +205,6 @@ void kit::Application::initialize()
 
 void kit::Application::render()
 {
-  this->m_window->clear(glm::vec4(0.0, 0.0, 1.0, 1.0));
-  
   this->onRender();
   
   if(this->m_states.size() > 0)
@@ -306,7 +296,7 @@ void kit::Application::handleEvent(const double & mstime, const kit::WindowEvent
   }
 }
 
-void kit::Application::run(ApplicationState::Ptr state)
+void kit::Application::run(ApplicationState * state)
 {
   this->initialize();
   
@@ -345,12 +335,13 @@ void kit::Application::run(ApplicationState::Ptr state)
   }
 }
 
-void kit::Application::pushState(kit::ApplicationState::Ptr state)
+void kit::Application::pushState(kit::ApplicationState * state)
 {
   if(this->m_states.size() > 0)
   {
     this->m_states.top()->onInactive();
   }
+  
   state->registerApplication(this);
   this->m_states.push(state);
   this->m_states.top()->allocate();
@@ -361,6 +352,7 @@ void kit::Application::popState()
 {
   this->m_states.top()->onInactive();
   this->m_states.top()->release();
+  this->m_states.top()->registerApplication(nullptr);
   this->m_states.pop();
   
   if(this->m_states.size() > 0)
@@ -369,12 +361,12 @@ void kit::Application::popState()
   }
 }
 
-kit::Window::Ptr kit::Application::getWindow()
+kit::Window* kit::Application::getWindow()
 {
   return this->m_window;
 }
 
-kit::Console::Ptr kit::Application::getConsole()
+kit::Console* kit::Application::getConsole()
 {
   return this->m_console;
 }

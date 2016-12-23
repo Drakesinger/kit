@@ -23,11 +23,6 @@ kit::Camera::~Camera()
 
 }
 
-kit::Camera::Ptr kit::Camera::create(float fov, float aspect_ratio, glm::vec2 cliprange)
-{
-  return std::make_shared<kit::Camera>(fov, aspect_ratio, cliprange);
-}
-
 const glm::mat4 & kit::Camera::getProjectionMatrix()
 {
   return this->m_projectionMatrix;

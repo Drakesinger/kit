@@ -6,105 +6,110 @@
 #include "Kit/Application.hpp"
 #include "Kit/Window.hpp"
 
+kit::ConsoleLine::ConsoleLine(const std::wstring& s)
+{
+  string = s;
+  text = new kit::Text(kit::Font::getSystemFont(), 18.0f, s);
+}
+
+kit::ConsoleLine::~ConsoleLine()
+{
+}
+
 kit::Console::Console(kit::Application* app)
 {
-  this->m_application = app;
-  this->m_heightCoeff = 0.0;
-  this->m_isActive = false;
-  this->m_lineOffset = 0;
-  this->m_cursorPosition = 0;
-  this->m_buffer.push_front(L"");
-  this->m_bufferPosition = 0;
+  m_application = app;
+  m_heightCoeff = 0.0;
+  m_isActive = false;
+  m_lineOffset = 0;
+  m_cursorPosition = 0;
+  m_buffer.push_front(L"");
+  m_bufferPosition = 0;
   
-  this->m_quad = kit::Quad::create();
-  this->m_quad->setColor(glm::vec4(0.005f, 0.02f, 0.05f, 0.9f));
-  this->m_bufferText = kit::Text::create(kit::Font::getSystemFont(), 18.0f, L"");
-  this->updateBufferText();
+  m_quad = new kit::Quad();
+  m_quad->setColor(glm::vec4(0.005f, 0.02f, 0.05f, 0.9f));
+  m_bufferText = new kit::Text(kit::Font::getSystemFont(), 18.0f, L"");
+  updateBufferText();
 }
 
 kit::Console::~Console()
 {
+  delete m_quad;
+  delete m_bufferText;
+  for(auto & c : m_lines)
+    delete c.text;
 
-}
-
-kit::Console::Ptr kit::Console::create(kit::Application* app)
-{
-  return std::make_shared<kit::Console>(app);
+  m_lines.clear();
 }
 
 void kit::Console::addLine(std::wstring s)
 {
-  kit::ConsoleLine newLine;
-  newLine.string = s;
-  newLine.text = kit::Text::create(kit::Font::getSystemFont(), 18.0f, s);
-  this->m_lines.push_front(newLine);
+  m_lines.push_front(kit::ConsoleLine(s));
   
-  while(this->m_lines.size() > 127)
+  std::wcout << L"Added console line " << s << std::endl;
+  
+  while(m_lines.size() > 127)
   {
-    this->m_lines.pop_back();
+    m_lines.pop_back();
   }
 }
 
 void kit::Console::hide()
 {
-  this->m_isActive = false;
+  m_isActive = false;
 }
 
 void kit::Console::Show()
 {
-  this->m_isActive = true;
+  m_isActive = true;
 }
 
 void kit::Console::render()
 {
-  glm::ivec2 winSize = this->m_application->getWindow()->getFramebufferSize();
-  this->m_application->getWindow()->bind();
 
-  if(this->m_heightCoeff > 0.0)
+  if(m_heightCoeff > 0.0)
   {
-    float effHeight =  -(1.0f-this->m_heightCoeff)*320.f;
+    glm::ivec2 winSize = m_application->getWindow()->getFramebufferSize();
+    m_application->getWindow()->bind();
     
-    this->m_quad->setSize(glm::vec2(1.0f, 320.0f/float(winSize.y)));
-    this->m_quad->setPosition(glm::vec2(0.0f, effHeight/float(winSize.y)));
-    this->m_quad->render();
+    float effHeight =  -(1.0f-m_heightCoeff)*320.f;
     
-    this->m_bufferText->setColor(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-    this->m_bufferText->setPosition(glm::vec2(3.0f, effHeight + 320.0f - 7.0f));
-    this->m_bufferText->render(winSize);
+    m_quad->setSize(glm::vec2(1.0f, 320.0f/float(winSize.y)));
+    m_quad->setPosition(glm::vec2(0.0f, effHeight/float(winSize.y)));
+    m_quad->render();
     
-    this->m_bufferText->setColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-    this->m_bufferText->setPosition(glm::vec2(4.0f, effHeight + 320.0f - 8.0f));
-    this->m_bufferText->render(winSize);
+    m_bufferText->setColor(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+    m_bufferText->setPosition(glm::vec2(3.0f, effHeight + 320.0f - 7.0f));
+    m_bufferText->render(winSize);
     
-    if(this->m_lines.size() > 0)
+    m_bufferText->setColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    m_bufferText->setPosition(glm::vec2(4.0f, effHeight + 320.0f - 8.0f));
+    m_bufferText->render(winSize);
+    
+    if(m_lines.size() > 0)
     {
-      auto it = this->m_lines.begin();
-      
-      for(uint32_t currLineOffset = 0; currLineOffset < this->m_lineOffset; currLineOffset++)
-      {
-        if(it != this->m_lines.end())
-        {
-          it++;
-        }
-      }
+      size_t i = m_lineOffset;
       
       float height = 320.0f - 32.0f;
       for(int count = 0; count < 9; count++)
       {
-        if(it == this->m_lines.end())
+        if(i >= m_lines.size())
         {
           break;
         }
-        it->text->setColor(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-        it->text->setPosition(glm::vec2(3.0f, effHeight + height - 7.0f));
-        it->text->render(winSize);
         
-        it->text->setColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-        it->text->setPosition(glm::vec2(4.0f, effHeight + height - 8.0f));
-        it->text->render(winSize);
+        auto & c = m_lines[i];
+        
+        c.text->setColor(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+        c.text->setPosition(glm::vec2(3.0f, effHeight + height - 7.0f));
+        c.text->render(winSize);
+        
+        c.text->setColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+        c.text->setPosition(glm::vec2(4.0f, effHeight + height - 8.0f));
+        c.text->render(winSize);
         
         height -= 32.0f;
-        it++;
+        i++;
       }
     }
   }
@@ -112,15 +117,15 @@ void kit::Console::render()
 
 void kit::Console::update(const double& ms)
 {
-  if(this->m_isActive && this->m_heightCoeff < 1.0f)
+  if(m_isActive && m_heightCoeff < 1.0f)
   {
-    this->m_heightCoeff += float(ms)*0.01f* (1.0f - this->m_heightCoeff);
-    this->m_heightCoeff = (glm::min)(this->m_heightCoeff, 1.0f);
+    m_heightCoeff += float(ms)*0.01f* (1.0f - m_heightCoeff);
+    m_heightCoeff = (glm::min)(m_heightCoeff, 1.0f);
   }
-  if(!this->m_isActive && this->m_heightCoeff > 0.0f)
+  if(!m_isActive && m_heightCoeff > 0.0f)
   {
-    this->m_heightCoeff -= float(ms)*0.01f*(glm::max)(1.0f - this->m_heightCoeff, 0.01f);
-    this->m_heightCoeff = (glm::max)(this->m_heightCoeff, 0.0f);
+    m_heightCoeff -= float(ms)*0.01f*(glm::max)(1.0f - m_heightCoeff, 0.01f);
+    m_heightCoeff = (glm::max)(m_heightCoeff, 0.0f);
   }
 }
 
@@ -128,144 +133,144 @@ void kit::Console::handleEvent(const kit::WindowEvent& evt)
 {
   if(evt.type == kit::WindowEvent::KeyPressed || evt.type == kit::WindowEvent::KeyRepeated)
   {
-    if(this->m_isActive)
+    if(m_isActive)
     {
       if(evt.keyboard.key == kit::Left)
       {
-        if(this->m_cursorPosition > 0)
+        if(m_cursorPosition > 0)
         {
-          this->m_cursorPosition--;
-          this->updateBufferText();
+          m_cursorPosition--;
+          updateBufferText();
         }
       }
       else if(evt.keyboard.key == kit::Right)
       {
-        if(this->m_cursorPosition < this->m_buffer.begin()->size())
+        if(m_cursorPosition < m_buffer.begin()->size())
         {
-          this->m_cursorPosition++;
-          this->updateBufferText();
+          m_cursorPosition++;
+          updateBufferText();
         }
       }
       else if(evt.keyboard.key == kit::Backspace)
       {
-        if(this->m_buffer.begin()->size() > 0)
+        if(m_buffer.begin()->size() > 0)
         {
-          //this->m_buffer.pop_back();
-          if(this->m_cursorPosition > 0)
+          //m_buffer.pop_back();
+          if(m_cursorPosition > 0)
           {
-            this->m_buffer.begin()->erase(this->m_buffer.begin()->begin() + this->m_cursorPosition-1);
-            this->m_cursorPosition--;
-            this->m_bufferSave.assign((*this->m_buffer.begin()));
-            this->updateBufferText();
+            m_buffer.begin()->erase(m_buffer.begin()->begin() + m_cursorPosition-1);
+            m_cursorPosition--;
+            m_bufferSave.assign((*m_buffer.begin()));
+            updateBufferText();
           }
         }
       }
       else if(evt.keyboard.key == kit::Delete)
       {
-        if((*this->m_buffer.begin()).size() > 0)
+        if((*m_buffer.begin()).size() > 0)
         {
-          if(this->m_cursorPosition < (*this->m_buffer.begin()).size())
+          if(m_cursorPosition < (*m_buffer.begin()).size())
           {
-            this->m_buffer.begin()->erase(this->m_buffer.begin()->begin() + this->m_cursorPosition);
+            m_buffer.begin()->erase(m_buffer.begin()->begin() + m_cursorPosition);
             
-            if(this->m_cursorPosition > this->m_buffer.begin()->size())
+            if(m_cursorPosition > m_buffer.begin()->size())
             {
-              this->m_cursorPosition = (uint32_t)this->m_buffer.begin()->size();
+              m_cursorPosition = (uint32_t)m_buffer.begin()->size();
             }
             
-            this->m_bufferSave.assign((*this->m_buffer.begin()));
+            m_bufferSave.assign((*m_buffer.begin()));
             
-            this->updateBufferText();
+            updateBufferText();
           }
         }
       }
       else if(evt.keyboard.key == kit::Enter)
       {
-        if(this->m_buffer.begin()->size() > 0)
+        if(m_buffer.begin()->size() > 0)
         {
-          std::string buf = kit::wideToString((*this->m_buffer.begin()));
-          this->addLine(std::wstring(L"> ") + (*this->m_buffer.begin()));
-          this->m_buffer.push_front(L"");
-          while(this->m_buffer.size() > 127)
+          std::string buf = kit::wideToString((*m_buffer.begin()));
+          addLine(std::wstring(L"> ") + (*m_buffer.begin()));
+          m_buffer.push_front(L"");
+          while(m_buffer.size() > 127)
           {
-            this->m_buffer.pop_back();
+            m_buffer.pop_back();
           }
-          this->m_bufferPosition = 0;
-          this->m_cursorPosition = 0;
-          this->updateBufferText();
+          m_bufferPosition = 0;
+          m_cursorPosition = 0;
+          updateBufferText();
           
-          this->m_application->evaluate(buf);
+          m_application->evaluate(buf);
         }
       }
       else if(evt.keyboard.key == kit::Home)
       {
-        this->m_cursorPosition = 0;
-        this->updateBufferText();
+        m_cursorPosition = 0;
+        updateBufferText();
       }
       else if(evt.keyboard.key == kit::End)
       {
-        this->m_cursorPosition = (uint32_t)this->m_buffer.begin()->size();
-        this->updateBufferText();
+        m_cursorPosition = (uint32_t)m_buffer.begin()->size();
+        updateBufferText();
       }
       else if(evt.keyboard.key == kit::Page_up)
       {
-        if(this->m_lineOffset + 9 < this->m_lines.size())
+        if(m_lineOffset + 9 < m_lines.size())
         {
-          this->m_lineOffset++;
+          m_lineOffset++;
         }
       }
       else if(evt.keyboard.key == kit::Page_down)
       {
-        if(this->m_lineOffset > 0)
+        if(m_lineOffset > 0)
         {
-          this->m_lineOffset--;
+          m_lineOffset--;
         }
       }
       else if(evt.keyboard.key == kit::Up)
       {
-        if(this->m_bufferPosition + 1 < this->m_buffer.size())
+        if(m_bufferPosition + 1 < m_buffer.size())
         {
-          this->m_bufferPosition++;
-          if(this->m_bufferPosition == 1)
+          m_bufferPosition++;
+          if(m_bufferPosition == 1)
           {
-            this->m_bufferSave.assign((*this->m_buffer.begin()));
+            m_bufferSave.assign((*m_buffer.begin()));
           }
-          if(this->m_bufferPosition != 0)
+          if(m_bufferPosition != 0)
           {
-            this->m_buffer.begin()->assign((*this->getCurrentBuffer()));
+            m_buffer.begin()->assign((*getCurrentBuffer()));
           }
-          this->m_cursorPosition = (uint32_t)this->m_buffer.begin()->size();
-          this->updateBufferText();
+          m_cursorPosition = (uint32_t)m_buffer.begin()->size();
+          updateBufferText();
         }
       }
       else if(evt.keyboard.key == kit::Down)
       {
-        if(this->m_bufferPosition > 0)
+        if(m_bufferPosition > 0)
         {
-          this->m_bufferPosition--;
-          if(this->m_bufferPosition != 0)
+          m_bufferPosition--;
+          if(m_bufferPosition != 0)
           {
-            this->m_buffer.begin()->assign((*this->getCurrentBuffer()));
+            m_buffer.begin()->assign((*getCurrentBuffer()));
           }
           else
           {
-            this->m_buffer.begin()->assign(this->m_bufferSave);
+            m_buffer.begin()->assign(m_bufferSave);
           }
-          this->m_cursorPosition = (uint32_t)this->m_buffer.begin()->size();
-          this->updateBufferText();
+          m_cursorPosition = (uint32_t)m_buffer.begin()->size();
+          updateBufferText();
         }
       }
     }
   }
   if(evt.type == kit::WindowEvent::TextEntered)
   {
-    if(this->m_isActive)
+    if(m_isActive)
     {
-      //this->m_buffer.push_back((wchar_t)evt.keyboard.unicode);
-      this->m_buffer.begin()->insert(this->m_buffer.begin()->begin() + this->m_cursorPosition, (wchar_t)evt.keyboard.unicode);
-      this->m_bufferSave.assign((*this->m_buffer.begin()));
-      this->m_cursorPosition++;
-      this->updateBufferText();
+      //m_buffer.push_back((wchar_t)evt.keyboard.unicode);
+      m_buffer.begin()->insert(m_buffer.begin()->begin() + m_cursorPosition, (wchar_t)evt.keyboard.unicode);
+      m_bufferSave.assign((*m_buffer.begin()));
+      m_cursorPosition++;
+      updateBufferText();
     }
   }
 
@@ -273,29 +278,29 @@ void kit::Console::handleEvent(const kit::WindowEvent& evt)
 
 bool kit::Console::isActive()
 {
-  return this->m_isActive;
+  return m_isActive;
 }
 
 void kit::Console::updateBufferText()
 {
-  std::wstring buftext = (*this->m_buffer.begin());
-  buftext.insert(this->m_cursorPosition, L"_");
-  this->m_bufferText->setText(std::wstring(L"> ") +buftext);
+  std::wstring buftext = (*m_buffer.begin());
+  buftext.insert(m_cursorPosition, L"_");
+  m_bufferText->setText(std::wstring(L"> ") +buftext);
 }
 
 std::list<std::wstring>::iterator kit::Console::getCurrentBuffer()
 {
-  std::list<std::wstring>::iterator returner = this->m_buffer.begin();
+  std::list<std::wstring>::iterator returner = m_buffer.begin();
   
-  if(this->m_buffer.size() == 1)
+  if(m_buffer.size() == 1)
   {
     return returner;
   }
   
-  for(unsigned int i = 0; i < this->m_bufferPosition; i++)
+  for(unsigned int i = 0; i < m_bufferPosition; i++)
   {
     returner++;
-    if(returner == this->m_buffer.end())
+    if(returner == m_buffer.end())
     {
       returner--;
       break;

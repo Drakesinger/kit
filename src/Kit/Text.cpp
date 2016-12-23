@@ -8,33 +8,48 @@
 
 #include <sstream>
 
-kit::Program::Ptr kit::Text::m_renderProgram = nullptr;
+kit::Program * kit::Text::m_renderProgram = nullptr;
 uint32_t kit::Text::m_instanceCount = 0;
 
-kit::Text::Ptr kit::Text::create(kit::Font::Ptr font, float fontsize, std::wstring text, glm::vec2 position)
+kit::Text::Text(kit::Font * font, float fontsize, std::wstring text, glm::vec2 position)
 {
-  kit::Text::Ptr returner = std::make_shared<kit::Text>();
-  returner->m_font = font;
-  returner->m_fontSize = fontsize;
-  returner->m_text = text;
-  returner->m_position = position;
-  returner->m_color = (glm::vec4(1.0, 1.0, 1.0, 1.0));
-  returner->updateBuffers();
-  return returner;
+  glGenVertexArrays(1, &m_glVertexArray);
+  glGenBuffers(1, &m_glVertexIndices);
+  glGenBuffers(1, &m_glVertexBuffer);
+
+  m_indexCount = 0;
+  m_width = 0.0;
+  m_hAlignment = Left;
+  m_vAlignment = Bottom;
+  
+  kit::Text::m_instanceCount++;
+  if(kit::Text::m_instanceCount == 1)
+  {
+    kit::Text::allocateShared();
+  }
+  
+  m_font = font;
+
+  m_fontSize = fontsize;
+  m_text = text;
+  m_position = position;
+  m_color = (glm::vec4(1.0, 1.0, 1.0, 1.0));
+  
+  updateBuffers();
 }
 
 void kit::Text::renderShadowed(glm::ivec2 resolution, glm::vec2 shadowOffset, glm::vec4 shadowColor)
 {
-  glm::vec4 c = this->m_color;
-  glm::vec2 p = this->m_position;
+  glm::vec4 c = m_color;
+  glm::vec2 p = m_position;
 
-  this->setPosition(p + shadowOffset);
-  this->setColor(shadowColor);
-  this->render(resolution);
+  setPosition(p + shadowOffset);
+  setColor(shadowColor);
+  render(resolution);
 
-  this->setPosition(p);
-  this->setColor(c);
-  this->render(resolution);
+  setPosition(p);
+  setColor(c);
+  render(resolution);
 }
 
 void kit::Text::render(glm::ivec2 resolution)
@@ -47,110 +62,91 @@ void kit::Text::render(glm::ivec2 resolution)
   kit::Text::m_renderProgram->use();
   kit::Text::m_renderProgram->setUniform2f("uniform_resolution", glm::vec2(float(resolution.x), float(resolution.y)));
   
-  glm::vec2 pos = this->m_position;
+  glm::vec2 pos = m_position;
   
-  if(this->m_hAlignment == Right)
+  if(m_hAlignment == Right)
   {
-    pos.x -= this->m_width;
+    pos.x -= m_width;
   }
-  else if(this->m_hAlignment == Centered)
+  else if(m_hAlignment == Centered)
   {
-    pos.x -=this->m_width / 2.0f;
+    pos.x -=m_width / 2.0f;
   }
   
-  if(this->m_vAlignment == Middle)
+  if(m_vAlignment == Middle)
   {
-    pos.y += this->m_font->getGlyphMap(this->m_fontSize)->getHeight() / 2.0f;
+    pos.y += m_font->getGlyphMap(m_fontSize)->getHeight() / 2.0f;
   }
-  else if(this->m_vAlignment == Top)
+  else if(m_vAlignment == Top)
   {
-    pos.y += this->m_font->getGlyphMap(this->m_fontSize)->getHeight();
+    pos.y += m_font->getGlyphMap(m_fontSize)->getHeight();
   }
 
   pos.x = glm::ceil(pos.x);
   pos.y = glm::ceil(pos.y);
   
   kit::Text::m_renderProgram->setUniform2f("uniform_position", pos);
-  kit::Text::m_renderProgram->setUniform4f("uniform_color", kit::srgbDec(this->m_color));
-  kit::Text::m_renderProgram->setUniformTexture("uniform_glyphmap", this->m_font->getGlyphMap(this->m_fontSize)->getTexture());
+  kit::Text::m_renderProgram->setUniform4f("uniform_color", kit::srgbDec(m_color));
+  kit::Text::m_renderProgram->setUniformTexture("uniform_glyphmap", m_font->getGlyphMap(m_fontSize)->getTexture());
   
-  glBindVertexArray(this->m_glVertexArray);
-  glDrawElements(GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0);
+  glBindVertexArray(m_glVertexArray);
+  glDrawElements(GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, (void*)0);
   kit::Program::useFixed();
 }
 
 void kit::Text::setText(std::wstring text)
 {
-  if (text == this->m_text)
+  if (text == m_text)
   {
     return;
   }
-  this->m_text = text;
-  this->updateBuffers();
+  m_text = text;
+  updateBuffers();
 }
 
 std::wstring const & kit::Text::getText()
 {
-  return this->m_text;
+  return m_text;
 }
 
-void kit::Text::setFont(kit::Font::Ptr font)
+void kit::Text::setFont(kit::Font * font)
 {
-  this->m_font = font;
-  this->updateBuffers();
+  m_font = font;
+  updateBuffers();
 }
 
-kit::Font::Ptr kit::Text::getFont()
+kit::Font * kit::Text::getFont()
 {
-  return this->m_font;
+  return m_font;
 }
 
 void kit::Text::setFontSize(float fontsize)
 {
-  this->m_fontSize = fontsize;
-  this->updateBuffers();
+  m_fontSize = fontsize;
+  updateBuffers();
 }
 
 float const & kit::Text::getFontSize()
 {
-  return this->m_fontSize;
+  return m_fontSize;
 }
 
 void kit::Text::setPosition(glm::vec2 position)
 {
-  this->m_position = position;
+  m_position = position;
 }
 
 glm::vec2 const & kit::Text::getPosition()
 {
-  return this->m_position;
-}
-
-kit::Text::Text()
-{
-  
-  glGenVertexArrays(1, &this->m_glVertexArray);
-  glGenBuffers(1, &this->m_glVertexIndices);
-  glGenBuffers(1, &this->m_glVertexBuffer);
-
-  this->m_indexCount = 0;
-  this->m_width = 0.0;
-  this->m_hAlignment = Left;
-  this->m_vAlignment = Bottom;
-  
-  kit::Text::m_instanceCount++;
-  if(kit::Text::m_instanceCount == 1)
-  {
-    kit::Text::allocateShared();
-  }
+  return m_position;
 }
 
 kit::Text::~Text()
 {
   
-  glDeleteBuffers(1, &this->m_glVertexIndices);
-  glDeleteBuffers(1, &this->m_glVertexBuffer);
-  glDeleteVertexArrays(1, &this->m_glVertexArray);
+  glDeleteBuffers(1, &m_glVertexIndices);
+  glDeleteBuffers(1, &m_glVertexBuffer);
+  glDeleteVertexArrays(1, &m_glVertexArray);
   
   kit::Text::m_instanceCount--;
   if(kit::Text::m_instanceCount == 0)
@@ -190,38 +186,41 @@ void kit::Text::allocateShared()
   pss << " out_color.rgb = uniform_color.rgb;" << std::endl;
   pss << "}" << std::endl;
   
-  auto vs = kit::Shader::create(Shader::Type::Vertex);
+  auto vs = new kit::Shader(Shader::Type::Vertex);
   vs->sourceFromString(vss.str());
   vs->compile();
   
-  auto ps = kit::Shader::create(Shader::Type::Fragment);
+  auto ps = new kit::Shader(Shader::Type::Fragment);
   ps->sourceFromString(pss.str());
   ps->compile();
   
-  kit::Text::m_renderProgram = kit::Program::create();
-  kit::Text::m_renderProgram->attachShader(vs);
-  kit::Text::m_renderProgram->attachShader(ps);
-  kit::Text::m_renderProgram->link();
-  kit::Text::m_renderProgram->detachShader(ps);
-  kit::Text::m_renderProgram->detachShader(vs);
+  m_renderProgram = new kit::Program();
+  m_renderProgram->attachShader(vs);
+  m_renderProgram->attachShader(ps);
+  m_renderProgram->link();
+  m_renderProgram->detachShader(ps);
+  m_renderProgram->detachShader(vs);
+  
+  delete vs;
+  delete ps;
 }
 
 void kit::Text::releaseShared()
 {
-
+  delete m_renderProgram;
 }
 
 void kit::Text::updateBuffers()
 {
   
-  if (this->m_text.size() == 0)
+  if (m_text.size() == 0)
   {
-    this->m_width = 0;
-    this->m_indexCount = 0;
+    m_width = 0;
+    m_indexCount = 0;
     return;
   }
-  uint32_t numIndices = uint32_t(this->m_text.size() * 6);
-  uint32_t numVertices = uint32_t(this->m_text.size() * 4) * 4;
+  uint32_t numIndices = uint32_t(m_text.size() * 6);
+  uint32_t numVertices = uint32_t(m_text.size() * 4) * 4;
   
   std::vector<float> vertices(numVertices , 0.0);
   std::vector<uint32_t> indices(numIndices, 0);
@@ -230,7 +229,7 @@ void kit::Text::updateBuffers()
   glm::vec2 pen(0.0, 0.0);
   float maxWidth = 0.0f;
   // Create vertices
-  for(wchar_t const & currChar : this->m_text)
+  for(wchar_t const & currChar : m_text)
   {
     if(currChar == wchar_t('\n'))
     {
@@ -240,11 +239,11 @@ void kit::Text::updateBuffers()
       }
 
       pen.x = 0.0;
-      pen.y += this->getLineAdvance();
+      pen.y += getLineAdvance();
       continue;
     }
     
-    kit::Font::Glyph const & currGlyph = this->m_font->getGlyphMap(this->m_fontSize)->getGlyph(currChar);
+    kit::Font::Glyph const & currGlyph = m_font->getGlyphMap(m_fontSize)->getGlyph(currChar);
     
     glm::vec2 glyphPos, glyphSize;
     
@@ -279,7 +278,7 @@ void kit::Text::updateBuffers()
   }
   
   uint32_t ii = 0;
-  for(uint32_t i = 0; i < this->m_text.size()*4; i+=4)
+  for(uint32_t i = 0; i < m_text.size()*4; i+=4)
   {
     indices[ii++] = i;
     indices[ii++] = i+1;
@@ -289,16 +288,16 @@ void kit::Text::updateBuffers()
     indices[ii++] = i+3;
   }
   
-  this->m_indexCount = uint32_t(indices.size());
+  m_indexCount = uint32_t(indices.size());
 
-  glBindVertexArray(this->m_glVertexArray);
+  glBindVertexArray(m_glVertexArray);
 
   // Upload indices
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_glVertexIndices);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glVertexIndices);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), &indices[0], GL_STATIC_DRAW);
 
   // Upload vertices 
-  glBindBuffer(GL_ARRAY_BUFFER, this->m_glVertexBuffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
   glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
 
   // Total size
@@ -319,32 +318,32 @@ void kit::Text::updateBuffers()
   {
     maxWidth = pen.x;
   }
-  this->m_width = maxWidth;
+  m_width = maxWidth;
 }
 
 float kit::Text::getLineAdvance()
 {
-  return this->m_font->getGlyphMap(this->m_fontSize)->getLineAdvance();
+  return m_font->getGlyphMap(m_fontSize)->getLineAdvance();
 }
 
 float kit::Text::getHeight()
 {
-  return this->m_font->getGlyphMap(this->m_fontSize)->getHeight();
+  return m_font->getGlyphMap(m_fontSize)->getHeight();
 }
 
 const glm::vec4& kit::Text::getColor()
 {
-  return this->m_color;
+  return m_color;
 }
 
 void kit::Text::setColor(glm::vec4 color)
 {
-  this->m_color = (color);
+  m_color = (color);
 }
 
 void kit::Text::setAlignment(kit::Text::HAlignment h, kit::Text::VAlignment v)
 {
-  this->m_hAlignment = h;
-  this->m_vAlignment = v;
+  m_hAlignment = h;
+  m_vAlignment = v;
 }
 

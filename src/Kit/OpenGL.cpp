@@ -36,13 +36,18 @@ uint32_t const & kit::GLFWSingleton::getInstanceCount()
 
 void kit::GLFWSingleton::allocateShared()
 {
-  glfwSetErrorCallback(kit::glfwError);
-  if (!glfwInit())
+  static bool wasRan = false;
+  if(!wasRan)
   {
-    KIT_THROW("Failed to initialize GLFW3");
-  }
+    glfwSetErrorCallback(kit::glfwError);
+    if (!glfwInit())
+    {
+      KIT_THROW("Failed to initialize GLFW3");
+    }
 
-  std::cout << "GLFW3 initialized." << std::endl;
+    std::cout << "GLFW3 initialized." << std::endl;
+    wasRan = true;
+  }
 }
 
 void kit::GLFWSingleton::releaseShared()

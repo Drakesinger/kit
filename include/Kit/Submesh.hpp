@@ -1,5 +1,4 @@
-#ifndef KIT_SUBMESH_HPP
-#define KIT_SUBMESH_HPP
+#pragma once
 
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
@@ -11,11 +10,11 @@ namespace kit
   class KITAPI Submesh 
   {
     public:
-      typedef std::shared_ptr<kit::Submesh> Ptr;
+      
       
       ~Submesh();
       
-      static kit::Submesh::Ptr load(const std::string& geometry, kit::DataSource source = kit::DataSource::Data);
+      static kit::Submesh * load(const std::string& geometry, kit::DataSource source = kit::DataSource::Data);
       static void flushCache();
       
       void renderGeometry();
@@ -27,7 +26,7 @@ namespace kit
       
       
       // Cache
-      static std::map<std::string, kit::Submesh::Ptr> m_cache;
+      static std::map<std::string, kit::Submesh*> m_cache;
       
       // Individual GPU data
       void allocateBuffers();
@@ -41,5 +40,3 @@ namespace kit
 
   };
 }
-
-#endif // KIT_SUBMESH_HPP

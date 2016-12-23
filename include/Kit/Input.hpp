@@ -160,7 +160,7 @@ enum KITAPI ModifierKey{
 class KITAPI Controller
 {
   public:
-    typedef std::shared_ptr<Controller> Ptr;
+    
 
     /// Polls for newly connected controllers
     static void refreshControllers();

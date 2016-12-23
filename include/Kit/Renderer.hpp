@@ -1,81 +1,78 @@
-#ifndef KIT_RENDERER_HPP
-#define KIT_RENDERER_HPP
+#pragma once 
 
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
 
 #include "Kit/Timer.hpp"
 
-#include <memory>
 #include <vector>
 
 namespace kit 
 {
   class Renderable;
-  typedef std::shared_ptr<Renderable> RenderablePtr;
+  
 
   class Light;
-  typedef std::shared_ptr<Light> LightPtr;
+  
 
   class Skybox;
-  typedef std::shared_ptr<Skybox> SkyboxPtr;
+  
 
   class Camera;
-  typedef std::shared_ptr<Camera> CameraPtr;
+  
 
   class Texture;
-  typedef std::shared_ptr<Texture> TexturePtr;
+  
 
   class Text;
-  typedef std::shared_ptr<Text> TextPtr;
+  
 
   class PixelBuffer;
-  typedef std::shared_ptr<PixelBuffer> PixelBufferPtr;
+  
 
   class DoubleBuffer;
-  typedef std::shared_ptr<DoubleBuffer> DoubleBufferPtr;
+  
 
   class Program;
-  typedef std::shared_ptr<Program> ProgramPtr;
+  
 
   class Sphere;
-  typedef std::shared_ptr<Sphere> SpherePtr;
+  
 
   class GLTimer;
-  typedef std::shared_ptr<GLTimer> GLTimerPtr;
+  
 
   class Quad;
-  typedef std::shared_ptr<Quad> QuadPtr;
+  
 
   class KITAPI RenderPayload
   {
   public:
-    typedef std::shared_ptr<kit::RenderPayload> Ptr;
-
-    static Ptr create();
+    
+    RenderPayload();
 
     void assertSorted();
 
-    std::vector<kit::RenderablePtr> & getRenderables();
-    void addRenderable(kit::RenderablePtr renderable);
-    void removeRenderable(kit::RenderablePtr renderable);
+    std::vector<kit::Renderable*> & getRenderables();
+    void addRenderable(kit::Renderable* renderable);
+    void removeRenderable(kit::Renderable* renderable);
 
-    std::vector<kit::LightPtr> & getLights();
+    std::vector<kit::Light*> & getLights();
 
-    void addLight(kit::LightPtr lightptr);
-    void removeLight(kit::LightPtr lightptr);
+    void addLight(kit::Light* lightptr);
+    void removeLight(kit::Light* lightptr);
 
   private:
-    std::vector<kit::LightPtr> m_lights;
-    std::vector<kit::RenderablePtr> m_renderables;
-    bool m_isSorted;
+    std::vector<kit::Light*> m_lights;
+    std::vector<kit::Renderable*> m_renderables;
+    bool m_isSorted = false;
   };
 
-  class KITAPI Renderer : public std::enable_shared_from_this<Renderer>
+  class KITAPI Renderer
   {
   public:
 
-    typedef std::shared_ptr<kit::Renderer> Ptr;
+    
 
     enum KITAPI  BloomQuality
     {
@@ -83,22 +80,22 @@ namespace kit
       High
     };
 
-    void setSkybox(kit::SkyboxPtr skybox);
+    void setSkybox(kit::Skybox * skybox);
     
-    kit::SkyboxPtr getSkybox();
+    kit::Skybox * getSkybox();
 
-    kit::CameraPtr getActiveCamera();
+    kit::Camera * getActiveCamera();
 
     /// Sets the camera to use when rendering payload
-    void setActiveCamera(kit::CameraPtr camera);
+    void setActiveCamera(kit::Camera * camera);
 
     /// Renders the payload and composes a fully rendered frame, the result is retreivable using getBuffer()
     void renderFrame();
 
     /// Gets a pointer to a texture containing the rendered payload
-    kit::TexturePtr getBuffer();
+    kit::Texture * getBuffer();
 
-    kit::PixelBufferPtr getAccumulationCopy();
+    kit::PixelBuffer * getAccumulationCopy();
 
     /// Sets the relative-to-framebuffer resolution for the geometry buffer, light buffer and composition buffer
     void setInternalResolution(float size);
@@ -129,9 +126,9 @@ namespace kit
     bool const & getColorCorrection();
 
     /// Sets the lookup table for color correction
-    void setCCLookupTable(kit::TexturePtr lut);
+    void setCCLookupTable(kit::Texture * lut);
     void loadCCLookupTable(const std::string& name);
-    kit::TexturePtr getCCLookupTable();
+    kit::Texture * getCCLookupTable();
 
     /// Sets bloom quality 
     void setBloomQuality(BloomQuality q);
@@ -145,8 +142,8 @@ namespace kit
     void setBloomBlurLevels(uint32_t b2, uint32_t b4, uint32_t b8, uint32_t b16, uint32_t b32);
     
     /// Set bloom dirt mask
-    void setBloomDirtMask(kit::TexturePtr m);
-    kit::TexturePtr getBloomDirtMask();
+    void setBloomDirtMask(kit::Texture * m);
+    kit::Texture * getBloomDirtMask();
 
     /// Set bloom dirt mask multiplier
     void setBloomDirtMaskMultiplier(float m);
@@ -165,10 +162,10 @@ namespace kit
     float  const & getSceneFringeScale();
 
     /// Adds a payload to renderer
-    void registerPayload(kit::RenderPayload::Ptr payload);
+    void registerPayload(kit::RenderPayload * payload);
 
     /// Removes payload from the renderer
-    void unregisterPayload(kit::RenderPayload::Ptr payload);
+    void unregisterPayload(kit::RenderPayload * payload);
 
     /// Set resolution
     void setResolution(glm::uvec2 resolution);
@@ -177,15 +174,13 @@ namespace kit
     /// Enables/disables GPU metrics
     void setGPUMetrics(bool enabled);
     bool const & getGPUMetrics();
-
-    static Ptr create(glm::uvec2 resolution);
     
-    kit::TextPtr getMetricsText();
+    kit::Text * getMetricsText();
 
     Renderer(glm::uvec2 resolution);
     ~Renderer();
     
-    kit::PixelBufferPtr getGeometryBuffer();
+    kit::PixelBuffer * getGeometryBuffer();
     
     void setSRGBEnabled(bool const & v);
     bool getSRGBEnabled();
@@ -205,7 +200,7 @@ namespace kit
     void renderFrameWithoutMetrics();
 
     void updateBuffers();
-    void renderLight(kit::LightPtr);
+    void renderLight(kit::Light *);
     
     static void allocateShared();
     static void releaseShared();
@@ -214,7 +209,7 @@ namespace kit
     static uint32_t             m_instanceCount;
     float                       m_internalResolution = 1.0;
     glm::uvec2                  m_resolution = glm::uvec2(0, 0);
-    kit::QuadPtr                m_screenQuad = nullptr;
+    kit::Quad *                m_screenQuad = nullptr;
     
     // Renderbuffers
     /*
@@ -258,28 +253,28 @@ namespace kit
      *  2   RGBA16F   N.x   N.y   N.z   O
      *  D   Depth24   D
      */
-    kit::PixelBufferPtr       m_geometryBuffer = nullptr;       // Geometry-pass goes here                        Linear
-    kit::PixelBufferPtr       m_accumulationBuffer = nullptr;   // Light passes, forward pass goes here           Linear
-    kit::DoubleBufferPtr      m_compositionBuffer = nullptr;    // HDR->LDR pass, post effects goes here          Linear
+    kit::PixelBuffer *       m_geometryBuffer = nullptr;       // Geometry-pass goes here                        Linear
+    kit::PixelBuffer *       m_accumulationBuffer = nullptr;   // Light passes, forward pass goes here           Linear
+    kit::DoubleBuffer *      m_compositionBuffer = nullptr;    // HDR->LDR pass, post effects goes here          Linear
     
-    kit::PixelBufferPtr       m_accumulationCopy = nullptr; // Holds a copy of the depth buffer for forward renderables who need it
+    kit::PixelBuffer *       m_accumulationCopy = nullptr; // Holds a copy of the depth buffer for forward renderables who need it
 
     // Light rendering
-    kit::TexturePtr           m_integratedBRDF = nullptr;
-    kit::ProgramPtr           m_programEmissive = nullptr;
-    kit::ProgramPtr           m_programIBL = nullptr;
-    kit::ProgramPtr           m_programDirectional = nullptr;
-    kit::ProgramPtr           m_programDirectionalNS = nullptr;
-    kit::ProgramPtr           m_programSpot = nullptr;
-    kit::ProgramPtr           m_programSpotNS = nullptr;
-    kit::ProgramPtr           m_programPoint = nullptr;
-    kit::ProgramPtr           m_programPointNS = nullptr;
-    kit::SpherePtr            m_pointGeometry = nullptr;
+    kit::Texture *           m_integratedBRDF = nullptr;
+    kit::Program *           m_programEmissive = nullptr;
+    kit::Program *           m_programIBL = nullptr;
+    kit::Program *           m_programDirectional = nullptr;
+    kit::Program *           m_programDirectionalNS = nullptr;
+    kit::Program *           m_programSpot = nullptr;
+    kit::Program *           m_programSpotNS = nullptr;
+    kit::Program *           m_programPoint = nullptr;
+    kit::Program *           m_programPointNS = nullptr;
+    kit::Sphere *            m_pointGeometry = nullptr;
 
     // Render payload (renderables, lights, camera)
-    kit::CameraPtr            m_activeCamera = nullptr;
-    std::vector<RenderPayload::Ptr> m_payload;
-    kit::SkyboxPtr            m_skybox = nullptr;
+    kit::Camera *            m_activeCamera = nullptr;
+    std::vector<RenderPayload*> m_payload;
+    kit::Skybox *           m_skybox = nullptr;
 
     // Shadow stuff
     bool                        m_shadowsEnabled = true;
@@ -289,15 +284,15 @@ namespace kit
     BloomQuality                m_bloomQuality = BloomQuality::High;
     float                       m_bloomDirtMultiplier = 3.0f;
     float                       m_bloomTresholdBias = 0.0f;
-    kit::ProgramPtr             m_bloomBrightProgram = nullptr;
-    kit::ProgramPtr             m_bloomBlurProgram = nullptr;
-    kit::TexturePtr             m_bloomDirtTexture = nullptr;
-    kit::DoubleBufferPtr        m_bloomBrightBuffer = nullptr;
-    kit::DoubleBufferPtr        m_bloomBlurBuffer2 = nullptr;
-    kit::DoubleBufferPtr        m_bloomBlurBuffer4 = nullptr;
-    kit::DoubleBufferPtr        m_bloomBlurBuffer8 = nullptr;
-    kit::DoubleBufferPtr        m_bloomBlurBuffer16 = nullptr;
-    kit::DoubleBufferPtr        m_bloomBlurBuffer32 = nullptr;
+    kit::Program *             m_bloomBrightProgram = nullptr;
+    kit::Program *             m_bloomBlurProgram = nullptr;
+    kit::Texture *             m_bloomDirtTexture = nullptr;
+    kit::DoubleBuffer *        m_bloomBrightBuffer = nullptr;
+    kit::DoubleBuffer *        m_bloomBlurBuffer2 = nullptr;
+    kit::DoubleBuffer *        m_bloomBlurBuffer4 = nullptr;
+    kit::DoubleBuffer *        m_bloomBlurBuffer8 = nullptr;
+    kit::DoubleBuffer *        m_bloomBlurBuffer16 = nullptr;
+    kit::DoubleBuffer *        m_bloomBlurBuffer32 = nullptr;
     uint32_t                    m_bloomBlurLevel2 = 1;
     uint32_t                    m_bloomBlurLevel4 = 2;
     uint32_t                    m_bloomBlurLevel8 = 4;
@@ -305,35 +300,35 @@ namespace kit
     uint32_t                    m_bloomBlurLevel32 = 16;
     
     // HDR stuff + bloom application
-    kit::ProgramPtr             m_hdrTonemap = nullptr;
-    kit::ProgramPtr             m_hdrTonemapBloomHigh = nullptr;
-    kit::ProgramPtr             m_hdrTonemapBloomLow = nullptr;
-    kit::ProgramPtr             m_hdrTonemapBloomHighDirt = nullptr;
-    kit::ProgramPtr             m_hdrTonemapBloomLowDirt = nullptr;
+    kit::Program *             m_hdrTonemap = nullptr;
+    kit::Program *             m_hdrTonemapBloomHigh = nullptr;
+    kit::Program *             m_hdrTonemapBloomLow = nullptr;
+    kit::Program *             m_hdrTonemapBloomHighDirt = nullptr;
+    kit::Program *             m_hdrTonemapBloomLowDirt = nullptr;
 
     // Scene fringe stuff
     bool                        m_fringeEnabled = true;
-    kit::ProgramPtr             m_fringeProgram = nullptr;
+    kit::Program *             m_fringeProgram = nullptr;
     float                       m_fringeExponential = 1.5f;
     float                       m_fringeScale = 0.01f;
     
     // FXAA stuff
     bool                        m_fxaaEnabled = true;
-    kit::ProgramPtr             m_fxaaProgram = nullptr;
+    kit::Program *             m_fxaaProgram = nullptr;
     
     // Color correction stuff
     bool                          m_ccEnabled = false;
-    kit::ProgramPtr               m_ccProgram = nullptr;
-    kit::TexturePtr               m_ccLookupTable = nullptr;
+    kit::Program *               m_ccProgram = nullptr;
+    kit::Texture *               m_ccLookupTable = nullptr;
 
     // sRGB conversion ???
-    kit::ProgramPtr               m_srgbProgram = nullptr;
+    kit::Program *               m_srgbProgram = nullptr;
     bool                          m_srgbEnabled = true;
 
     // Debug information (GPU metrics, fps etc)
     bool                        m_metricsEnabled = false;
-    kit::TextPtr                m_metrics = nullptr;
-    kit::GLTimerPtr             m_metricsTimer = nullptr;
+    kit::Text *                m_metrics = nullptr;
+    kit::GLTimer *             m_metricsTimer = nullptr;
     kit::Timer                  m_metricsFPSTimer;
     uint32_t                    m_framesCount = 0;
     uint32_t                    m_metricsFPS = 0;
@@ -342,5 +337,3 @@ namespace kit
   };
   
 }
-
-#endif

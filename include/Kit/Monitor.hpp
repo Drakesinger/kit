@@ -1,5 +1,4 @@
-#ifndef KIT_MONITOR_HEADER
-#define KIT_MONITOR_HEADER
+#pragma once
 
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
@@ -7,7 +6,6 @@
 
 #include <vector>
 #include <string>
-#include <memory>
 
 struct GLFWmonitor;
 
@@ -17,11 +15,11 @@ namespace kit
   struct KITAPI VideoMode
   {
     int m_width;
-    int m_Height;
-    int m_RedBits;
-    int m_GreenBits;
-    int m_BlueBits;
-    int m_RefreshRate;
+    int m_height;
+    int m_redBits;
+    int m_greenBits;
+    int m_blueBits;
+    int m_refreshRate;
 
     glm::uvec2 Resolution();
   };
@@ -29,8 +27,6 @@ namespace kit
   class KITAPI Monitor
   {
     public:
-
-      typedef std::shared_ptr<Monitor> Ptr;
 
       ~Monitor();
 
@@ -44,8 +40,8 @@ namespace kit
       std::vector<kit::VideoMode>  getVideoModes();
       kit::VideoMode               getVideoMode();
 
-      static std::vector<kit::Monitor::Ptr> getConnectedMonitors();
-      static kit::Monitor::Ptr              getPrimaryMonitor();
+      static std::vector<kit::Monitor*> getMonitors();
+      static kit::Monitor*              getPrimaryMonitor();
       Monitor(GLFWmonitor*);
 
     private:
@@ -56,13 +52,11 @@ namespace kit
       
       static uint32_t m_instanceCount;
       static void __monfunc(GLFWmonitor * mon, int event);
-      static kit::Monitor::Ptr findMonitor(GLFWmonitor * mon);
-      static std::vector<kit::Monitor::Ptr> m_monitors;
+      static kit::Monitor* findMonitor(GLFWmonitor * mon);
+      static std::vector<kit::Monitor*> m_monitors;
       
       GLFWmonitor  * m_glfwHandle;
       bool           m_connected;
   };
 
 }
-
-#endif // KIT_MONITOR_HEADER

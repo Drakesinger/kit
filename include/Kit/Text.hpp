@@ -4,17 +4,14 @@
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
 
-
-#include <memory>
-
 namespace kit 
 {
 
   class Font;
-  typedef std::shared_ptr<Font> FontPtr;
+  
 
   class Program;
-  typedef std::shared_ptr<Program> ProgramPtr;
+  
  
   class KITAPI Text
   {
@@ -33,11 +30,8 @@ namespace kit
         Middle,
         Bottom
       };
-
-      typedef std::shared_ptr<kit::Text> Ptr;
-      typedef std::shared_ptr<kit::Text> WPtr;
       
-      static kit::Text::Ptr create(kit::FontPtr font, float fontsize, std::wstring text, glm::vec2 position = glm::vec2(0.0, 0.0));
+      Text(kit::Font * font, float fontsize, std::wstring text, glm::vec2 position = glm::vec2(0.0, 0.0));
       
       void renderShadowed(glm::ivec2 resolution, glm::vec2 shadowOffset, glm::vec4 shadowColor);
       void render(glm::ivec2 resolution);
@@ -45,8 +39,8 @@ namespace kit
       void setText(std::wstring text);
       std::wstring const & getText();
       
-      void setFont(kit::FontPtr font);
-      kit::FontPtr getFont();
+      void setFont(kit::Font * font);
+      kit::Font * getFont();
       
       void setFontSize(float fontsize);
       float const & getFontSize();
@@ -62,7 +56,6 @@ namespace kit
       
       void setAlignment(HAlignment h, VAlignment v);
       
-      Text();
       ~Text();
       
     private:
@@ -77,10 +70,10 @@ namespace kit
       
       uint32_t m_indexCount;
       
-      static kit::ProgramPtr m_renderProgram;
+      static kit::Program * m_renderProgram;
       static uint32_t m_instanceCount;
       
-      kit::FontPtr m_font;
+      kit::Font * m_font;
       float m_fontSize;
       glm::vec4 m_color;
       HAlignment m_hAlignment;

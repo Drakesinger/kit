@@ -13,10 +13,10 @@
 int main(int argc, char *argv[])
 {
   // Create a window
-  auto win = kit::Window::create("Foo", kit::Window::Windowed, glm::uvec2(1280, 720));
+  auto win = new kit::Window("Foo", kit::Window::Windowed, glm::uvec2(1280, 720));
 
   // Create our text
-  auto txt = kit::Text::create(kit::Font::getSystemFont(), 14.0f, L"Hello, world!");
+  auto txt = new kit::Text(kit::Font::getSystemFont(), 14.0f, L"Hello, world!");
 
   // Place our text in the exact middle of the screen
   txt->setPosition(glm::vec2(1280.0f / 2.0f, 720.0f / 2.0f));
@@ -46,4 +46,7 @@ int main(int argc, char *argv[])
     // Flip the buffers so that what we just rendered is visible on the window
     win->display();
   }
+  
+  delete txt;
+  delete win;
 }

@@ -1,11 +1,9 @@
-#ifndef KIT_CONVEXHULL_HPP
-#define KIT_CONVEXHULL_HPP
+#pragma once
 
 #include "Kit/Transformable.hpp"
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
 
-#include <memory>
 #include <map>
 #include <string>
 
@@ -84,15 +82,10 @@ namespace kit
   class KITAPI ConvexHull : public kit::Transformable
   {
   public:
-
-
-    typedef std::shared_ptr<ConvexHull> Ptr;
-    static Ptr load(const std::string& filename);
-
-    bool overlaps(Ptr hull);
+    bool overlaps(ConvexHull* hull);
     bool overlaps(glm::vec3 point);
 
-    ConvexHull();
+    ConvexHull(const std::string& filename);
     ~ConvexHull();
 
     std::vector<glm::vec3> & getLocalPoints();
@@ -106,5 +99,3 @@ namespace kit
     std::vector<Plane> m_planes;
   };
 }
-
-#endif

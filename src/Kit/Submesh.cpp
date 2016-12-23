@@ -1,34 +1,34 @@
 #include "Kit/Submesh.hpp"
 #include "Kit/IncOpenGL.hpp"
 
-std::map<std::string, kit::Submesh::Ptr> kit::Submesh::m_cache = std::map<std::string, kit::Submesh::Ptr>();
+std::map<std::string, kit::Submesh*> kit::Submesh::m_cache = std::map<std::string, kit::Submesh*>();
 
 kit::Submesh::Submesh(const std::string&filename)
 {
-  this->allocateBuffers();
-  this->m_indexCount = 0;
+  allocateBuffers();
+  m_indexCount = 0;
 
-  this->loadGeometry(filename);
+  loadGeometry(filename);
 }
 
 kit::Submesh::~Submesh()
 {
-  this->releaseBuffers();
+  releaseBuffers();
 }
 
 void kit::Submesh::renderGeometry()
 {
-  glBindVertexArray(this->m_glVertexArray);
-  glDrawElements( GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0);
+  glBindVertexArray(m_glVertexArray);
+  glDrawElements( GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, (void*)0);
 }
 
 void kit::Submesh::renderGeometryInstanced(uint32_t numInstances)
 {
-  glBindVertexArray(this->m_glVertexArray);
-  glDrawElementsInstanced( GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0, numInstances);
+  glBindVertexArray(m_glVertexArray);
+  glDrawElementsInstanced( GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, (void*)0, numInstances);
 }
 
-kit::Submesh::Ptr kit::Submesh::load(const std::string& name, kit::DataSource source)
+kit::Submesh* kit::Submesh::load(const std::string& name, kit::DataSource source)
 {
   std::string full = kit::getDataDirectory(source) + std::string ("geometry/") + name;
 
@@ -38,30 +38,32 @@ kit::Submesh::Ptr kit::Submesh::load(const std::string& name, kit::DataSource so
     return finder->second;
   }
   
-  kit::Submesh::m_cache[full] = std::make_shared<kit::Submesh>(full);
+  kit::Submesh::m_cache[full] = new kit::Submesh(full);
   
   return kit::Submesh::m_cache[full];
 }
 
 void kit::Submesh::flushCache()
 {
-  kit::Submesh::m_cache.clear();
+  for(auto & t : m_cache)
+    delete t.second;
+  
+  m_cache.clear();
 }
 
 void kit::Submesh::allocateBuffers()
 {
-  
-  glGenVertexArrays(1, &this->m_glVertexArray);
-  glGenBuffers(1, &this->m_glVertexIndices);
-  glGenBuffers(1, &this->m_glVertexBuffer);
+  glGenVertexArrays(1, &m_glVertexArray);
+  glGenBuffers(1, &m_glVertexIndices);
+  glGenBuffers(1, &m_glVertexBuffer);
 }
 
 void kit::Submesh::releaseBuffers()
 {
   
-  glDeleteBuffers(1, &this->m_glVertexIndices);
-  glDeleteBuffers(1, &this->m_glVertexBuffer);
-  glDeleteVertexArrays(1, &this->m_glVertexArray);
+  glDeleteBuffers(1, &m_glVertexIndices);
+  glDeleteBuffers(1, &m_glVertexBuffer);
+  glDeleteVertexArrays(1, &m_glVertexArray);
 }
 
 void kit::Submesh::loadGeometry(const std::string&filename)
@@ -73,16 +75,16 @@ void kit::Submesh::loadGeometry(const std::string&filename)
     KIT_THROW("Failed to load submesh data from file");
   }
   
-  this->m_indexCount = (uint32_t)data.m_indices.size();
+  m_indexCount = (uint32_t)data.m_indices.size();
   
-  glBindVertexArray(this->m_glVertexArray);
+  glBindVertexArray(m_glVertexArray);
   
   // Upload indices
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_glVertexIndices);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glVertexIndices);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.m_indices.size() * sizeof(uint32_t), &data.m_indices[0], GL_STATIC_DRAW);
   
   // Upload vertices 
-  glBindBuffer(GL_ARRAY_BUFFER, this->m_glVertexBuffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
   glBufferData(GL_ARRAY_BUFFER, data.m_vertices.size() * 19 * sizeof(float) , &data.m_vertices[0], GL_STATIC_DRAW);
   
   // Total size

@@ -1,5 +1,4 @@
-#ifndef KIT_SPHERE_HPP
-#define KIT_SPHERE_HPP
+#pragma once
 
 
 #include "Kit/Export.hpp"
@@ -12,17 +11,14 @@ namespace kit
   class KITAPI Sphere
   {
   public:
-    typedef std::shared_ptr<kit::Sphere> Ptr;
+    
 
     Sphere(uint32_t rings, uint32_t sectors);
     ~Sphere();
-
-    static kit::Sphere::Ptr create(uint32_t rings, uint32_t sectors);
-
+    
     void renderGeometry();
 
   private:
-
 
     // Individual GPU data
     void allocateBuffers();
@@ -36,5 +32,3 @@ namespace kit
 
   };
 }
-
-#endif // KIT_SPHERE_HPP

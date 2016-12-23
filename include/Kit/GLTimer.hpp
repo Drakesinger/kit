@@ -1,18 +1,13 @@
-#ifndef KIT_GLTIMER_HPP
-#define KIT_GLTIMER_HPP
+#pragma once
 
 #include "Kit/Export.hpp"
-
-#include <memory>
+#include <cstdint>
 
 namespace kit 
 {
   class KITAPI GLTimer
   {
   public:
-    typedef std::shared_ptr<GLTimer> Ptr;
-    
-    static Ptr create();
     
     GLTimer();
     ~GLTimer();
@@ -24,5 +19,3 @@ namespace kit
     uint32_t m_glHandle;
   };
 }
-
-#endif

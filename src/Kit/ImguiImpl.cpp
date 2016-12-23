@@ -16,7 +16,7 @@
 
 #include <functional>
 
-kit::Window::WPtr kit::UISystem::m_window = kit::Window::WPtr();
+kit::Window * kit::UISystem::m_window = nullptr;
 uint32_t kit::UISystem::m_instanceCount = 0;
 
 bool kit::UISystem::m_usesKeyboard = false;
@@ -41,10 +41,10 @@ unsigned int kit::UISystem::imgui_elementsHandle = 0;
 
 kit::UISystem::UISystem()
 {
-  this->m_instanceCount++;
-  if (this->m_instanceCount == 1)
+  m_instanceCount++;
+  if (m_instanceCount == 1)
   {
-    this->allocateShared();
+    allocateShared();
   }
 }
 
@@ -93,15 +93,14 @@ void kit::UISystem::releaseShared()
   ImGui::Shutdown();
 }
 
-void kit::UISystem::setWindow(kit::Window::WPtr window)
+void kit::UISystem::setWindow(kit::Window * window)
 {
-  kit::UISystem::m_window = window;
+  m_window = window;
   #ifdef _WIN32
     ImGuiIO &io = ImGui::GetIO();
-    kit::Window::Ptr win = kit::UISystem::m_window.lock();
-    if (win)
+    if (m_window)
     {
-      io.ImeWindowHandle = glfwGetWin32Window(win->getGLFWHandle());
+      io.ImeWindowHandle = glfwGetWin32Window(m_window->getGLFWHandle());
     }
   #endif
 }
@@ -200,10 +199,9 @@ void kit::UISystem::imgui_renderDrawLists(ImDrawData* draw_data)
 
 const char* kit::UISystem::imgui_getClipboardText()
 {
-  kit::Window::Ptr win = kit::UISystem::m_window.lock();
-  if (win)
+  if (m_window)
   {
-    return glfwGetClipboardString(win->getGLFWHandle());
+    return glfwGetClipboardString(m_window->getGLFWHandle());
   }
   static const char * woot = "";
   return woot;
@@ -211,16 +209,14 @@ const char* kit::UISystem::imgui_getClipboardText()
 
 void kit::UISystem::imgui_setClipboardText(const char * text)
 {
-  kit::Window::Ptr win = kit::UISystem::m_window.lock();
-  if (win)
+  if (m_window)
   {
-    glfwSetClipboardString(win->getGLFWHandle(), text);
+    glfwSetClipboardString(m_window->getGLFWHandle(), text);
   }
 }
 
 bool kit::UISystem::createFontsTexture()
 {
-  
   // Build texture atlas
   ImGuiIO& io = ImGui::GetIO();
   unsigned char* pixels;
@@ -425,8 +421,7 @@ void kit::UISystem::handleEvent(kit::WindowEvent const & evt)
 
 void kit::UISystem::prepareFrame(double const & ms)
 {
-  kit::Window::Ptr win = kit::UISystem::m_window.lock();
-  if (!win)
+  if (!m_window)
   {
     return;
   }
@@ -441,8 +436,8 @@ void kit::UISystem::prepareFrame(double const & ms)
   // Setup display size (every frame to accommodate for window resizing)
   int w, h;
   int display_w, display_h;
-  glfwGetWindowSize(win->getGLFWHandle(), &w, &h);
-  glfwGetFramebufferSize(win->getGLFWHandle(), &display_w, &display_h);
+  glfwGetWindowSize(m_window->getGLFWHandle(), &w, &h);
+  glfwGetFramebufferSize(m_window->getGLFWHandle(), &display_w, &display_h);
   io.DisplaySize = ImVec2((float)w, (float)h);
   io.DisplayFramebufferScale = ImVec2((float)display_w / w, (float)display_h / h);
 
@@ -451,10 +446,10 @@ void kit::UISystem::prepareFrame(double const & ms)
 
   // Setup inputs
   // (we already got mouse wheel, keyboard keys & characters from glfw callbacks polled in glfwPollEvents())
-  if (glfwGetWindowAttrib(win->getGLFWHandle(), GLFW_FOCUSED))
+  if (glfwGetWindowAttrib(m_window->getGLFWHandle(), GLFW_FOCUSED))
   {
     double mouse_x, mouse_y;
-    glfwGetCursorPos(win->getGLFWHandle(), &mouse_x, &mouse_y);
+    glfwGetCursorPos(m_window->getGLFWHandle(), &mouse_x, &mouse_y);
     io.MousePos = ImVec2((float)mouse_x, (float)mouse_y);   // Mouse position in screen coordinates (set to -1,-1 if no mouse / on another screen, etc.)
   }
   else
@@ -464,7 +459,7 @@ void kit::UISystem::prepareFrame(double const & ms)
 
   for (int i = 0; i < 3; i++)
   {
-    io.MouseDown[i] = kit::UISystem::imgui_mousePressed[i] || glfwGetMouseButton(win->getGLFWHandle(), i) != 0;    // If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
+    io.MouseDown[i] = kit::UISystem::imgui_mousePressed[i] || glfwGetMouseButton(m_window->getGLFWHandle(), i) != 0;    // If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
     kit::UISystem::imgui_mousePressed[i] = false;
   }
 
@@ -582,11 +577,11 @@ kit::UISystem::SelectionIterator kit::UISystem::select(const std::string& title,
 }
 
 
-kit::Texture::Ptr kit::UISystem::selectTexture(const std::string& name, kit::Texture::Ptr currentTexture, bool srgb, bool reload, const std::string& prefix)
+kit::Texture * kit::UISystem::selectTexture(const std::string& name, kit::Texture * currentTexture, bool srgb, bool reload, const std::string& prefix)
 {
-  kit::Texture::Ptr newTexture = currentTexture;
+  kit::Texture * newTexture = currentTexture;
   static std::vector<std::string> textures; 
-  static std::vector<kit::Texture::Ptr> textureObjs;
+  static std::vector<kit::Texture *> textureObjs;
   
   if (reload || textures.size() == 0)
   {

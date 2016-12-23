@@ -6,54 +6,49 @@
 
 #include "Kit/Texture.hpp"
 
-#include <memory>
 #include <map>
 
 namespace kit
 {
 
   class Program;
-  typedef std::shared_ptr<Program> ProgramPtr;
+  
 
   class KITAPI Quad 
   {
     public:
       
-      typedef std::shared_ptr<Quad> Ptr;
+      Quad( glm::vec2 position = glm::vec2(0.0f, 0.0f),
+                                    glm::vec2 size     = glm::vec2(1.0f, 1.0f),
+                                    glm::vec4 color    = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
+                                    kit::Texture * texture = nullptr );
       
       ~Quad();
 
-      void render(kit::ProgramPtr customprogram = nullptr);
+      void render(kit::Program * customprogram = nullptr);
       static void renderGeometry();
       static void renderAltGeometry();
 
-      static kit::Quad::Ptr create( glm::vec2 position = glm::vec2(0.0f, 0.0f),
-                                    glm::vec2 size     = glm::vec2(1.0f, 1.0f),
-                                    glm::vec4 color    = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
-                                    kit::Texture::WPtr   = kit::Texture::WPtr() );
+
 
       glm::vec2 const & getPosition();
       glm::vec2 const & getSize();
       glm::vec4 const & getColor();
-      kit::Texture::WPtr & getTexture();
+      kit::Texture * getTexture();
       float const & getDepth();
       
       void setPosition(glm::vec2 position);
       void setSize(glm::vec2 size);
       void setDepth(float d);
       void setColor(glm::vec4 color);
-      void setTexture(kit::Texture::WPtr texture);
-
-      void setBlending(bool b);
+      void setTexture(kit::Texture * texture);
+      void setTextureSubRect(glm::vec2 position, glm::vec2 size);
       
-      Quad(glm::vec2 position,
-        glm::vec2 size,
-        glm::vec4 color,
-        kit::Texture::WPtr);
+      void setBlending(bool b);
     private:
 
       
-      void PrepareProgram(kit::ProgramPtr customprogram = nullptr);
+      void prepareProgram(kit::Program * customprogram = nullptr);
       
       
       // Shared GPU data
@@ -64,15 +59,17 @@ namespace kit
       static uint32_t m_glVertexIndices;
       static uint32_t m_glVertexBuffer;
       
-      static kit::ProgramPtr m_program;
-      static kit::ProgramPtr m_ProgramTextured;
+      static kit::Program * m_program;
+      static kit::Program * m_programTextured;
       
       // Individual CPU cache
       glm::vec2 m_position;
       float      m_depth;
       glm::vec2 m_size;
+      glm::vec2 m_texSubOffset;
+      glm::vec2 m_texSubSize;
       glm::vec4 m_color;
-      kit::Texture::WPtr m_texture;
+      kit::Texture * m_texture;
       bool m_blending;
   };
 

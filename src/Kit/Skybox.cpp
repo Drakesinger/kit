@@ -81,13 +81,13 @@ void main()\n\
 }";
 
 uint32_t kit::Skybox::m_instanceCount = 0;
-kit::Program::Ptr kit::Skybox::m_program = nullptr;
-kit::Program::Ptr kit::Skybox::m_programNoTexture = nullptr;
+kit::Program* kit::Skybox::m_program = nullptr;
+kit::Program* kit::Skybox::m_programNoTexture = nullptr;
 uint32_t kit::Skybox::m_glVertexArray = 0;
 uint32_t kit::Skybox::m_glVertexIndices = 0;
 uint32_t kit::Skybox::m_glVertexBuffer = 0;
 
-kit::Skybox::Skybox(kit::Cubemap::Ptr cubemap)
+kit::Skybox::Skybox(std::string name)
 {
   kit::Skybox::m_instanceCount++;
   if(kit::Skybox::m_instanceCount == 1)
@@ -95,9 +95,22 @@ kit::Skybox::Skybox(kit::Cubemap::Ptr cubemap)
     kit::Skybox::allocateShared();
   }
   
-  this->m_strength = 1.0f;
-  this->m_color = glm::vec3(2.0f/255.0f, 3.0f/255.0f, 4.0f/255.0f);
-  this->m_texture = cubemap;
+  m_strength = 1.0f;
+  m_color = glm::vec3(2.0f/255.0f, 3.0f/255.0f, 4.0f/255.0f);
+  m_texture = kit::Cubemap::loadIrradianceMap(name);
+}
+
+kit::Skybox::Skybox(glm::vec3 color, float strength)
+{
+  kit::Skybox::m_instanceCount++;
+  if(kit::Skybox::m_instanceCount == 1)
+  {
+    kit::Skybox::allocateShared();
+  }
+  
+  m_strength = strength;
+  m_color = color;
+  m_texture = nullptr;
 }
 
 kit::Skybox::~Skybox()
@@ -107,6 +120,8 @@ kit::Skybox::~Skybox()
   {
     kit::Skybox::releaseShared();
   }
+  
+  if(m_texture) delete m_texture;
 }
 
 void kit::Skybox::renderGeometry()
@@ -116,32 +131,26 @@ void kit::Skybox::renderGeometry()
   glDrawElements(GL_TRIANGLES, (uint32_t)indices.size(), GL_UNSIGNED_INT, (void*)0);
 }
 
-void kit::Skybox::render(kit::Renderer::Ptr renderer)
+void kit::Skybox::render(kit::Renderer* renderer)
 {
   glm::mat4 rotProjMatrix = renderer->getActiveCamera()->getProjectionMatrix() * glm::inverse(renderer->getActiveCamera()->getRotationMatrix());
-  if (this->m_texture)
+  if (m_texture)
   {
     kit::Skybox::m_program->use();
     kit::Skybox::m_program->setUniformMat4("uniform_rotProjMatrix", rotProjMatrix);
     kit::Skybox::m_program->setUniform1f("uniform_farclip", renderer->getActiveCamera()->getClipRange().y);
-    kit::Skybox::m_program->setUniformCubemap("uniform_texture", this->m_texture);
-    kit::Skybox::m_program->setUniform1f("uniform_strength", this->m_strength);
+    kit::Skybox::m_program->setUniformCubemap("uniform_texture", m_texture);
+    kit::Skybox::m_program->setUniform1f("uniform_strength", m_strength);
   }
   else
   {
     kit::Skybox::m_programNoTexture->use();
     kit::Skybox::m_programNoTexture->setUniformMat4("uniform_rotProjMatrix", rotProjMatrix);
     kit::Skybox::m_programNoTexture->setUniform1f("uniform_farclip", renderer->getActiveCamera()->getClipRange().y);
-    kit::Skybox::m_programNoTexture->setUniform4f("uniform_color", glm::vec4(this->m_color.x, this->m_color.y, this->m_color.z, this->m_strength));
+    kit::Skybox::m_programNoTexture->setUniform4f("uniform_color", glm::vec4(m_color.x, m_color.y, m_color.z, m_strength));
   }
 
-  this->renderGeometry();
-}
-
-kit::Skybox::Ptr kit::Skybox::create(kit::Cubemap::Ptr cubemap)
-{
-  //return kit::Skybox::Ptr(new kit::Skybox(cubemap));
-  return std::make_shared<kit::Skybox>(cubemap);
+  renderGeometry();
 }
 
 void kit::Skybox::allocateShared()
@@ -170,18 +179,18 @@ void kit::Skybox::allocateShared()
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
 
-  kit::Skybox::m_program = kit::Program::create();
-  kit::Skybox::m_programNoTexture = kit::Program::create();
+  kit::Skybox::m_program = new kit::Program();
+  kit::Skybox::m_programNoTexture = new kit::Program();
   
-  auto pixelShader = kit::Shader::create(Shader::Type::Fragment);
+  auto pixelShader = new kit::Shader(Shader::Type::Fragment);
   pixelShader->sourceFromString(pixelSource);
   pixelShader->compile();
   
-  auto pixelShaderNoTexture = kit::Shader::create(Shader::Type::Fragment);
+  auto pixelShaderNoTexture = new kit::Shader(Shader::Type::Fragment);
   pixelShaderNoTexture->sourceFromString(pixelSourceNoTex);
   pixelShaderNoTexture->compile();
 
-  auto vertexShader = kit::Shader::create(Shader::Type::Vertex);
+  auto vertexShader = new kit::Shader(Shader::Type::Vertex);
   vertexShader->sourceFromString(vertexSource);
   vertexShader->compile();
   
@@ -196,6 +205,10 @@ void kit::Skybox::allocateShared()
   kit::Skybox::m_programNoTexture->link();
   kit::Skybox::m_programNoTexture->detachShader(pixelShaderNoTexture);
   kit::Skybox::m_programNoTexture->detachShader(vertexShader);
+  
+  delete vertexShader;
+  delete pixelShader;
+  delete pixelShaderNoTexture;
 }
 
 void kit::Skybox::releaseShared()
@@ -203,34 +216,31 @@ void kit::Skybox::releaseShared()
   glDeleteBuffers(1, &kit::Skybox::m_glVertexIndices);
   glDeleteBuffers(1, &kit::Skybox::m_glVertexBuffer);
   glDeleteVertexArrays(1, &kit::Skybox::m_glVertexArray);
+  delete m_program;
+  delete m_programNoTexture;
 }
 
-kit::Cubemap::Ptr kit::Skybox::getTexture()
+kit::Cubemap * kit::Skybox::getTexture()
 {
-  return this->m_texture;
-}
-
-void kit::Skybox::setTexture(kit::Cubemap::Ptr cubemaptexture)
-{
-  this->m_texture = cubemaptexture;
+  return m_texture;
 }
 
 void kit::Skybox::setColor(glm::vec3 c)
 {
-  this->m_color = c;
+  m_color = c;
 }
 
 void kit::Skybox::setStrength(float s)
 {
-  this->m_strength = s;
+  m_strength = s;
 }
 
 glm::vec3 kit::Skybox::getColor()
 {
-  return this->m_color;
+  return m_color;
 }
 
 float kit::Skybox::getStrength()
 {
-  return this->m_strength;
+  return m_strength;
 }

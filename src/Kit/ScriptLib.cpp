@@ -497,7 +497,8 @@ chaiscript::ModulePtr kit::getScriptLibrary()
         {chaiscript::fun(&kit::Renderer::setSceneFringeScale), "setSceneFringeScale"},
         {chaiscript::fun(&kit::Renderer::setBloomTresholdBias), "setBloomTresholdBias"},
         {chaiscript::fun(&kit::Renderer::setBloomQuality), "setBloomQuality"},
-        {chaiscript::fun(&kit::Renderer::setGPUMetrics), "setGPUMetrics" }
+        {chaiscript::fun(&kit::Renderer::setGPUMetrics), "setGPUMetrics" },
+        {chaiscript::fun(&kit::Renderer::getResolution), "getResolution" },
      
       }
     );

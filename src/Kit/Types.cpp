@@ -984,6 +984,20 @@ void kit::writeVec2(std::ostream & s, glm::vec2 v)
   }
 }
 
+glm::uvec2 kit::readVec2u(std::istream & s)
+{
+  glm::uvec2 v;
+  v.x = kit::readUint32(s);
+  v.y = kit::readUint32(s);
+  return v;
+}
+
+void kit::writeVec2u(std::ostream & s, glm::uvec2 v)
+{
+  kit::writeUint32(s, v.x);
+  kit::writeUint32(s, v.y);
+}
+
 glm::vec3 kit::readVec3(std::istream & s)
 {
   glm::vec3 v;

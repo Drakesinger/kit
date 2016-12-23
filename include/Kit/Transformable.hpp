@@ -1,12 +1,10 @@
-#ifndef KIT_TRANSFORMABLE_HPP
-#define KIT_TRANSFORMABLE_HPP
+#pragma once
 
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <memory>
 
 namespace kit 
 {
@@ -14,9 +12,7 @@ namespace kit
   class KITAPI Transformable 
   {
     public:
-      typedef std::shared_ptr<Transformable> Ptr;
-      typedef std::weak_ptr<Transformable> WPtr;
-
+      
       enum class RotationOrder : uint8_t
       {
         XYZ,
@@ -29,9 +25,9 @@ namespace kit
       
       Transformable();
     
-      Transformable::Ptr getParent();
+      Transformable * getParent();
       
-      void attachTo(Transformable::Ptr parent);
+      void attachTo(Transformable * parent);
       
       glm::mat4 getRotationMatrix();
       glm::mat4 getTransformMatrix();
@@ -62,7 +58,7 @@ namespace kit
       
 
     private:
-      Transformable::WPtr m_parent;
+      Transformable * m_parent = nullptr;
       
       glm::mat4 m_transformMatrix;
       bool m_transformMatrixDirty;
@@ -73,5 +69,3 @@ namespace kit
   };
   
 }
-
-#endif // KIT_TRANSFORMABLE_HPP

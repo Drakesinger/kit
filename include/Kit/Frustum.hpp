@@ -1,23 +1,17 @@
-#ifndef KIT_FRUSTUM_HPP
-#define KIT_FRUSTUM_HPP
+#pragma once
 
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
-
-
-#include <memory>
 
 namespace kit
 {
   class KITAPI Frustum
   {
   public:
-    typedef std::shared_ptr<kit::Frustum> Ptr;
+    
 
     Frustum(float fov, float ratio, glm::vec2 cliprange);
     ~Frustum();
-
-    static kit::Frustum::Ptr create(float fov, float ratio, glm::vec2 cliprange);
 
     void renderGeometry();
 
@@ -34,5 +28,3 @@ namespace kit
 
   };
 }
-
-#endif // KIT_FRUSTUM_HPP

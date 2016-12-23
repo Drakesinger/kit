@@ -1,5 +1,4 @@
-#ifndef KIT_WINDOW_HEADER
-#define KIT_WINDOW_HEADER
+#pragma once
 
 #include "Kit/WindowEvent.hpp"
 #include "Kit/Export.hpp"
@@ -25,9 +24,6 @@ namespace kit
   class KITAPI Window
   {
     public:
-
-      typedef std::shared_ptr<Window> Ptr;
-      typedef std::weak_ptr<Window> WPtr;
       
       ///
       /// \brief Represents different window modes
@@ -44,63 +40,48 @@ namespace kit
       ///
       struct KITAPI Args
       {
-        public:
+      public:
           
-          /// 
-          /// \brief Default constructor
-          /// 
-	  Args();
-          
-          ///
-          /// \brief Constructor
-          ///
-          /// \param title The window title to set
-          /// \param mode The window mode to use (fullscreen, windowed etc.)
-          /// \param fullscreenMonitor If the window mode is fullscreen, this parameter specifies on which monitor the window should be on
-          /// \param sharedWindow Specifies a window to share resources with
-          /// \param resizable Specifies whether the window should be resizable
-          ///
-	  Args(const std::string& title, kit::Window::Mode mode, glm::uvec2 resolution, kit::Monitor::Ptr fullscreenMonitor = kit::Monitor::getPrimaryMonitor() , kit::Window::Ptr sharedWindow = nullptr, bool resizable = false);
+        /// 
+        /// \brief Default constructor
+        /// 
+        Args();
+            
+        ///
+        /// \brief Constructor
+        ///
+        /// \param title The window title to set
+        /// \param mode The window mode to use (fullscreen, windowed etc.)
+        /// \param fullscreenMonitor If the window mode is fullscreen, this parameter specifies on which monitor the window should be on
+        /// \param sharedWindow Specifies a window to share resources with
+        /// \param resizable Specifies whether the window should be resizable
+        ///
+        Args(const std::string& title, kit::Window::Mode mode, glm::uvec2 resolution, kit::Monitor * fullscreenMonitor = kit::Monitor::getPrimaryMonitor() , kit::Window * sharedWindow = nullptr, bool resizable = false);
 
-	  std::string        title; ///< The window title to set upon creation
-	  kit::Monitor::Ptr  fullscreenMonitor; ///< The monitor to use (for fullscreen windows, specify with mode)
-	  kit::Window::Mode  mode; ///< The window mode to set upon creation
-	  glm::uvec2         resolution; ///< The window resolution to set upon creation
-	  kit::Window::Ptr   sharedWindow; ///< A window to share resources with, or nullptr
-	  bool               resizable; ///< True if window should be resizable
+        std::string        title = "New window"; ///< The window title to set upon creation
+        kit::Monitor *  fullscreenMonitor = nullptr; ///< The monitor to use (for fullscreen windows, specify with mode)
+        kit::Window::Mode  mode = kit::Window::Windowed; ///< The window mode to set upon creation
+        glm::uvec2         resolution; ///< The window resolution to set upon creation
+        kit::Window *   sharedWindow = nullptr; ///< A window to share resources with, or nullptr
+        bool               resizable = true; ///< True if window should be resizable
 
-	private:
-	  kit::GLFWSingleton m_glfwSingleton;
+      private:
+        kit::GLFWSingleton m_glfwSingleton;
       };
 
       /// 
       /// \brief Creates a window given a title, window-mode and reoslution
       ///
-      /// You should only use the static `create` methods to create instances. Avoid instancing this class yourself!
-      ///
       /// \param title The window title
       /// \param mode The window mode
       /// \param resolution The window resolution
       ///
-      /// \returns A shared pointer pointing to the newly created window
-      ///
-      static kit::Window::Ptr create(const std::string& title, kit::Window::Mode mode, glm::uvec2 resolution);
+      Window(const std::string& title, kit::Window::Mode mode, glm::uvec2 resolution);
 
       /// 
       /// \brief Creates a window given window arguments
       ///
-      /// You should only use the static `create` methods to create instances. Avoid instancing this class yourself!
-      ///
       /// \param windowArgs Contains the window arguments for creation of the window
-      ///
-      /// \returns A shared pointer pointing to the newly created window
-      ///
-      static kit::Window::Ptr create(kit::Window::Args const & windowArgs);
-
-      ///
-      /// \brief Constructor (FOR INTERNAL USE ONLY)
-      /// 
-      /// You should NEVER instance this as usual. ALWAYS use smart pointers (std::shared_ptr), and create them explicitly using the `create` methods!
       ///
       Window(kit::Window::Args const & a);
 
@@ -302,6 +283,9 @@ namespace kit
 
 
     private:
+      
+      static kit::GLFWSingleton                   m_glfwSingleton;
+      
       static uint32_t                      m_instanceCount;
       static std::vector<kit::Window*>     m_windows;
       
@@ -320,8 +304,6 @@ namespace kit
       static void                          __infunc_key(GLFWwindow*, int key, int scancode, int action, int mods);
       static void                          __infunc_char(GLFWwindow*, unsigned int codepoint);
 
-      kit::GLFWSingleton                   m_glfwSingleton;
-
       GLFWwindow                           * m_glfwHandle;
       std::queue<kit::WindowEvent>         m_eventList;
       bool                                 m_eventsDistributed;
@@ -330,5 +312,3 @@ namespace kit
       bool                                 m_virtualMouse;
   };
 }
-
-#endif // KIT_WINDOW_HEADER
