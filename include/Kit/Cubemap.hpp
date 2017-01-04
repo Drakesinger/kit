@@ -70,10 +70,10 @@ namespace kit{
     Cubemap(uint32_t handle);
     
   private:
-    uint32_t	                       m_glHandle;
-    kit::Cubemap::FilteringMode    m_filteringMode;
-    kit::Cubemap::EdgeSamplingMode m_edgeSamplingMode;
-    glm::uvec2                   m_resolution;
+    uint32_t	                       m_glHandle = 0;
+    kit::Cubemap::FilteringMode    m_filteringMode = FilteringMode::Trilinear;
+    kit::Cubemap::EdgeSamplingMode m_edgeSamplingMode = EdgeSamplingMode::Repeat;
+    glm::uvec2                   m_resolution = glm::uvec2(0, 0);
   };
 
 }

@@ -34,30 +34,26 @@ namespace kit {
         ///
         /// \brief Constructor. Constructs a new texture for the attachment, given the different parameters.
         /// \param format The internal format of the new texture
-        /// \param edgemode The edge sampling mode of the new texture
-        /// \param minfilter The minification filtering mode of the new texture.
-        /// \param magfilter The magnification filtering mode of the new texture. Valid paramters are Nearest and Linear.
         ///
-        AttachmentInfo(kit::Texture::InternalFormat format, kit::Texture::EdgeSamplingMode edgemode = kit::Texture::ClampToEdge, kit::Texture::FilteringMode minfilter = kit::Texture::Linear, kit::Texture::FilteringMode magfilter = kit::Texture::Linear);
+        AttachmentInfo(kit::Texture::InternalFormat format, uint8_t levels = 0);
 
         ///
         /// \brief Constructor. Uses pre-existing texture
         /// \param texture Texture to use for attachment
         ///
-        AttachmentInfo(kit::Texture * texture);
+        AttachmentInfo(kit::Texture * texture, bool own = false);
 
         ///
         /// \brief If not null, the attachment will be created using this texture
         /// 
         kit::Texture * texture = nullptr;
+        bool own = false;
 
         ///
         /// \brief If texture is null, the attachment will be created using these parameters
         /// 
-        kit::Texture::InternalFormat    format;
-        kit::Texture::EdgeSamplingMode  edgeSamplingMode;
-        kit::Texture::FilteringMode     minFilteringMode;
-        kit::Texture::FilteringMode     magFilteringMode;
+        kit::Texture::InternalFormat    format = kit::Texture::InternalFormat::RGBA8;
+        uint8_t levels = 1;
       };
 
       ///

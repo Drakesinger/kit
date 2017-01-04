@@ -5,6 +5,9 @@
 
 #include "Kit/Renderable.hpp"
 
+#include <memory>
+
+
 namespace kit 
 {
   class Texture;
@@ -61,7 +64,7 @@ namespace kit
 
       struct LayerInfo
       {
-        kit::Material * material;
+        std::shared_ptr<kit::Material> material;
       };
       
       enum PaintOperation

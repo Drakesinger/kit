@@ -5,20 +5,15 @@
 
 #include <glm/gtx/transform.hpp>
 
+#include <memory>
+
 namespace kit 
 {
   class Texture;
-  
-
   class Program;
-  
-
   class PixelBuffer;
-  
-
   class Camera;
   
-
   class KITAPI Material
   {
     public:
@@ -90,14 +85,12 @@ namespace kit
       
       ~Material();
       Material();
+      Material(std::string const & filename);
       
-      static kit::Material * load(const std::string& filename, bool use_cache = true);
+      static std::shared_ptr<kit::Material> load(const std::string& name);
+
       
       bool save(const std::string& filename);
-
-      static void clearCache(std::string entry = "");
-
-      static std::map<std::string, kit::Material*> getCacheList();
 
       std::string getName();
       
@@ -106,26 +99,26 @@ namespace kit
       const glm::vec3 & getAlbedo();
       void setAlbedo(glm::vec3 albedo);
       
-      kit::Texture * getAlbedoMap();
-      void setAlbedoMap(kit::Texture * albedoMap);
+      std::shared_ptr<kit::Texture> getAlbedoMap();
+      void setAlbedoMap(std::shared_ptr<kit::Texture> albedoMap);
       
-      kit::Texture * getNormalMap();
-      void setNormalMap(kit::Texture * normalMap);
+      std::shared_ptr<kit::Texture> getNormalMap();
+      void setNormalMap(std::shared_ptr<kit::Texture> normalMap);
       
       const float & getRoughness();
       void setRoughness(float roughness);
 
-      kit::Texture * getRoughnessMap();
-      void setRoughnessMap(kit::Texture * roughnessMap);
+      std::shared_ptr<kit::Texture> getRoughnessMap();
+      void setRoughnessMap(std::shared_ptr<kit::Texture> roughnessMap);
       
       const float & getMetalness();
       void setMetalness(float metalness);
 
-      kit::Texture * getMetalnessMap();
-      void setMetalnessMap(kit::Texture * metalnessMap);
+      std::shared_ptr<kit::Texture> getMetalnessMap();
+      void setMetalnessMap(std::shared_ptr<kit::Texture> metalnessMap);
       
-      kit::Texture * getOcclusionMap();
-      void setOcclusionMap(kit::Texture * occlusionMap);
+      std::shared_ptr<kit::Texture> getOcclusionMap();
+      void setOcclusionMap(std::shared_ptr<kit::Texture> occlusionMap);
 
       void setDynamicAR(bool);
       void setDynamicNM(bool);
@@ -137,8 +130,8 @@ namespace kit
       float const & getEmissiveStrength();
       void setEmissiveStrength(float);
 
-      kit::Texture * getEmissiveMap();
-      void setEmissiveMap(kit::Texture * emissiveMap);
+      std::shared_ptr<kit::Texture> getEmissiveMap();
+      void setEmissiveMap(std::shared_ptr<kit::Texture> emissiveMap);
 
       bool const & getDepthRead();
       bool const & getDepthWrite();
@@ -151,8 +144,8 @@ namespace kit
       void setCastShadows(bool enabled);
       bool const & getCastShadows();
 
-      void setOpacityMask(kit::Texture * mask);
-      kit::Texture * getOpacityMask();
+      void setOpacityMask(std::shared_ptr<kit::Texture> mask);
+      std::shared_ptr<kit::Texture> getOpacityMask();
 
       void setOpacity(float opacity);
       float const & getOpacity();
@@ -163,9 +156,8 @@ namespace kit
       kit::Texture * getNDCache();
       
       void setUvScale(float v);
-      void setDepthMask(kit::Texture *);
-
-      kit::Texture * getDepthMask();
+      void setDepthMask(std::shared_ptr<kit::Texture>);
+      std::shared_ptr<kit::Texture> getDepthMask();
       float getUvScale();
 
       void assertCache();
@@ -180,7 +172,7 @@ namespace kit
       void updateUniforms();
       static kit::Program * getProgram(ProgramFlags);
       
-      static std::map<std::string, kit::Material*> m_cache;
+      static std::map<std::string, std::weak_ptr<kit::Material>> m_cache;
       static void allocateShared();
       static void releaseShared();
       static kit::Program * m_cacheProgram; // Program to re-render our caches for NM and AR and EO
@@ -211,26 +203,26 @@ namespace kit
       bool m_doubleSided = false;
 
       glm::vec3        m_albedo = glm::vec3(1.0f, 1.0f, 1.0f);
-      kit::Texture *   m_albedoMap = nullptr;
+      std::shared_ptr<kit::Texture>   m_albedoMap = nullptr;
 
       float             m_opacity = 1.0f;
-      kit::Texture *   m_opacityMask = nullptr;
+      std::shared_ptr<kit::Texture>   m_opacityMask = nullptr;
 
       BlendMode         m_blendMode = BlendMode::None;
 
-      kit::Texture *   m_occlusionMap = nullptr;
+      std::shared_ptr<kit::Texture>   m_occlusionMap = nullptr;
 
       glm::vec3        m_emissiveColor = glm::vec3(1.0f, 1.0f, 1.0f);
       float            m_emissiveStrength = 0.0f;
-      kit::Texture *   m_emissiveMap = nullptr;
+      std::shared_ptr<kit::Texture>   m_emissiveMap = nullptr;
 
-      kit::Texture *   m_normalMap = nullptr;
+      std::shared_ptr<kit::Texture>   m_normalMap = nullptr;
 
       float            m_roughness = 0.0f;
-      kit::Texture *   m_roughnessMap = nullptr;
+      std::shared_ptr<kit::Texture>   m_roughnessMap = nullptr;
 
       float             m_metalness = 0.0f;
-      kit::Texture *   m_metalnessMap = nullptr;
+      std::shared_ptr<kit::Texture>   m_metalnessMap = nullptr;
       
       kit::Program *   m_program = nullptr;
       kit::Program *   m_sProgram = nullptr;
@@ -240,7 +232,7 @@ namespace kit
 
       // SPECIFICS
       float            m_spec_uvScale = 1.0f;
-      kit::Texture *   m_spec_depthMask = nullptr;
+      std::shared_ptr<kit::Texture>   m_spec_depthMask = nullptr;
   };
 }
 

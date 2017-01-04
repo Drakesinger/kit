@@ -1,7 +1,6 @@
 #include "Kit/Window.hpp"
 
 #include "Kit/IncOpenGL.hpp"
-#include "Kit/Monitor.hpp"
 #include "Kit/Exception.hpp"
 #include "Kit/Submesh.hpp"
 #include "Kit/Texture.hpp"
@@ -33,7 +32,7 @@ kit::Window::Args::Args()
   title = "New window";
 }
 
-kit::Window::Args::Args(const std::string & t, kit::Window::Mode m, glm::uvec2 r, kit::Monitor * f, kit::Window * s, bool rz)
+kit::Window::Args::Args(const std::string & t, kit::Window::Mode m, glm::uvec2 r, GLFWmonitor * f, kit::Window * s, bool rz)
 {
   mode = m;
   resolution = r;
@@ -47,12 +46,6 @@ kit::Window::Window(kit::Window::Args const & windowArgs)
 {
   kit::Window::m_instanceCount++;
   
-  m_glfwHandle = nullptr;
-  m_isFocused = true;
-  m_isMinimized = false;
-  m_virtualMouse = false;
-  m_eventsDistributed = false;
-
   // Get the GLFW handle from the window to share resources with
   GLFWwindow * glfwSharedWindow = nullptr;  
   if(windowArgs.sharedWindow != nullptr)
@@ -60,18 +53,28 @@ kit::Window::Window(kit::Window::Args const & windowArgs)
     glfwSharedWindow = windowArgs.sharedWindow->getGLFWHandle();
   }
   
-  // Get the GLFW handle for the fullscreen monitor to use
-  auto autoMon = kit::Monitor::getPrimaryMonitor();
-  GLFWmonitor* glfwFullscreenMonitor = autoMon->getGLFWHandle();
+  // Get the fullscreen monitor to use
+  GLFWmonitor * glfwFullscreenMonitor = nullptr;
   if(windowArgs.fullscreenMonitor)
   {
-      GLFWmonitor* glfwFullscreenMonitor = windowArgs.fullscreenMonitor->getGLFWHandle();
+      glfwFullscreenMonitor = windowArgs.fullscreenMonitor;
+  }
+  else
+  {
+    glfwFullscreenMonitor = glfwGetPrimaryMonitor();
   }
   
-  glm::uvec2 effResolution = windowArgs.resolution;
-  if(effResolution.x < 1 || effResolution.y < 1)
+  if(!glfwFullscreenMonitor)
   {
-    effResolution = glm::uvec2(autoMon->getVideoMode().m_width, autoMon->getVideoMode().m_height);
+    KIT_THROW("No monitor");
+  }
+  
+  // Make sure we have a valid window resolution
+  glm::uvec2 windowResolution = windowArgs.resolution;
+  if(windowResolution.x < 1 || windowResolution.y < 1)
+  {
+    const GLFWvidmode * mode = glfwGetVideoMode(glfwFullscreenMonitor);
+    windowResolution = glm::uvec2(mode->width, mode->height);
   }
 
   // Set OpenGL context hints.
@@ -99,17 +102,17 @@ kit::Window::Window(kit::Window::Args const & windowArgs)
       {
         kit::Window::prepareGLFWHints(GLFW_RESIZABLE, GL_FALSE);
       }
-      m_glfwHandle = glfwCreateWindow(effResolution.x, effResolution.y, windowArgs.title.c_str(), nullptr, glfwSharedWindow);
+      m_glfwHandle = glfwCreateWindow(windowResolution.x, windowResolution.y, windowArgs.title.c_str(), nullptr, glfwSharedWindow);
       break;
 
     case kit::Window::Mode::Fullscreen:
-      m_glfwHandle = glfwCreateWindow(effResolution.x, effResolution.y, windowArgs.title.c_str(), glfwFullscreenMonitor, glfwSharedWindow);
+      m_glfwHandle = glfwCreateWindow(windowResolution.x, windowResolution.y, windowArgs.title.c_str(), glfwFullscreenMonitor, glfwSharedWindow);
       break;
 
     case kit::Window::Mode::Borderless:
       kit::Window::prepareGLFWHints(GLFW_DECORATED, GL_FALSE);
       kit::Window::prepareGLFWHints(GLFW_RESIZABLE, GL_FALSE);
-      m_glfwHandle = glfwCreateWindow(effResolution.x, effResolution.y, windowArgs.title.c_str(), nullptr, glfwSharedWindow);
+      m_glfwHandle = glfwCreateWindow(windowResolution.x, windowResolution.y, windowArgs.title.c_str(), nullptr, glfwSharedWindow);
       break;
 
     default:

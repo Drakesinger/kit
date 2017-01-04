@@ -585,10 +585,10 @@ kit::Texture * kit::UISystem::selectTexture(const std::string& name, kit::Textur
   
   if (reload || textures.size() == 0)
   {
-    textures = kit::Texture::getAvailableTextures(prefix, true);
+    //textures = kit::Texture::getAvailableTextures(prefix, true); //TODO: Fix this (or scrap this impl)
     for(auto currName : textures)
     {
-      textureObjs.push_back(kit::Texture::load(prefix + currName, srgb));
+      //textureObjs.push_back(kit::Texture::load(prefix + currName, srgb)); //TODO fix this 
     }
   }
 
@@ -629,7 +629,7 @@ kit::Texture * kit::UISystem::selectTexture(const std::string& name, kit::Textur
       {
         if(ImGui::ImageButton((ImTextureID)textureObjs[i]->getHandle(), ImVec2(32, 32), ImVec2(0.0, 1.0), ImVec2(1.0, 0.0)))
         {
-          newTexture = kit::Texture::load(prefix + textures[i], srgb);
+          //TODO newTexture = kit::Texture::load(prefix + textures[i], srgb);
           ImGui::CloseCurrentPopup();
         }
 
@@ -637,7 +637,7 @@ kit::Texture * kit::UISystem::selectTexture(const std::string& name, kit::Textur
 
         if (ImGui::Selectable(textures[i].c_str(), (textureObjs[i] == currentTexture), 0, ImVec2(0, 32)))
         {
-          newTexture = kit::Texture::load(prefix + textures[i], srgb);
+          //TODO newTexture = kit::Texture::load(prefix + textures[i], srgb);
         }
       }
       ImGui::EndPopup();

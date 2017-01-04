@@ -117,7 +117,10 @@ kit::Renderer::Renderer(glm::uvec2 resolution)
   // Setup light programs
   m_programEmissive = new kit::Program({"screenquad.vert"}, {"lighting/emissive-light.frag"}, kit::DataSource::Static);
   m_programIBL = new kit::Program({"lighting/directional-light.vert"}, {"normals.glsl", "lighting/ibl-light.frag"}, kit::DataSource::Static);
-  m_integratedBRDF = new kit::Texture(kit::getDataDirectory(kit::DataSource::Static) + "/textures/brdf.tga", kit::Texture::RGBA8, kit::Texture::ClampToEdge, kit::Texture::Linear, kit::Texture::Linear);
+  m_integratedBRDF = new kit::Texture(kit::getDataDirectory(kit::DataSource::Static) + "/textures/brdf.tga", Texture::RGBA8);
+  m_integratedBRDF->setEdgeSamplingMode(Texture::EdgeSamplingMode::ClampToEdge);
+  m_integratedBRDF->setMinFilteringMode(Texture::FilteringMode::LinearMipmapLinear);
+  m_integratedBRDF->setMagFilteringMode(Texture::FilteringMode::Linear);
   m_integratedBRDF->generateMipmap();
   
   m_programDirectional = new kit::Program({"lighting/directional-light.vert"}, {"lighting/cooktorrance.glsl", "normals.glsl", "lighting/directional-light.frag"}, kit::DataSource::Static);
@@ -295,13 +298,14 @@ void kit::Renderer::renderLight(kit::Light * currLight)
       currProgram = m_programDirectionalNS;
     }
     
-    currProgram->use(); 
     currProgram->setUniform3f("uniform_lightColor", currLight->getColor());
     currProgram->setUniform3f("uniform_lightDir", normalize(glm::vec3(v * glm::vec4(currLight->getForward(), 0.0f))));
 
     currProgram->setUniform2f("uniform_projConst", glm::vec2(px, py));
     
     currProgram->setUniformMat4("uniform_invProjMatrix", glm::inverse(p));
+    
+    currProgram->use(); 
     
     //glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     m_screenQuad->render(currProgram);
@@ -320,7 +324,6 @@ void kit::Renderer::renderLight(kit::Light * currLight)
       currProgram = m_programSpotNS;
     }
     
-    currProgram->use();
     currProgram->setUniform3f("uniform_lightColor", currLight->getColor());
     currProgram->setUniform3f("uniform_lightPosition", glm::vec3(v * glm::vec4(currLight->getPosition(), 1.0f)));
     currProgram->setUniform3f("uniform_lightDirection", glm::vec3(v * glm::vec4(currLight->getForward(), 0.0f)));
@@ -329,6 +332,8 @@ void kit::Renderer::renderLight(kit::Light * currLight)
     currProgram->setUniformMat4("uniform_MVPMatrix", mvp);
     currProgram->setUniformMat4("uniform_MVMatrix", mv);
     currProgram->setUniform2f("uniform_projConst", glm::vec2(px, py));
+    
+    currProgram->use();
     
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
@@ -349,7 +354,6 @@ void kit::Renderer::renderLight(kit::Light * currLight)
       currProgram = m_programPointNS;
     //}
     
-    currProgram->use();
     currProgram->setUniform3f("uniform_lightColor", currLight->getColor());
     currProgram->setUniformMat4("uniform_MVPMatrix", mvp);
     //currProgram->setUniform1f("uniform_lightRadius", currLight->getRadius());
@@ -358,6 +362,8 @@ void kit::Renderer::renderLight(kit::Light * currLight)
     
     currProgram->setUniformMat4("uniform_MVMatrix", mv);
     currProgram->setUniform2f("uniform_projConst", glm::vec2(px, py));
+
+    currProgram->use();
     
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
@@ -366,7 +372,7 @@ void kit::Renderer::renderLight(kit::Light * currLight)
   }
   else if(currLight->getType() == kit::Light::IBL)
   {
-    m_programIBL->use();
+
     m_programIBL->setUniform3f("uniform_lightColor", currLight->getColor());
     m_programIBL->setUniformCubemap("uniform_lightIrradiance", currLight->getIrradianceMap());
     m_programIBL->setUniformCubemap("uniform_lightRadiance", currLight->getRadianceMap());
@@ -374,6 +380,8 @@ void kit::Renderer::renderLight(kit::Light * currLight)
     m_programIBL->setUniform2f("uniform_projConst", glm::vec2(px, py));
     
     m_programIBL->setUniformMat4("uniform_invProjMatrix", glm::inverse(p));
+    
+    m_programIBL->use();
     
     //glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     m_screenQuad->render(m_programIBL);
@@ -1030,7 +1038,8 @@ void kit::Renderer::setCCLookupTable(kit::Texture * tex)
 
 void kit::Renderer::loadCCLookupTable(const std::string&name)
 {
-  m_ccLookupTable = new kit::Texture("./data/luts/" + name, Texture::RGB8, Texture::ClampToEdge, Texture::Linear, Texture::Linear, Texture::Texture3D);
+  m_ccLookupTable = new kit::Texture("./data/luts/" + name, Texture::RGB8, 1, Texture::Texture3D);
+  m_ccLookupTable->setEdgeSamplingMode(Texture::ClampToEdge);
 }
 
 kit::Texture * kit::Renderer::getCCLookupTable()
@@ -1254,6 +1263,9 @@ void kit::Renderer::updateBuffers()
   glm::uvec2 effectiveResolution(uint32_t(float(m_resolution.x) * m_internalResolution), uint32_t(float(m_resolution.y) * m_internalResolution));
 
   // create rendering buffers
+  if(m_compositionBuffer)
+    delete m_compositionBuffer;
+  
   m_compositionBuffer = new kit::DoubleBuffer(
     effectiveResolution,
     {
@@ -1262,6 +1274,10 @@ void kit::Renderer::updateBuffers()
   );
   m_compositionBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
 
+  
+  if(m_geometryBuffer)
+    delete m_geometryBuffer;
+  
   m_geometryBuffer = new kit::PixelBuffer(
     effectiveResolution,
     {
@@ -1273,6 +1289,9 @@ void kit::Renderer::updateBuffers()
     );
   m_geometryBuffer->clear({ glm::vec4(0.0, 0.0, 0.0, 0.0), glm::vec4(0.0, 0.0, 0.0, 0.0), glm::vec4(0.0, 0.0, 0.0, 0.0) }, 1.0f);
 
+  if(m_accumulationBuffer)
+    delete m_accumulationBuffer;
+  
   m_accumulationBuffer = new kit::PixelBuffer(
     effectiveResolution,
     {
@@ -1282,6 +1301,9 @@ void kit::Renderer::updateBuffers()
     );
   m_accumulationBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) }, 1.0f);
 
+  if(m_accumulationCopy)
+    delete m_accumulationCopy;
+  
   m_accumulationCopy = new kit::PixelBuffer(
     effectiveResolution,
     {
@@ -1291,25 +1313,43 @@ void kit::Renderer::updateBuffers()
   );
   m_accumulationCopy->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) }, 1.0f);
 
+  if(m_bloomBrightBuffer)
+    delete m_bloomBrightBuffer;
+  
   m_bloomBrightBuffer = new kit::DoubleBuffer(effectiveResolution, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
   m_bloomBrightBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
 
+  if(m_bloomBlurBuffer2)
+    delete m_bloomBlurBuffer2;
+  
   glm::uvec2 bloom2Res(uint32_t(float(effectiveResolution.x) * (1.0f / 2.0f)), uint32_t(float(effectiveResolution.y) * (1.0f / 2.0f)));
   m_bloomBlurBuffer2 = new kit::DoubleBuffer(bloom2Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
   m_bloomBlurBuffer2->clear({glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)});
 
+  if(m_bloomBlurBuffer4)
+    delete m_bloomBlurBuffer4;
+  
   glm::uvec2 bloom4Res(uint32_t(float(effectiveResolution.x) * (1.0f / 4.0f)), uint32_t(float(effectiveResolution.y) * (1.0f / 4.0f)));
   m_bloomBlurBuffer4 = new kit::DoubleBuffer(bloom4Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
   m_bloomBlurBuffer4->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
 
+  if(m_bloomBlurBuffer8)
+    delete m_bloomBlurBuffer8;
+  
   glm::uvec2 bloom8Res(uint32_t(float(effectiveResolution.x) * (1.0f / 8.0f)), uint32_t(float(effectiveResolution.y) * (1.0f / 8.0f)));
   m_bloomBlurBuffer8 = new kit::DoubleBuffer(bloom8Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
   m_bloomBlurBuffer8->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
 
+  if(m_bloomBlurBuffer16)
+    delete m_bloomBlurBuffer16;
+  
   glm::uvec2 bloom16Res(uint32_t(float(effectiveResolution.x) * (1.0f / 16.0f)), uint32_t(float(effectiveResolution.y) * (1.0f / 16.0f)));
   m_bloomBlurBuffer16 = new kit::DoubleBuffer(bloom16Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
   m_bloomBlurBuffer16->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
 
+  if(m_bloomBlurBuffer32)
+    delete m_bloomBlurBuffer32;
+  
   glm::uvec2 bloom32Res(uint32_t(float(effectiveResolution.x) * (1.0f / 32.0f)), uint32_t(float(effectiveResolution.y) * (1.0f / 32.0f)));
   m_bloomBlurBuffer32 = new kit::DoubleBuffer(bloom32Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
   m_bloomBlurBuffer32->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });

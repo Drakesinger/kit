@@ -14,7 +14,7 @@
 #include <random>
 #include <array>
 
-std::map<std::string, kit::Texture*> kit::Texture::m_cachedTextures = std::map<std::string, kit::Texture*>();
+std::unordered_map<std::string, std::weak_ptr<kit::Texture>> kit::Texture::m_cache = std::unordered_map<std::string, std::weak_ptr<kit::Texture>>();
 
 kit::Texture::Texture(Type t)
 {
@@ -24,49 +24,41 @@ kit::Texture::Texture(Type t)
   glGenTextures(1, &m_glHandle);
 #endif
 
-  m_arraySize = 0;  
-  m_edgeSamplingModeS = kit::Texture::Repeat;
-  m_edgeSamplingModeT = kit::Texture::Repeat;
-  m_edgeSamplingModeR = kit::Texture::Repeat;
-  m_internalFormat = RGBA8;
-  m_magFilteringMode = kit::Texture::Linear;
-  m_minFilteringMode = kit::Texture::LinearMipmapLinear;
-  m_resolution = glm::uvec3(0, 0, 0);
   m_type = t;
-  m_anisotropicLevel = 8.0f;
 }
 
 kit::Texture::~Texture()
 {
+  std::cout << "Removing texture \"" << m_filename << "\"" << std::endl;
   glDeleteTextures(1, &m_glHandle);
   glGetError();
 }
 
-kit::Texture::Texture(glm::uvec2 resolution, kit::Texture::InternalFormat format, kit::Texture::EdgeSamplingMode edgemode, kit::Texture::FilteringMode minfilter, kit::Texture::FilteringMode magfilter) : kit::Texture(Type::Texture2D)
+kit::Texture::Texture(glm::uvec2 resolution, kit::Texture::InternalFormat format, uint8_t levels) : kit::Texture(Type::Texture2D)
 {
   m_internalFormat    = format;
   m_resolution        = glm::uvec3(resolution, 0);
 
+  uint8_t mipLevels = levels > 0 ? levels : calculateMipLevels();
+  
 #ifndef KIT_SHITTY_INTEL
-  glTextureStorage2D(m_glHandle, calculateMipLevels(), m_internalFormat, m_resolution.x, m_resolution.y);
+  glTextureStorage2D(m_glHandle, mipLevels, m_internalFormat, m_resolution.x, m_resolution.y);
 #else
   bind();
-  glTexStorage2D(m_type, calculateMipLevels(), m_internalFormat, m_resolution.x, m_resolution.y);
+  glTexStorage2D(m_type, mipLevels, m_internalFormat, m_resolution.x, m_resolution.y);
 #endif
 
-  setEdgeSamplingMode(edgemode);
+  setEdgeSamplingMode(EdgeSamplingMode::Repeat);
+  setMinFilteringMode(m_minFilteringMode);
+  setMagFilteringMode(m_magFilteringMode);
 
-  // Stupid AMD bug https://gist.github.com/haikarainen/97959adfe4e3ca10968a
-  //std::vector<GLubyte> data(returner->m_resolution.x * returner->m_resolution.y, 0);
-  //glTextureSubImage2D(returner->m_glHandle, 0, 0, 0, returner->m_resolution.x, returner->m_resolution.y, GL_RED, GL_UNSIGNED_BYTE, &data[0]);
-  setMinFilteringMode(minfilter);
-  setMagFilteringMode(magfilter);
-
-  setAnisotropicLevel(8.0f);
+  setAnisotropicLevel(1.0f);
 }
 
-kit::Texture::Texture(const std::string & filename, kit::Texture::InternalFormat format, kit::Texture::EdgeSamplingMode edgemode, kit::Texture::FilteringMode minfilter, kit::Texture::FilteringMode magfilter, Type t) : kit::Texture(t)
+kit::Texture::Texture(const std::string & filename, kit::Texture::InternalFormat format, uint8_t levels, Type t) : kit::Texture(t)
 {
+  std::cout << "Loading texture from file \"" << filename.c_str() << "\"" << std::endl;
+  m_filename = filename;
   if(t == Type::Texture2D)
   {
     m_internalFormat    = format;
@@ -80,26 +72,20 @@ kit::Texture::Texture(const std::string & filename, kit::Texture::InternalFormat
     if (bufferdata == nullptr)
     {
       KIT_THROW(stbi_failure_reason());
-      x = 1;
-      y = 1;
-      n = 4;
-      bufferdata = new unsigned char[4];
-      bufferdata[0] = 255;
-      bufferdata[1] = 0;
-      bufferdata[2] = 0;
-      bufferdata[3] = 255;
     }
 
     // Set resolution
     m_resolution        = glm::uvec3(x, y, 0);
 
+    uint8_t mipLevels = levels > 0 ? levels : calculateMipLevels();
+    
     // Specify storage and upload data to GPU
   #ifndef KIT_SHITTY_INTEL
-    glTextureStorage2D(m_glHandle, calculateMipLevels(), m_internalFormat, m_resolution.x, m_resolution.y);
+    glTextureStorage2D(m_glHandle, mipLevels, m_internalFormat, m_resolution.x, m_resolution.y);
     glTextureSubImage2D(m_glHandle, 0, 0, 0, x, y, GL_RGBA, GL_UNSIGNED_BYTE, bufferdata);
   #else
     bind();
-    glTexStorage2D(m_type, calculateMipLevels(), m_internalFormat, m_resolution.x, m_resolution.y);
+    glTexStorage2D(m_type, mipLevels, m_internalFormat, m_resolution.x, m_resolution.y);
     glTexSubImage2D(m_type, 0, 0, 0, x, y, GL_RGBA, GL_UNSIGNED_BYTE, bufferdata);
   #endif
 
@@ -107,17 +93,11 @@ kit::Texture::Texture(const std::string & filename, kit::Texture::InternalFormat
     stbi_image_free(bufferdata);
 
     // Set parameters
-    setEdgeSamplingMode(edgemode);
-    setMinFilteringMode(minfilter);
-    setMagFilteringMode(magfilter);
+    setEdgeSamplingMode(EdgeSamplingMode::Repeat);
+    setMinFilteringMode(m_minFilteringMode);
+    setMagFilteringMode(m_magFilteringMode);
 
     setAnisotropicLevel(1.0f);
-
-    // Generate mipmap
-    if(minfilter != kit::Texture::Linear && minfilter != kit::Texture::Nearest)
-    {
-      generateMipmap();
-    }
   }
   if(t == Type::Texture3D)
   {
@@ -135,7 +115,7 @@ kit::Texture::Texture(const std::string & filename, kit::Texture::InternalFormat
 
     if (y != x*x || y%y != 0)
     {
-      KIT_ERR("Failed to load 3d texture from file, not perfectly cubical");
+      KIT_THROW("Failed to load 3d texture from file, not perfectly cubical");
     }
 
     // Set resolution
@@ -153,16 +133,17 @@ kit::Texture::Texture(const std::string & filename, kit::Texture::InternalFormat
     // Free loaded data
     stbi_image_free(bufferdata);
 
-    // Set parameters
-    setEdgeSamplingMode(edgemode);
-    setMinFilteringMode(minfilter);
-    setMagFilteringMode(magfilter);
+    setEdgeSamplingMode(EdgeSamplingMode::Repeat);
+    setMinFilteringMode(m_minFilteringMode);
+    setMagFilteringMode(m_magFilteringMode);
+
+    setAnisotropicLevel(1.0f);
   }
 }
 
 kit::Texture * kit::Texture::createShadowmap(glm::uvec2 resolution)
 {
-  kit::Texture * returner = new kit::Texture(resolution, kit::Texture::DepthComponent24);
+  kit::Texture * returner = new kit::Texture(resolution, kit::Texture::DepthComponent24, 1);
 #ifndef KIT_SHITTY_INTEL
   glTextureParameteri(returner->getHandle(), GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE );
 #else
@@ -172,36 +153,30 @@ kit::Texture * kit::Texture::createShadowmap(glm::uvec2 resolution)
   return returner;
 }
 
-kit::Texture * kit::Texture::load(const std::string&name, bool srgb)
+std::shared_ptr<kit::Texture> kit::Texture::load(const std::string & name, bool sRGB)
 {
-  if(kit::Texture::m_cachedTextures.find(name) != kit::Texture::m_cachedTextures.end())
+  std::string key = name + (sRGB ? ".sRGB" : ".linear");
+  InternalFormat format = sRGB ? SRGB8Alpha8 : RGBA8;
+  std::string path = kit::getDataDirectory() + "textures/" + name;
+  
+  auto & entry = m_cache[key];
+  auto sharedEntry = entry.lock();
+  
+  if(!sharedEntry)
   {
-    return kit::Texture::m_cachedTextures.at(name);
+    entry = sharedEntry = std::make_shared<kit::Texture>(path, format);
+    sharedEntry->setMinFilteringMode(FilteringMode::LinearMipmapLinear);
+    sharedEntry->setMagFilteringMode(FilteringMode::Linear);
+    sharedEntry->setAnisotropicLevel(4.0f);
+    sharedEntry->generateMipmap();
   }
 
-  static const std::string dataDir = "./data/textures/";
-  kit::Texture * returner =  new kit::Texture(dataDir + name, srgb ? SRGB8Alpha8 : RGBA8, kit::Texture::Repeat, kit::Texture::LinearMipmapLinear, kit::Texture::Linear);
-  returner->m_filename = name;
-  returner->setAnisotropicLevel(8.0f);
-
-  kit::Texture::m_cachedTextures[name] = returner;
-
-  return returner;
+  return sharedEntry;
 }
 
 std::string kit::Texture::getFilename()
 {
   return m_filename;
-}
-
-void kit::Texture::flushCache()
-{
-  for(auto t : kit::Texture::m_cachedTextures)
-  {
-    delete t.second;
-  }
-  
-  kit::Texture::m_cachedTextures.clear();
 }
 
 uint32_t kit::Texture::calculateMipLevels()
@@ -469,18 +444,6 @@ uint32_t kit::Texture::getHandle()
 kit::Texture::InternalFormat kit::Texture::getInternalFormat()
 {
   return m_internalFormat;
-}
-
-std::vector<std::string> kit::Texture::getAvailableTextures(const std::string&prefix, bool reload)
-{
-  std::vector<std::string> result;
-
-  for (auto & currEntry : kit::listFilesystemEntries("./data/textures/" + prefix, true, false))
-  {
-    result.push_back(currEntry.filename);
-  }
-
-  return result;
 }
 
 bool kit::Texture::saveToFile(const std::string&filename)

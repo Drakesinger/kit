@@ -18,46 +18,7 @@ chaiscript::ModulePtr kit::getScriptLibrary()
   if(!wasInitialized)
   {
     std::cout << "Initializing script library" << std::endl;
-    /*
-    // --- Monitor --- //
-    chaiscript::utility::add_class<kit::VideoMode>
-    (
-      *moduleKit,
-      "VideoMode",
-      {
-        chaiscript::constructor<kit::VideoMode()>(),
-        chaiscript::constructor<kit::VideoMode(const kit::VideoMode&)>()
-      },
-      {
-        {chaiscript::fun(&kit::VideoMode::m_width), "m_width"},     
-        {chaiscript::fun(&kit::VideoMode::m_Height), "m_Height"},
-        {chaiscript::fun(&kit::VideoMode::m_RedBits), "m_RedBits"},
-        {chaiscript::fun(&kit::VideoMode::m_GreenBits), "m_GreenBits"},
-        {chaiscript::fun(&kit::VideoMode::m_BlueBits), "m_BlueBits"},
-        {chaiscript::fun(&kit::VideoMode::m_RefreshRate), "m_RefreshRate"},
-        {chaiscript::fun(&kit::VideoMode::Resolution), "Resolution"}
-      }
-    );
-    
-    chaiscript::utility::add_class<kit::Monitor>
-    (
-      *moduleKit,
-      "Monitor",
-      {
-        chaiscript::constructor<kit::Monitor(const kit::Monitor&)>()
-      },
-      {
-        {chaiscript::fun(&kit::Monitor::isConnected), "isConnected"},     
-        {chaiscript::fun(&kit::Monitor::getPhysicalSize), "getPhysicalSize"},
-        {chaiscript::fun(&kit::Monitor::getPosition), "getPosition"},
-        {chaiscript::fun(&kit::Monitor::getName), "getName"},
-        {chaiscript::fun(&kit::Monitor::getVideoModes), "getVideoModes"},
-        {chaiscript::fun(&kit::Monitor::getVideoMode), "getVideoMode"},
-        {chaiscript::fun(&kit::Monitor::getConnectedMonitors), "getConnectedMonitors"},
-        {chaiscript::fun(&kit::Monitor::getPrimaryMonitor), "getPrimaryMonitor"}
-      }
-    );
-    */
+
     // --- Kit types --- //
     chaiscript::utility::add_class<glm::uvec2>
     (

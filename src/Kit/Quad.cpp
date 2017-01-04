@@ -104,11 +104,11 @@ void kit::Quad::prepareProgram(kit::Program * customprogram)
   
   if(customprogram != nullptr)
   {
-    customprogram->use();
     customprogram->setUniform2f("uniform_size", m_size);
     customprogram->setUniform2f("uniform_position", m_position);
     //customprogram->setUniform2f("uniform_texSubOffset", m_texSubOffset);
     //customprogram->setUniform2f("uniform_texSubSize", m_texSubSize);
+    customprogram->use();
   }
   else if(!m_texture)
   {
@@ -124,10 +124,10 @@ void kit::Quad::prepareProgram(kit::Program * customprogram)
       glDisable(GL_DEPTH_TEST);
       glDepthMask(GL_FALSE);
 
-      kit::Quad::m_program->use();
       kit::Quad::m_program->setUniform4f("uniform_color", kit::srgbDec(m_color));
       kit::Quad::m_program->setUniform2f("uniform_size", m_size);
       kit::Quad::m_program->setUniform2f("uniform_position", m_position);
+      kit::Quad::m_program->use();
   }
   else
   {
@@ -142,13 +142,13 @@ void kit::Quad::prepareProgram(kit::Program * customprogram)
     }
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
-    kit::Quad::m_programTextured->use();
     kit::Quad::m_programTextured->setUniformTexture("uniform_texture", m_texture);
     kit::Quad::m_programTextured->setUniform2f("uniform_texSubOffset", m_texSubOffset);
     kit::Quad::m_programTextured->setUniform2f("uniform_texSubSize", m_texSubSize);
     kit::Quad::m_programTextured->setUniform4f("uniform_color", kit::srgbDec(m_color));
     kit::Quad::m_programTextured->setUniform2f("uniform_size", m_size);
     kit::Quad::m_programTextured->setUniform2f("uniform_position", m_position);
+    kit::Quad::m_programTextured->use();
   }
 }
 

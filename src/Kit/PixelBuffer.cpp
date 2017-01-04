@@ -1,21 +1,19 @@
 #include "Kit/PixelBuffer.hpp"
 #include "Kit/IncOpenGL.hpp"
 
-kit::PixelBuffer::AttachmentInfo::AttachmentInfo(kit::Texture * t)
+kit::PixelBuffer::AttachmentInfo::AttachmentInfo(kit::Texture * t, bool o)
 {
-  edgeSamplingMode = Texture::Repeat;
+  own = o;
   format = Texture::RGBA8;
-  magFilteringMode = Texture::Linear;
-  minFilteringMode = Texture::LinearMipmapLinear;
+  levels = 0;
   texture = t;
 }
 
-kit::PixelBuffer::AttachmentInfo::AttachmentInfo(kit::Texture::InternalFormat f, kit::Texture::EdgeSamplingMode edgemode, kit::Texture::FilteringMode minfilter, kit::Texture::FilteringMode magfilter)
+kit::PixelBuffer::AttachmentInfo::AttachmentInfo(kit::Texture::InternalFormat f, uint8_t l)
 {
-  edgeSamplingMode = edgemode;
+
   format = f;
-  magFilteringMode = magfilter;
-  minFilteringMode = minfilter;
+  levels = l;
   texture = nullptr;
 }
 
@@ -118,7 +116,7 @@ kit::PixelBuffer::PixelBuffer(glm::uvec2 resolution, kit::PixelBuffer::Attachmen
           KIT_THROW("Pixelbuffer attachments must be of the same size");
         }
         
-        m_colorAttachments.push_back(AttachmentEntry(info.texture, false));
+        m_colorAttachments.push_back(AttachmentEntry(info.texture, info.own));
 #ifndef KIT_SHITTY_INTEL
         glNamedFramebufferTexture(m_glHandle, currEnum, info.texture->getHandle(), 0);
 #else 
@@ -128,7 +126,7 @@ kit::PixelBuffer::PixelBuffer(glm::uvec2 resolution, kit::PixelBuffer::Attachmen
       }
       else
       {
-        kit::Texture * adder = new kit::Texture(resolution, info.format, info.edgeSamplingMode, info.minFilteringMode, info.magFilteringMode);
+        kit::Texture * adder = new kit::Texture(resolution, info.format, info.levels);
         m_colorAttachments.push_back(AttachmentEntry(adder, true));
 #ifndef KIT_SHITTY_INTEL
         glNamedFramebufferTexture(m_glHandle, currEnum, adder->getHandle(), 0);
@@ -185,7 +183,7 @@ kit::PixelBuffer::PixelBuffer(glm::uvec2 resolution, kit::PixelBuffer::Attachmen
           KIT_THROW("Pixelbuffer attachments must be of the same size");
         }
         
-        m_colorAttachments.push_back(AttachmentEntry(info.texture, false));
+        m_colorAttachments.push_back(AttachmentEntry(info.texture, info.own));
 #ifndef KIT_SHITTY_INTEL
         glNamedFramebufferTexture(m_glHandle, currEnum, info.texture->getHandle(), 0);
 #else 
@@ -195,7 +193,7 @@ kit::PixelBuffer::PixelBuffer(glm::uvec2 resolution, kit::PixelBuffer::Attachmen
       }
       else
       {
-        kit::Texture * adder = new kit::Texture(resolution, info.format, info.edgeSamplingMode, info.minFilteringMode, info.magFilteringMode);
+        kit::Texture * adder = new kit::Texture(resolution, info.format, info.levels);
         m_colorAttachments.push_back(AttachmentEntry(adder, true));
 #ifndef KIT_SHITTY_INTEL
         glNamedFramebufferTexture(m_glHandle, currEnum, adder->getHandle(), 0);
@@ -232,6 +230,7 @@ kit::PixelBuffer::PixelBuffer(glm::uvec2 resolution, kit::PixelBuffer::Attachmen
     }
     
     m_depthAttachment = depthattachment.texture;
+    m_ownDepth = depthattachment.own;
 #ifndef KIT_SHITTY_INTEL
     glNamedFramebufferTexture(m_glHandle, GL_DEPTH_ATTACHMENT, m_depthAttachment->getHandle(), 0);
 #else 
@@ -248,7 +247,9 @@ kit::PixelBuffer::PixelBuffer(glm::uvec2 resolution, kit::PixelBuffer::Attachmen
       KIT_THROW("Wrong internal format of depth component");
     }
     
-    m_depthAttachment = new kit::Texture(resolution, depthattachment.format, depthattachment.edgeSamplingMode, depthattachment.minFilteringMode, depthattachment.magFilteringMode);
+    m_depthAttachment = new kit::Texture(resolution, depthattachment.format, depthattachment.levels);
+    m_ownDepth = true;
+    
 #ifndef KIT_SHITTY_INTEL
     glNamedFramebufferTexture(m_glHandle, GL_DEPTH_ATTACHMENT, m_depthAttachment->getHandle(), 0);
 #else 
@@ -260,7 +261,7 @@ kit::PixelBuffer::PixelBuffer(glm::uvec2 resolution, kit::PixelBuffer::Attachmen
 
 kit::PixelBuffer * kit::PixelBuffer::createShadowBuffer(glm::uvec2 resolution)
 {
-  return new kit::PixelBuffer(resolution, AttachmentList(), AttachmentInfo(kit::Texture::createShadowmap(resolution)));
+  return new kit::PixelBuffer(resolution, AttachmentList(), AttachmentInfo(kit::Texture::createShadowmap(resolution), true));
 }
 
 void kit::PixelBuffer::setDrawBuffers(std::vector< uint32_t > drawBuffers)

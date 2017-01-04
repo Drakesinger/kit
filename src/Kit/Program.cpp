@@ -216,8 +216,6 @@ void kit::Program::setUniformTexture(const std::string & name, kit::Texture * te
 
       this->m_textures[loc] = texture;
     }
-    
-    this->prepareTextures();
   }
 }
 
@@ -246,8 +244,6 @@ void kit::Program::setUniformCubemap(const std::string & name, kit::Cubemap * te
 
       this->m_cubemaps[loc] = texture;
     }
-    
-    this->prepareTextures();
   }
 }
 

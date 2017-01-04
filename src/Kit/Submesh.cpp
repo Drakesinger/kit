@@ -1,10 +1,11 @@
 #include "Kit/Submesh.hpp"
 #include "Kit/IncOpenGL.hpp"
 
-std::map<std::string, kit::Submesh*> kit::Submesh::m_cache = std::map<std::string, kit::Submesh*>();
+std::map<std::string, std::weak_ptr<kit::Submesh>> kit::Submesh::m_cache = std::map<std::string, std::weak_ptr<kit::Submesh>>();
 
 kit::Submesh::Submesh(const std::string&filename)
 {
+  std::cout << "Loading submesh from file \"" << filename << "\"" << std::endl;
   allocateBuffers();
   m_indexCount = 0;
 
@@ -13,6 +14,7 @@ kit::Submesh::Submesh(const std::string&filename)
 
 kit::Submesh::~Submesh()
 {
+  std::cout << "Removing submesh" << std::endl;
   releaseBuffers();
 }
 
@@ -28,27 +30,19 @@ void kit::Submesh::renderGeometryInstanced(uint32_t numInstances)
   glDrawElementsInstanced( GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, (void*)0, numInstances);
 }
 
-kit::Submesh* kit::Submesh::load(const std::string& name, kit::DataSource source)
+std::shared_ptr<kit::Submesh> kit::Submesh::load(const std::string& name)
 {
-  std::string full = kit::getDataDirectory(source) + std::string ("geometry/") + name;
+  std::string path = kit::getDataDirectory() + "geometry/" + name;
 
-  auto finder = kit::Submesh::m_cache.find(full);
-  if(finder != kit::Submesh::m_cache.end())
+  auto & entry = m_cache[name];
+  auto sharedEntry = entry.lock();
+
+  if(!sharedEntry)
   {
-    return finder->second;
+    entry = sharedEntry = std::make_shared<kit::Submesh>(path);
   }
-  
-  kit::Submesh::m_cache[full] = new kit::Submesh(full);
-  
-  return kit::Submesh::m_cache[full];
-}
 
-void kit::Submesh::flushCache()
-{
-  for(auto & t : m_cache)
-    delete t.second;
-  
-  m_cache.clear();
+  return sharedEntry;
 }
 
 void kit::Submesh::allocateBuffers()

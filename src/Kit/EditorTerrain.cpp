@@ -55,7 +55,7 @@ kit::EditorTerrain::EditorTerrain() : kit::Renderable()
   // Initialize the layerinfo array with some sane defaults
   for(auto & currLayer : m_layerInfo)
   {
-    currLayer.material = new kit::Material();
+    currLayer.material = std::make_shared<kit::Material>();
   }
 
   m_name = "";

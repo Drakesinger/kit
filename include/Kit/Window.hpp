@@ -5,13 +5,13 @@
 #include "Kit/Types.hpp"
 
 #include "Kit/Input.hpp"
-#include "Kit/Monitor.hpp"
 
 #include <queue>
 #include <string>
 #include <memory>
 
 struct GLFWwindow;
+struct GLFWmonitor;
 
 namespace kit
 {
@@ -56,10 +56,10 @@ namespace kit
         /// \param sharedWindow Specifies a window to share resources with
         /// \param resizable Specifies whether the window should be resizable
         ///
-        Args(const std::string& title, kit::Window::Mode mode, glm::uvec2 resolution, kit::Monitor * fullscreenMonitor = kit::Monitor::getPrimaryMonitor() , kit::Window * sharedWindow = nullptr, bool resizable = false);
+        Args(const std::string& title, kit::Window::Mode mode, glm::uvec2 resolution, GLFWmonitor * fullscreenMonitor = nullptr , kit::Window * sharedWindow = nullptr, bool resizable = false);
 
         std::string        title = "New window"; ///< The window title to set upon creation
-        kit::Monitor *  fullscreenMonitor = nullptr; ///< The monitor to use (for fullscreen windows, specify with mode)
+        GLFWmonitor *  fullscreenMonitor = nullptr; ///< The monitor to use (for fullscreen windows, specify with mode)
         kit::Window::Mode  mode = kit::Window::Windowed; ///< The window mode to set upon creation
         glm::uvec2         resolution; ///< The window resolution to set upon creation
         kit::Window *   sharedWindow = nullptr; ///< A window to share resources with, or nullptr
@@ -304,11 +304,11 @@ namespace kit
       static void                          __infunc_key(GLFWwindow*, int key, int scancode, int action, int mods);
       static void                          __infunc_char(GLFWwindow*, unsigned int codepoint);
 
-      GLFWwindow                           * m_glfwHandle;
+      GLFWwindow                           * m_glfwHandle = nullptr;
       std::queue<kit::WindowEvent>         m_eventList;
-      bool                                 m_eventsDistributed;
-      bool                                 m_isFocused;
-      bool                                 m_isMinimized;
-      bool                                 m_virtualMouse;
+      bool                                 m_eventsDistributed = false;
+      bool                                 m_isFocused = true;
+      bool                                 m_isMinimized = false;
+      bool                                 m_virtualMouse = false;
   };
 }

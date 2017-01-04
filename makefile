@@ -1,4 +1,4 @@
-DEBUG        ?= 0
+DEBUG        ?= 1
 PREFIX       := /usr
 CXX          := g++
 CXXFLAGS     := -std=c++14 -Wall -Wextra -Wpedantic -Wno-unused-parameter -fPIC
@@ -17,7 +17,7 @@ OBJECTS      := $(addprefix $(BUILDDIR)/,$(SOURCES:%.cpp=%.o))
 PCFILE       := pkgconfig/kit.pc
 
 ifeq ($(DEBUG), 1)
-	CXXFLAGS += -DKIT_DEBUG -g
+	CXXFLAGS += -DKIT_DEBUG -g -O0
 else
 	CXXFLAGS += -O2 -g
 endif

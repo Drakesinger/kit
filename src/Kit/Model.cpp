@@ -28,6 +28,9 @@ kit::Model::Model() : kit::Renderable::Renderable()
 
 kit::Model::~Model()
 {
+  if(m_ownMesh && m_mesh) delete m_mesh;
+  if(m_skeleton) delete m_skeleton;
+  
   kit::Model::m_instanceCount--;
   if (kit::Model::m_instanceCount == 0)
   {
@@ -185,6 +188,7 @@ kit::Model::Model(kit::Mesh * mesh) : kit::Model()
 kit::Model::Model(const std::string&mesh, const std::string& skeleton) : kit::Model()
 {
   m_mesh = new kit::Mesh(mesh);
+  m_ownMesh = true;
   m_skeleton = new kit::Skeleton(skeleton);
 }
 
@@ -281,7 +285,7 @@ void kit::Model::renderShadows(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
 
     if(O)
     {
-      currProgram->setUniformTexture("uniform_opacityMask", currMaterial->getOpacityMask());
+      currProgram->setUniformTexture("uniform_opacityMask", currMaterial->getOpacityMask().get());
     }
 
     if(S)

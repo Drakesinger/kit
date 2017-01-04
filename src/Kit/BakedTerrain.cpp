@@ -130,12 +130,35 @@ kit::BakedTerrain::BakedTerrain(std::string const & name)
   // Load maps
   {
     std::cout << "Loading maps" << std::endl;
-    m_arCache = new kit::Texture(dataDirectory + "arcache.tga", kit::Texture::RGBA8, kit::Texture::Repeat, kit::Texture::LinearMipmapLinear, kit::Texture::Linear);
-    m_nxCache = new kit::Texture(dataDirectory + "nxcache.tga", kit::Texture::RGBA8, kit::Texture::Repeat, kit::Texture::LinearMipmapLinear, kit::Texture::Linear);
+    m_arCache = new kit::Texture(dataDirectory + "arcache.tga");
+    m_arCache->setEdgeSamplingMode(Texture::Repeat);
+    m_arCache->setMinFilteringMode(Texture::LinearMipmapLinear);
+    m_arCache->setMagFilteringMode(Texture::Linear);
+    m_arCache->setAnisotropicLevel(8.0f);
+    m_arCache->generateMipmap();
+    
+    m_nxCache = new kit::Texture(dataDirectory + "nxcache.tga");
+    m_nxCache->setEdgeSamplingMode(Texture::Repeat);
+    m_nxCache->setMinFilteringMode(Texture::LinearMipmapLinear);
+    m_nxCache->setMagFilteringMode(Texture::Linear);
+    m_nxCache->setAnisotropicLevel(8.0f);
+    m_nxCache->generateMipmap();
+    
     try
     {
-      m_materialMask[0] = new kit::Texture(dataDirectory + "materialmask0.tga", kit::Texture::RGBA8, kit::Texture::ClampToEdge, kit::Texture::LinearMipmapLinear, kit::Texture::Linear);
-      m_materialMask[1] = new kit::Texture(dataDirectory + "materialmask1.tga", kit::Texture::RGBA8, kit::Texture::ClampToEdge, kit::Texture::LinearMipmapLinear, kit::Texture::Linear);
+      m_materialMask[0] = new kit::Texture(dataDirectory + "materialmask0.tga");
+      m_materialMask[0]->setEdgeSamplingMode(Texture::ClampToEdge);
+      m_materialMask[0]->setMinFilteringMode(Texture::LinearMipmapLinear);
+      m_materialMask[0]->setMagFilteringMode(Texture::Linear);
+      m_materialMask[0]->setAnisotropicLevel(8.0f);
+      m_materialMask[0]->generateMipmap();
+    
+      m_materialMask[1] = new kit::Texture(dataDirectory + "materialmask1.tga");
+      m_materialMask[1]->setEdgeSamplingMode(Texture::ClampToEdge);
+      m_materialMask[1]->setMinFilteringMode(Texture::LinearMipmapLinear);
+      m_materialMask[1]->setMagFilteringMode(Texture::Linear);
+      m_materialMask[1]->setAnisotropicLevel(8.0f);
+      m_materialMask[1]->generateMipmap();
     }
     catch (...)
     {
@@ -198,11 +221,21 @@ kit::BakedTerrain::BakedTerrain(std::string const & name)
 
           std::stringstream currAr;
           currAr << dataDirectory << "arlayer" << currLayer << ".tga";
-          m_layerInfo[currLayer].arCache = new kit::Texture(currAr.str(), kit::Texture::RGBA8, kit::Texture::Repeat, kit::Texture::LinearMipmapLinear, kit::Texture::Linear);
+          m_layerInfo[currLayer].arCache = new kit::Texture(currAr.str());
+          m_layerInfo[currLayer].arCache->setEdgeSamplingMode(Texture::Repeat);
+          m_layerInfo[currLayer].arCache->setMinFilteringMode(Texture::LinearMipmapLinear);
+          m_layerInfo[currLayer].arCache->setMagFilteringMode(Texture::Linear);
+          m_layerInfo[currLayer].arCache->setAnisotropicLevel(8.0f);
+          m_layerInfo[currLayer].arCache->generateMipmap();
 
           std::stringstream currNm;
           currNm << dataDirectory << "ndlayer" << currLayer << ".tga";
-          m_layerInfo[currLayer].ndCache = new kit::Texture(currNm.str(), kit::Texture::RGBA8, kit::Texture::Repeat, kit::Texture::LinearMipmapLinear, kit::Texture::Linear);
+          m_layerInfo[currLayer].ndCache = new kit::Texture(currNm.str());
+          m_layerInfo[currLayer].ndCache->setEdgeSamplingMode(Texture::Repeat);
+          m_layerInfo[currLayer].ndCache->setMinFilteringMode(Texture::LinearMipmapLinear);
+          m_layerInfo[currLayer].ndCache->setMagFilteringMode(Texture::Linear);
+          m_layerInfo[currLayer].ndCache->setAnisotropicLevel(8.0f);
+          m_layerInfo[currLayer].ndCache->generateMipmap();
         }
         else
         {
@@ -245,6 +278,12 @@ kit::BakedTerrain::~BakedTerrain()
   glDeleteBuffers(1, &m_glVertexBuffer);
   glDeleteVertexArrays(1, &m_glVertexArray);
   
+  if(m_materialMask[0])
+    delete m_materialMask[0];
+
+  if(m_materialMask[1])
+    delete m_materialMask[1];
+  
   if(m_program)
     delete m_program;
   
@@ -278,18 +317,20 @@ void kit::BakedTerrain::renderDeferred(kit::Renderer * renderer)
   glDisable(GL_CULL_FACE);
   //glCullFace(GL_BACK);
 
-  m_program->use();
   m_program->setUniformMat4("uniform_mvMatrix", modelViewMatrix);
   m_program->setUniformMat4("uniform_mvpMatrix", modelViewProjectionMatrix);
 
+  m_program->use();
+  
   renderGeometry();
 }
 
 void kit::BakedTerrain::renderShadows(glm::mat4 viewmatrix, glm::mat4 projectionmatrix)
 {
   glDisable(GL_CULL_FACE);
-  kit::Model::getShadowProgram(false, false, false)->use();
-  kit::Model::getShadowProgram(false, false, false)->setUniformMat4("uniform_mvpMatrix", projectionmatrix * viewmatrix * getTransformMatrix());
+  auto program = kit::Model::getShadowProgram(false, false, false);
+  program->setUniformMat4("uniform_mvpMatrix", projectionmatrix * viewmatrix * getTransformMatrix());
+  program->use();
   renderGeometry();
 }
 

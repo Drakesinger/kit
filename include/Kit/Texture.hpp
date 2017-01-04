@@ -4,7 +4,8 @@
 #include "Kit/Export.hpp"
 #include "Kit/Types.hpp"
 
-#include <map>
+#include <unordered_map>
+#include <memory>
 #include <string>
 
 namespace kit{
@@ -182,34 +183,21 @@ namespace kit{
         UnsignedInt2101010Rev = GLK_UNSIGNED_INT_2_10_10_10_REV
       };
 
-      ///
-      /// \brief Constructor
       /// 
-      /// \param t The texture type to initialize this texture as
-      ///
-      Texture(Type t);
-
-      /// 
-      /// \brief Creates an empty 2D texture
+      /// \brief Creates a 2D texture
       ///
       /// \param resolution Resolution of the new texture
       /// \param format The internal format of the new texture
-      /// \param edgemode The edge sampling mode of the new texture
-      /// \param minfilter The minification filtering mode of the new texture.
-      /// \param magfilter The magnification filtering mode of the new texture. Valid paramters are Nearest and Linear.
       ///
-      Texture(glm::uvec2 resolution, InternalFormat format, EdgeSamplingMode edgemode = ClampToEdge, FilteringMode minfilter = Linear, FilteringMode magfilter = Linear);
+      Texture(glm::uvec2 resolution, InternalFormat format = RGBA8, uint8_t levels = 0);
 
       /// 
       /// \brief Creates a 2D texture and loads its content from a file
       ///
       /// \param filename Path to the source file, relative to the working directory.
       /// \param format The internal format of the new texture
-      /// \param edgemode The edge sampling mode of the new texture
-      /// \param minfilter The minification filtering mode of the new texture.
-      /// \param magfilter The magnification filtering mode of the new texture. Valid paramters are Nearest and Linear.
       ///
-      Texture(const std::string& filename, InternalFormat format = RGBA8, EdgeSamplingMode edgemode = ClampToEdge, FilteringMode minfilter = Linear, FilteringMode magfilter = Linear, Type t = Type::Texture2D);
+      Texture(const std::string& filename, InternalFormat format = RGBA8, uint8_t levels = 0, Type t = Type::Texture2D);
       
       
       ///
@@ -219,9 +207,6 @@ namespace kit{
 
       /// 
       /// \brief Creates a 2D texture fitting for a shadowmap
-      ///
-      /// You should only use the static `create` methods to create instances. Avoid instancing this class yourself!
-      ///
       /// \param resolution Resolution of the new texture
       ///
       /// \returns A shared pointer pointing to the newly created texture
@@ -233,14 +218,12 @@ namespace kit{
       /// 
       /// \brief Loads a texture from a file. This is probably want you want to use for regular 2D texture loading.
       ///
-      /// You should only use the static `create` methods to create instances. Avoid instancing this class yourself!
-      ///
       /// \param name Path to the source file, relative to ./data/textures/
       /// \param srgb true if texture is sRGB-encoded
       ///
       /// \returns A shared pointer pointing to the newly created texture
       ///
-      static kit::Texture * load(const std::string& name, bool srgb = true);
+      static std::shared_ptr<kit::Texture> load(const std::string& name, bool srgb = true);
 
 
       // ---- Operations
@@ -288,19 +271,6 @@ namespace kit{
       /// \param t The type of texture to unbind
       ///
       static void unbind(Type t);
-
-      ///
-      /// \brief Flushes the resource managed cache. Cache will be empty but textures might still be used elsewhere.
-      ///
-      static void flushCache();
-
-      ///
-      /// \brief Returns a list of textures in ./data/textures/prefix. The list is cached and has to be updated using the reload parameter.
-      /// \param prefix adds a prefix to the path before iterating the directory
-      /// \param reload set to true to force reloading the cache
-      /// \returns A list of filenames
-      ///
-      static std::vector<std::string> getAvailableTextures(const std::string& prefix = "", bool reload = false);
 
 
       // ---- Properties
@@ -388,8 +358,12 @@ namespace kit{
       ///
       std::string getFilename();
 
+      
+      // Helper utility
     private:
 
+      Texture(Type t);
+      
       std::string         m_filename = "";
 
       uint32_t            m_glHandle = 0;
@@ -403,9 +377,9 @@ namespace kit{
       EdgeSamplingMode    m_edgeSamplingModeR = EdgeSamplingMode::Repeat;
       glm::uvec3          m_resolution = glm::uvec3(0, 0, 0);
       uint32_t            m_arraySize = 0;
-      float               m_anisotropicLevel = 4.0f;
+      float               m_anisotropicLevel = 1.0f;
 
-      static std::map<std::string, kit::Texture*> m_cachedTextures;
+      static std::unordered_map<std::string, std::weak_ptr<kit::Texture>> m_cache;
   };
 
 }

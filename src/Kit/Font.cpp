@@ -56,7 +56,10 @@ kit::Font::GlyphMap::GlyphMap(kit::Font * font, float size)
   float gridsizepx = glm::ceil(float(gridsize) * float(cellsize));
   
   // Create a texture to hold our glyphs, and initialize it to be fully black
-  m_texture = new kit::Texture(glm::uvec2((uint32_t)gridsizepx, (uint32_t)gridsizepx), kit::Texture::R8, Texture::ClampToEdge, Texture::Nearest, Texture::Nearest);
+  m_texture = new kit::Texture(glm::uvec2((uint32_t)gridsizepx, (uint32_t)gridsizepx), Texture::R8);
+  m_texture->setEdgeSamplingMode(Texture::ClampToEdge);
+  m_texture->setMagFilteringMode(Texture::Nearest);
+  m_texture->setMinFilteringMode(Texture::Nearest);
   m_texture->bind();
   
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);

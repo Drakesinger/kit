@@ -15,11 +15,13 @@ kit::Mesh::Mesh()
 
 kit::Mesh::~Mesh()
 {
+  std::cout << "Removing mesh" << std::endl;
   m_submeshEntries.clear();
 }
 
 kit::Mesh::Mesh(const std::string&filename)
 {
+  std::cout << "Creating mesh " << filename << std::endl;
   std::fstream fhandle(std::string("./data/meshes/") + filename);
   if(!fhandle)
   {
@@ -59,7 +61,7 @@ void kit::Mesh::setSubmeshEnabled(const std::string&name, bool b)
   m_submeshesEnabled.at(name) = b;
 }
 
-void kit::Mesh::addSubmeshEntry(const std::string&name, kit::Submesh* geometry, kit::Material* material)
+void kit::Mesh::addSubmeshEntry(const std::string&name, std::shared_ptr<kit::Submesh> geometry, std::shared_ptr<kit::Material> material)
 {
   m_submeshEntries[name].m_material = material;
   m_submeshEntries[name].m_submesh = geometry;

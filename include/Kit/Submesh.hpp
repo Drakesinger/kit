@@ -14,8 +14,7 @@ namespace kit
       
       ~Submesh();
       
-      static kit::Submesh * load(const std::string& geometry, kit::DataSource source = kit::DataSource::Data);
-      static void flushCache();
+      static std::shared_ptr<kit::Submesh> load(const std::string& geometry);
       
       void renderGeometry();
       void renderGeometryInstanced(uint32_t numInstances);
@@ -24,9 +23,8 @@ namespace kit
     private:
       void loadGeometry(const std::string& filename);
       
-      
       // Cache
-      static std::map<std::string, kit::Submesh*> m_cache;
+      static std::map<std::string, std::weak_ptr<kit::Submesh>> m_cache;
       
       // Individual GPU data
       void allocateBuffers();
