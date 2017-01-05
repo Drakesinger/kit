@@ -1,4 +1,4 @@
-/*#include "Kit/Water.hpp"
+#include "Kit/Water.hpp"
 
 #include "Kit/IncOpenGL.hpp"
 #include "Kit/Camera.hpp"
@@ -7,6 +7,7 @@
 #include "Kit/Texture.hpp"
 #include "Kit/Cubemap.hpp"
 #include "Kit/PixelBuffer.hpp"
+#include "Kit/DoubleBuffer.hpp"
 
 // A structure to use as index for vertices, when generating our index buffer
 struct xyPair
@@ -28,8 +29,6 @@ kit::Water::Water(glm::uvec2 resolution)
 {
   // Set values
   this->m_resolution = resolution;
-  this->m_radianceMap = nullptr;
-  this->m_environmentStrength = glm::vec3(1.0f, 1.0f, 1.0f);
 
   // Number of floats needed per vertex
   // We need 2: First float for x position and texcoord, second for y position and texcoord.
@@ -110,12 +109,11 @@ kit::Water::Water(glm::uvec2 resolution)
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, attributeSize, (void*)0);
 
   // Lets also create a shader program  and load some textures we need
-  this->m_program = kit::Program::load({ "water.vert" }, {"lighting/cooktorrance.glsl", "water.frag" });
+  this->m_program = new kit::Program({ "water.vert" }, {"lighting/cooktorrance.glsl", "water.frag" });
   this->m_heightmapA = kit::Texture::load("waterheight.tga", false);
   this->m_normalmapA = kit::Texture::load("waternormal.tga", false);
   this->m_heightmapB = kit::Texture::load("waterheight2.tga", false);
   this->m_normalmapB = kit::Texture::load("waternormal2.tga", false);
-  this->m_brdf = kit::Texture::load("brdf.tga", false);
 }
 
 kit::Water::~Water()
@@ -123,9 +121,12 @@ kit::Water::~Water()
   glDeleteBuffers(1, &this->m_glIndexBuffer);
   glDeleteBuffers(1, &this->m_glVertexBuffer);
   glDeleteVertexArrays(1, &this->m_glVao);
+  
+  if(m_radianceMap) delete m_radianceMap;
+  if(m_program) delete m_program;
 }
 
-void kit::Water::renderForward(kit::Renderer::Ptr renderer)
+void kit::Water::renderForward(kit::Renderer* renderer)
 {
   // Set OpenGL states
   glEnable(GL_BLEND);
@@ -152,8 +153,6 @@ void kit::Water::renderForward(kit::Renderer::Ptr renderer)
   float py = zfar / (zfar - znear);
 
   // Use our shader program, and update variables
-  this->m_program->use();
-
   this->m_program->setUniformTexture("uniform_colormap", renderer->getAccumulationCopy()->getColorAttachment(0));
   this->m_program->setUniformTexture("uniform_depthmap", renderer->getAccumulationCopy()->getDepthAttachment());
   this->m_program->setUniform2f("uniform_projConst", glm::vec2(px, py));
@@ -161,22 +160,18 @@ void kit::Water::renderForward(kit::Renderer::Ptr renderer)
   this->m_program->setUniformCubemap("uniform_reflection", this->m_radianceMap);
   this->m_program->setUniform3f("uniform_lightColor", this->m_environmentStrength);
 
-  this->m_program->setUniformTexture("uniform_normalmapA", this->m_normalmapA);
-  this->m_program->setUniformTexture("uniform_normalmapB", this->m_normalmapB);
-  this->m_program->setUniformTexture("uniform_heightmapA", this->m_heightmapA);
-  this->m_program->setUniformTexture("uniform_heightmapB", this->m_heightmapB);
+  this->m_program->setUniformTexture("uniform_normalmapA", this->m_normalmapA.get());
+  this->m_program->setUniformTexture("uniform_normalmapB", this->m_normalmapB.get());
+  this->m_program->setUniformTexture("uniform_heightmapA", this->m_heightmapA.get());
+  this->m_program->setUniformTexture("uniform_heightmapB", this->m_heightmapB.get());
 
   this->m_program->setUniformMat4("uniform_mvpMatrix", mvpMatrix);
   this->m_program->setUniformMat4("uniform_mvMatrix", mvMatrix);
   
-  // Bind our OpenGL VAO and push a draw-call to the GPU to render our water
+  this->m_program->use();
+
   glBindVertexArray(this->m_glVao);
   glDrawElements(GL_TRIANGLES, this->m_indexCount, GL_UNSIGNED_INT, (void*)0);
-}
-
-kit::Water::Ptr kit::Water::create(glm::uvec2 resolution)
-{
-  return std::make_shared<kit::Water>(resolution);
 }
 
 void kit::Water::update(double const & ms)
@@ -198,10 +193,12 @@ bool kit::Water::requestAccumulationCopy()
   return true;
 }
 
-void kit::Water::setRadianceMap(kit::Cubemap::Ptr rad)
+void kit::Water::setRadianceMap(std::string const & name)
 {
   // Radiance map to use for reflective lights
-  this->m_radianceMap = rad;
+  if(m_radianceMap) delete m_radianceMap;
+  
+  this->m_radianceMap = kit::Cubemap::loadRadianceMap(name);
 }
 
 void kit::Water::setEnvironmentStrength(glm::vec3 e)
@@ -219,4 +216,3 @@ void kit::Water::setSunColor(glm::vec3 c)
 {
   this->m_sunColor = c;
 }
-*/

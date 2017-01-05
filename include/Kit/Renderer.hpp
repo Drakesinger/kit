@@ -185,6 +185,8 @@ namespace kit
     void setSRGBEnabled(bool const & v);
     bool getSRGBEnabled();
     
+    kit::Texture * getIntegratedBRDF();
+    
   private:
     /// Called on every resize
     void onResize();

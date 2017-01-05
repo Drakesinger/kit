@@ -47,7 +47,7 @@ $(PCFILE):
 	echo 'Libs: -L$${libdir} -lkit' >> $(PCFILE)
 	echo 'Cflags: -I$${includedir}' >> $(PCFILE)
 	
-install: all
+install: 
 	cp -r $(INCLUDEDIR)/* $(PREFIX)/include
 	cp lib/$(OUT_LIBRARY) $(PREFIX)/lib/
 	cp $(PCFILE) $(PREFIX)/lib/pkgconfig/kit.pc

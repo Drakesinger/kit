@@ -1288,6 +1288,7 @@ void kit::Renderer::updateBuffers()
     kit::PixelBuffer::AttachmentInfo(Texture::DepthComponent24)
     );
   m_geometryBuffer->clear({ glm::vec4(0.0, 0.0, 0.0, 0.0), glm::vec4(0.0, 0.0, 0.0, 0.0), glm::vec4(0.0, 0.0, 0.0, 0.0) }, 1.0f);
+  m_geometryBuffer->getColorAttachment(0)->setEdgeSamplingMode(kit::Texture::EdgeSamplingMode::ClampToEdge);
 
   if(m_accumulationBuffer)
     delete m_accumulationBuffer;
@@ -1300,6 +1301,7 @@ void kit::Renderer::updateBuffers()
     kit::PixelBuffer::AttachmentInfo(m_geometryBuffer->getDepthAttachment())
     );
   m_accumulationBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) }, 1.0f);
+  m_accumulationBuffer->getColorAttachment(0)->setEdgeSamplingMode(kit::Texture::EdgeSamplingMode::ClampToEdge);
 
   if(m_accumulationCopy)
     delete m_accumulationCopy;
@@ -1312,6 +1314,7 @@ void kit::Renderer::updateBuffers()
     kit::PixelBuffer::AttachmentInfo(kit::Texture::DepthComponent24)
   );
   m_accumulationCopy->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) }, 1.0f);
+  m_accumulationCopy->getColorAttachment(0)->setEdgeSamplingMode(kit::Texture::EdgeSamplingMode::ClampToEdge);
 
   if(m_bloomBrightBuffer)
     delete m_bloomBrightBuffer;

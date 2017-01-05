@@ -296,10 +296,12 @@ void kit::Model::renderShadows(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
     if(I)
     {
       currProgram->setUniformMat4v("uniform_instanceTransform", m_instanceTransform);
+      currProgram->use();
       currSubmesh->renderGeometryInstanced(m_instanceTransform.size());
     }
     else
     {
+      currProgram->use();
       currSubmesh->renderGeometry();
     }
   }

@@ -572,7 +572,7 @@ void kit::BakedTerrain::updateGpuProgram()
   
   m_program->setUniformTexture("uniform_arCache", m_arCache);
   m_program->setUniformTexture("uniform_nxCache", m_nxCache);
-  m_program->setUniform1f("uniform_detailDistance", 25.0f); //< TODO: Replace with configuration parameter
+  m_program->setUniform1f("uniform_detailDistance", 500.0f); //< TODO: Replace with configuration parameter
 
   // Layer-specific uniforms
   for(int i = 0; i < m_numLayers; i++)

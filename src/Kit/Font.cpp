@@ -153,6 +153,8 @@ kit::Font::GlyphMap::~GlyphMap()
 {
   if(m_texture)
     delete m_texture;
+  
+  m_glyphIndex.clear();
 }
 
 const float & kit::Font::GlyphMap::getLineHeight()

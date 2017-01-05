@@ -1,5 +1,4 @@
-/*#ifndef KIT_WATER_HPP
-#define KIT_WATER_HPP
+#pragma once
 
 #include "Kit/Renderable.hpp"
 #include "Kit/Types.hpp"
@@ -8,6 +7,8 @@
 
 namespace kit 
 {
+  class DoubleBuffer;
+  
   class Camera;
   
 
@@ -26,21 +27,18 @@ namespace kit
   class Water : public kit::Renderable
   {
     public:
-      
-
-      static Ptr create(glm::uvec2 resolution);
 
       Water(glm::uvec2 resolution);
       virtual ~Water() override;
 
-      virtual void renderForward(kit::RendererPtr) override;
+      virtual void renderForward(kit::Renderer*) override;
 
       virtual void update(double const & ms);
 
       virtual int32_t getRenderPriority() override;
       virtual bool requestAccumulationCopy() override;
 
-      virtual void setRadianceMap(kit::CubemapPtr);
+      virtual void setRadianceMap(std::string const & name);
       virtual void setEnvironmentStrength(glm::vec3);
 
       virtual void setSunDirection(glm::vec3);
@@ -49,28 +47,28 @@ namespace kit
     private:
 
 
-      uint32_t m_glVertexBuffer; // VBO to hold vertex data
-      uint32_t m_glIndexBuffer; // VBO to hold index data
-      uint32_t m_glVao; // VAO for our VBO and program
-      kit::ProgramPtr m_program;
+      uint32_t m_glVertexBuffer = 0; // VBO to hold vertex data
+      uint32_t m_glIndexBuffer = 0; // VBO to hold index data
+      uint32_t m_glVao = 0; // VAO for our VBO and program
+      kit::Program * m_program  = nullptr;
 
-      kit::TexturePtr m_brdf;
+      std::shared_ptr<kit::Texture> m_heightmapA = nullptr;
+      std::shared_ptr<kit::Texture> m_normalmapA = nullptr;
 
-      kit::TexturePtr m_heightmapA;
-      kit::TexturePtr m_normalmapA;
+      std::shared_ptr<kit::Texture> m_heightmapB = nullptr;
+      std::shared_ptr<kit::Texture> m_normalmapB = nullptr;
 
-      kit::TexturePtr m_heightmapB;
-      kit::TexturePtr m_normalmapB;
+      kit::Cubemap * m_radianceMap = nullptr;
+      glm::vec3 m_environmentStrength = glm::vec3(1.0f, 1.0f, 1.0f);
+      
+      kit::DoubleBuffer * m_belowSurfaceBuffer = nullptr;
+      kit::Program * m_belowSurfaceProgram = nullptr;
 
-      kit::CubemapPtr m_radianceMap;
-      glm::vec3 m_environmentStrength;
+      glm::vec3 m_sunColor = glm::vec3(1.0f, 1.0f, 1.0f);
+      glm::vec3 m_sunDirection = glm::vec3(1.0f, 1.0f, 1.0f);
 
-      glm::vec3 m_sunColor;
-      glm::vec3 m_sunDirection;
-
-      glm::uvec2 m_resolution;
-      uint32_t m_indexCount;
+      glm::uvec2 m_resolution = glm::uvec2(0, 0);
+      uint32_t m_indexCount = 0;
   };
 }
 
-#endif*/

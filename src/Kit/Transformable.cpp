@@ -37,7 +37,7 @@ glm::mat4 kit::Transformable::getTransformMatrix()
   
   if (m_parent != nullptr)
   {
-    return m_transformMatrix * m_parent->getTransformMatrix();
+    return m_parent->getTransformMatrix() * m_transformMatrix;
   }
 
   return m_transformMatrix;

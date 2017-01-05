@@ -11,11 +11,6 @@ uniform vec2 uniform_projConst; //D
 uniform mat4 uniform_invViewMatrix;
 uniform mat4 uniform_viewMatrix;
 
-// IBL specular
-uniform samplerCube uniform_reflection;
-uniform vec3 uniform_lightColor;
-
-
 // Normal and height
 uniform sampler2D uniform_normalmapA;
 uniform sampler2D uniform_normalmapB;
@@ -42,9 +37,8 @@ void main()
   float heightB = texture(uniform_heightmapB, waveUvB).r;
   
   float height = mix(heightA, heightB, 0.5);
-  
-  
-  // World-space normal
+ 
+ // World-space normal
   vec3 wNormal = ((texture(uniform_normalmapA, waveUvA).rgb * 2.0) - 1.0);
   wNormal += ((texture(uniform_normalmapB, waveUvB).rgb * 2.0) - 1.0);
   wNormal = normalize(wNormal);
@@ -57,72 +51,50 @@ void main()
   
   wNormal =  normalRotation * wNormal;
  
- 
   vec3 vNormal = normalize(vec3(uniform_viewMatrix * vec4(wNormal, 0.0)));
  
-  
   // Sample accumulation copy
-
   vec2 texStep = vec2(1.0) / textureSize(uniform_depthmap, 0);
   vec2 texCoord = gl_FragCoord.xy * texStep;
-  float waterDepth = texture(uniform_depthmap, texCoord).r;
-  
-
+  float oldDepth = texture(uniform_depthmap, texCoord).r;
   
   // Depthextracted position
   vec3 viewRay = vec3(in_vertexPos.xy / in_vertexPos.z, 1.0);//D
-  float linearWaterDepth = uniform_projConst.x / (uniform_projConst.y - waterDepth);//D
-  vec3 waterPosition = viewRay * linearWaterDepth;//D
+  float linearOldDepth = uniform_projConst.x / (uniform_projConst.y - oldDepth);//D
+  vec3 oldPosition = viewRay * linearOldDepth;//D
 
-  vec3 waterWP = vec3(uniform_invViewMatrix * vec4(waterPosition, 1.0));
-  vec3 vertexWP = vec3(uniform_invViewMatrix * in_vertexPos);
+  vec3 oldWP = vec3(uniform_invViewMatrix * vec4(oldPosition, 1.0));
+  vec3 waterWP = vec3(uniform_invViewMatrix * in_vertexPos);
   
+  float refractionStrength = 100.0;
   
-  
-  
-  
-  //(screenPos.xy/screenPos.w) + bumpTex.xy * vScale.xy;
+  vec2 refTexCoord = texCoord + texStep * normalTex.xy * refractionStrength;
+  float oldRefDepth = texture(uniform_depthmap, refTexCoord).r;
 
-  
-    float refractionStrength = 100.0;
-  
-  texCoord += texStep * normalTex.xy * refractionStrength;
+  if(oldRefDepth > gl_FragCoord.z)
+  {
+    texCoord += texStep * normalTex.xy * refractionStrength;
+  }
   vec3 prevColor = texture(uniform_colormap, texCoord).rgb;
-  
-
-  
   
   // water distance
   float shoreLength = 0.5;
-  float shoreCoeff = clamp(distance(waterWP.y, vertexWP.y)* (1.0 / shoreLength), 0.0, 1.0);
+  float shoreCoeff = clamp(distance(waterWP.y, oldWP.y)* (1.0 / shoreLength), 0.0, 1.0);
 
-  
-  
-  
   // View-direction in viewspace
-  vec3 vViewDir = normalize( -waterPosition );
+  vec3 vViewDir = normalize( -oldPosition );
 
   // View-direction in worldspace
   vec3 wViewDir = normalize(vec3(uniform_invViewMatrix * vec4(vViewDir, 0.0)));
   
       // Config variables for murk
-  float waterClarity = 0.3;
+  float waterClarity = 0.2;
   vec3 baseColor = vec3(0.67, 0.8, 0.9);
-  
-  // IBL specular
-  vec3 refVec = normalize(reflect(-wViewDir.xyz, wNormal));
-  vec3 reflection = textureLod(uniform_reflection, refVec, 0.0).xyz * baseColor;
-  vec3 iblSpecular = reflection * uniform_lightColor;
-  
-  vec3 finalSpecular = iblSpecular * shoreCoeff;
-  
-
 
   // water color 
-  vec3 waterColor = prevColor* 0.5 * shoreCoeff;
-  vec3 specColor = mix(finalSpecular* 0.5, finalSpecular, shoreCoeff);
+  vec3 waterColor = prevColor* baseColor * shoreCoeff;
   
-  vec3 result = mix(prevColor, waterColor + specColor, shoreCoeff);
+  vec3 result = mix(prevColor, waterColor, shoreCoeff);
   out_color = vec4(result, 1.0);
 }
 
