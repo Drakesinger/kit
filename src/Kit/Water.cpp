@@ -122,7 +122,6 @@ kit::Water::~Water()
   glDeleteBuffers(1, &this->m_glVertexBuffer);
   glDeleteVertexArrays(1, &this->m_glVao);
   
-  if(m_radianceMap) delete m_radianceMap;
   if(m_program) delete m_program;
 }
 
@@ -157,8 +156,6 @@ void kit::Water::renderForward(kit::Renderer* renderer)
   this->m_program->setUniformTexture("uniform_depthmap", renderer->getAccumulationCopy()->getDepthAttachment());
   this->m_program->setUniform2f("uniform_projConst", glm::vec2(px, py));
   this->m_program->setUniformMat4("uniform_invViewMatrix", invViewMatrix);
-  this->m_program->setUniformCubemap("uniform_reflection", this->m_radianceMap);
-  this->m_program->setUniform3f("uniform_lightColor", this->m_environmentStrength);
 
   this->m_program->setUniformTexture("uniform_normalmapA", this->m_normalmapA.get());
   this->m_program->setUniformTexture("uniform_normalmapB", this->m_normalmapB.get());
@@ -191,20 +188,6 @@ int32_t kit::Water::getRenderPriority()
 bool kit::Water::requestAccumulationCopy()
 {
   return true;
-}
-
-void kit::Water::setRadianceMap(std::string const & name)
-{
-  // Radiance map to use for reflective lights
-  if(m_radianceMap) delete m_radianceMap;
-  
-  this->m_radianceMap = kit::Cubemap::loadRadianceMap(name);
-}
-
-void kit::Water::setEnvironmentStrength(glm::vec3 e)
-{
-  // Strength of reflective lights
-  this->m_environmentStrength = e;
 }
 
 void kit::Water::setSunDirection(glm::vec3 d)

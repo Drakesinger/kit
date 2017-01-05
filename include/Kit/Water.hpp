@@ -38,9 +38,6 @@ namespace kit
       virtual int32_t getRenderPriority() override;
       virtual bool requestAccumulationCopy() override;
 
-      virtual void setRadianceMap(std::string const & name);
-      virtual void setEnvironmentStrength(glm::vec3);
-
       virtual void setSunDirection(glm::vec3);
       virtual void setSunColor(glm::vec3);
 
@@ -57,9 +54,6 @@ namespace kit
 
       std::shared_ptr<kit::Texture> m_heightmapB = nullptr;
       std::shared_ptr<kit::Texture> m_normalmapB = nullptr;
-
-      kit::Cubemap * m_radianceMap = nullptr;
-      glm::vec3 m_environmentStrength = glm::vec3(1.0f, 1.0f, 1.0f);
       
       kit::DoubleBuffer * m_belowSurfaceBuffer = nullptr;
       kit::Program * m_belowSurfaceProgram = nullptr;
