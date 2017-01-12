@@ -13,6 +13,7 @@ namespace kit
   class Program;
   class PixelBuffer;
   class Camera;
+  class Renderer;
   
   class KITAPI Material
   {
@@ -94,7 +95,8 @@ namespace kit
 
       std::string getName();
       
-      void use(kit::Camera * camera, const glm::mat4 & modelMatrix, const std::vector<glm::mat4> & skinTransform, const std::vector<glm::mat4> & instanceTransform);
+      void use(glm::mat4 const & viewMatrix, glm::mat4 const & projectionMatrix, const glm::mat4 & modelMatrix, const std::vector<glm::mat4> & skinTransform, const std::vector<glm::mat4> & instanceTransform);
+      void useReflective(kit::Renderer * renderer, glm::mat4 const & viewMatrix, glm::mat4 const & projectionMatrix, const glm::mat4 & modelMatrix, const std::vector<glm::mat4> & skinTransform, const std::vector<glm::mat4> & instanceTransform);
       
       const glm::vec3 & getAlbedo();
       void setAlbedo(glm::vec3 albedo);
@@ -178,6 +180,7 @@ namespace kit
       static kit::Program * m_cacheProgram; // Program to re-render our caches for NM and AR and EO
       static uint32_t       m_instanceCount;
       static std::map<ProgramFlags, kit::Program *> m_programCache;
+      static kit::Program *   m_reflectiveProgram;
       
       std::string m_filename;
 

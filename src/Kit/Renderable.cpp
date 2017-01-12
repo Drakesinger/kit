@@ -12,7 +12,7 @@ void kit::Renderable::renderForward(kit::Renderer * renderer)
 
 }
 
-void kit::Renderable::renderShadows(glm::mat4 v, glm::mat4 p)
+void kit::Renderable::renderShadows(glm::mat4 const & viewMatrix, glm::mat4 const & projectionMatrix)
 {
 
 }
@@ -20,6 +20,11 @@ void kit::Renderable::renderShadows(glm::mat4 v, glm::mat4 p)
 void kit::Renderable::renderGeometry()
 {
 
+}
+
+void kit::Renderable::renderReflection(Renderer *, glm::mat4 const & viewMatrix, glm::mat4 const & projectionMatrix)
+{
+  
 }
 
 bool kit::Renderable::isShadowCaster()
@@ -61,3 +66,9 @@ bool kit::Renderable::requestAccumulationCopy()
 {
   return false;
 }
+
+bool kit::Renderable::requestPositionBuffer()
+{
+  return false;
+}
+

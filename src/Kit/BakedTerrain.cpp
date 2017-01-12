@@ -310,8 +310,8 @@ void kit::BakedTerrain::renderDeferred(kit::Renderer * renderer)
     return;
   }
 
-  glm::mat4 modelViewMatrix = renderer->getActiveCamera()->getViewMatrix() * getTransformMatrix();
-  glm::mat4 modelViewProjectionMatrix = renderer->getActiveCamera()->getProjectionMatrix() * renderer->getActiveCamera()->getViewMatrix() * getTransformMatrix();
+  glm::mat4 modelViewMatrix = renderer->getActiveCamera()->getViewMatrix() * getWorldTransformMatrix();
+  glm::mat4 modelViewProjectionMatrix = renderer->getActiveCamera()->getProjectionMatrix() * renderer->getActiveCamera()->getViewMatrix() * getWorldTransformMatrix();
 
   glDisable(GL_BLEND);
   glDisable(GL_CULL_FACE);
@@ -325,11 +325,11 @@ void kit::BakedTerrain::renderDeferred(kit::Renderer * renderer)
   renderGeometry();
 }
 
-void kit::BakedTerrain::renderShadows(glm::mat4 viewmatrix, glm::mat4 projectionmatrix)
+void kit::BakedTerrain::renderShadows(glm::mat4 const & viewMatrix, glm::mat4 const & projectionMatrix)
 {
   glDisable(GL_CULL_FACE);
   auto program = kit::Model::getShadowProgram(false, false, false);
-  program->setUniformMat4("uniform_mvpMatrix", projectionmatrix * viewmatrix * getTransformMatrix());
+  program->setUniformMat4("uniform_mvpMatrix", projectionMatrix * viewMatrix * getWorldTransformMatrix());
   program->use();
   renderGeometry();
 }

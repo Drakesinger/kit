@@ -30,7 +30,7 @@ const glm::mat4 & kit::Camera::getProjectionMatrix()
 
 glm::mat4 kit::Camera::getViewMatrix()
 {
-  return glm::inverse(this->getTransformMatrix());
+  return glm::inverse(this->getWorldTransformMatrix());
 }
 
 void kit::Camera::setClipRange(glm::vec2 cliprange)

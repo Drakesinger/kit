@@ -1,4 +1,4 @@
-DEBUG        ?= 1
+DEBUG        ?= 0
 PREFIX       := /usr
 CXX          := g++
 CXXFLAGS     := -std=c++14 -Wall -Wextra -Wpedantic -Wno-unused-parameter -fPIC
@@ -21,8 +21,6 @@ ifeq ($(DEBUG), 1)
 else
 	CXXFLAGS += -O2 -g
 endif
-
-all: $(OUT_LIBRARY)
 
 $(OUT_LIBRARY): $(OBJECTS) $(PCFILE)
 	$(shell mkdir lib)

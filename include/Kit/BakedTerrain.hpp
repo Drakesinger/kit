@@ -50,7 +50,7 @@ namespace kit
       void renderDeferred(kit::Renderer * camera) override;
       void renderGeometry() override;
 
-      void renderShadows(glm::mat4 viewmatrix, glm::mat4 projectionmatrix) override;
+      void renderShadows(glm::mat4 const & viewMatrix, glm::mat4 const & projectionMatrix) override;
       
       kit::Texture *  getArCache();
       kit::Texture *  getNxCache();

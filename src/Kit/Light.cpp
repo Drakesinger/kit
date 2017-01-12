@@ -204,28 +204,29 @@ glm::mat4 kit::Light::getPointProjectionMatrix()
 }
 
 glm::mat4 kit::Light::getPointViewMatrix(kit::Cubemap::Side s)
-{  
+{
+  glm::vec3 worldPosition = getWorldPosition();
   switch(s)
   {
     default:
     case Cubemap::Count:
     case Cubemap::PositiveX:
-      return glm::lookAt(getPosition(), getPosition() + glm::vec3(1.0,0.0,0.0), glm::vec3(0.0,-1.0,0.0));
+      return glm::lookAt(worldPosition, worldPosition + glm::vec3(1.0,0.0,0.0), glm::vec3(0.0,-1.0,0.0));
       break;
     case Cubemap::NegativeX:
-      return glm::lookAt(getPosition(), getPosition() + glm::vec3(-1.0,0.0,0.0), glm::vec3(0.0,-1.0,0.0));
+      return glm::lookAt(worldPosition, worldPosition + glm::vec3(-1.0,0.0,0.0), glm::vec3(0.0,-1.0,0.0));
       break;
     case Cubemap::PositiveY:
-      return glm::lookAt(getPosition(), getPosition() + glm::vec3(0.0,1.0,0.0), glm::vec3(0.0,0.0,1.0));
+      return glm::lookAt(worldPosition, worldPosition + glm::vec3(0.0,1.0,0.0), glm::vec3(0.0,0.0,1.0));
       break;
     case Cubemap::NegativeY:
-      return glm::lookAt(getPosition(), getPosition() + glm::vec3(0.0,-1.0,0.0), glm::vec3(0.0,0.0,-1.0));
+      return glm::lookAt(worldPosition, worldPosition + glm::vec3(0.0,-1.0,0.0), glm::vec3(0.0,0.0,-1.0));
       break;
     case Cubemap::PositiveZ:
-      return glm::lookAt(getPosition(), getPosition() + glm::vec3(0.0,0.0,1.0), glm::vec3(0.0,-1.0,0.0));
+      return glm::lookAt(worldPosition, worldPosition + glm::vec3(0.0,0.0,1.0), glm::vec3(0.0,-1.0,0.0));
       break;
     case Cubemap::NegativeZ:
-      return glm::lookAt(getPosition(), getPosition() + glm::vec3(0.0,0.0,-1.0), glm::vec3(0.0,-1.0,0.0));
+      return glm::lookAt(worldPosition, worldPosition + glm::vec3(0.0,0.0,-1.0), glm::vec3(0.0,-1.0,0.0));
       break;
   }
   KIT_THROW("No such side");
@@ -239,7 +240,9 @@ glm::mat4 kit::Light::getSpotProjectionMatrix()
 
 glm::mat4 kit::Light::getSpotViewMatrix()
 {
-  return glm::lookAt(getPosition(), getPosition() + getForward(), glm::vec3(0, 1, 0));
+  glm::vec3 worldPosition = getWorldPosition();
+  
+  return glm::lookAt(worldPosition, worldPosition + getWorldForward(), glm::vec3(0, 1, 0));
 }
 
 
@@ -251,7 +254,7 @@ glm::mat4 kit::Light::getDirectionalProjectionMatrix()
 
 glm::mat4 kit::Light::getDirectionalViewMatrix()
 {
-  glm::mat4 depthViewMatrix = glm::lookAt(-getForward(), glm::vec3(0,0,0), glm::vec3(0,1,0));
+  glm::mat4 depthViewMatrix = glm::lookAt(-getWorldForward(), glm::vec3(0,0,0), glm::vec3(0,1,0));
 
   return depthViewMatrix;
 }

@@ -18,8 +18,9 @@ namespace  kit
     virtual ~Renderable();
     virtual void renderDeferred(Renderer *);
     virtual void renderForward(Renderer *);
-    virtual void renderShadows(glm::mat4 viewmatrix, glm::mat4 projectionmatrix);
+    virtual void renderShadows(glm::mat4 const & viewMatrix, glm::mat4 const & projectionMatrix);
     virtual void renderGeometry();
+    virtual void renderReflection(Renderer *, glm::mat4 const & viewMatrix, glm::mat4 const & projectionMatrix);
     
     virtual bool isShadowCaster();
     virtual void setShadowCaster(bool s);
@@ -30,6 +31,7 @@ namespace  kit
     virtual int32_t getRenderPriority(); // Lower values are rendered first
 
     virtual bool requestAccumulationCopy();
+    virtual bool requestPositionBuffer();
 
   private:
     bool m_shadowCaster;

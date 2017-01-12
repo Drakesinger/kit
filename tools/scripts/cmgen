@@ -1,14 +1,13 @@
 #!/bin/bash
 # This little sweetheart takes 6 jpgs and turns them into tons of png's.
 # its very useful if you know what its for.
-# Allright I'll tell you, it converts humus cubemaps into IBL maps for Kit.
+# Allright I'll tell you, it converts humus-formatted cubemaps into IBL maps for Kit.
 
 ## Rename our jpegs to be more fitting to our liking
 for i in *.jpg ; do mv "$i" "sb_$i" ; done
 
 ## Convert source image to tga
 mogrify -format tga *.jpg
-
 
 ## Generate irradiance map
 cmft --inputFacePosX ./sb_posx.tga --inputFacePosY ./sb_posy.tga --inputFacePosZ ./sb_posz.tga --inputFaceNegX ./sb_negx.tga --inputFaceNegY ./sb_negy.tga --inputFaceNegZ ./sb_negz.tga --filter irradiance --outputNum 1 --output0 irr --output0params tga,bgr8,facelist --dstFaceSize 128
@@ -20,8 +19,7 @@ cmft --inputFacePosX ./sb_posx.tga --inputFacePosY ./sb_posy.tga --inputFacePosZ
 # This method relies on regex-powered renames, which isnt available on fedora
 #find -name "rad_*.png" -exec rename 's/_[0-9x]{3,7}.png/.png/' {} ";"
 
+rm sb_*.jpg
+
 mmv "rad_*_*_*.tga" "rad_#1_#2.tga"
 
-rm sb_*
-
-rm readme.txt

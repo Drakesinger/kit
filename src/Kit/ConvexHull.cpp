@@ -88,7 +88,7 @@ std::vector<glm::vec3> kit::ConvexHull::getWorldPoints()
 
   for (auto currPoint : m_points)
   {
-    worldPoints.push_back(glm::vec3(getTransformMatrix() * glm::vec4(currPoint, 1.0f)));
+    worldPoints.push_back(glm::vec3(getWorldTransformMatrix() * glm::vec4(currPoint, 1.0f)));
   }
 
   return worldPoints;
@@ -106,8 +106,8 @@ std::vector<kit::Plane>  kit::ConvexHull::getWorldPlanes()
   for (auto currPlane : m_planes)
   {
     kit::Plane newPlane;
-    newPlane.normal = glm::vec3(getTransformMatrix() * glm::vec4(currPlane.normal, 0.0f));
-    newPlane.point = glm::vec3(getTransformMatrix() * glm::vec4(currPlane.point, 1.0f));
+    newPlane.normal = glm::vec3(getWorldTransformMatrix() * glm::vec4(currPlane.normal, 0.0f));
+    newPlane.point = glm::vec3(getWorldTransformMatrix() * glm::vec4(currPlane.point, 1.0f));
     worldPlanes.push_back(newPlane);
   }
 

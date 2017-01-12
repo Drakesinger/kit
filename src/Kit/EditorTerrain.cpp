@@ -455,8 +455,8 @@ void kit::EditorTerrain::renderDeferred(kit::Renderer * renderer)
     return;
   }
 
-  glm::mat4 modelViewMatrix = renderer->getActiveCamera()->getViewMatrix() * getTransformMatrix();
-  glm::mat4 modelViewProjectionMatrix = renderer->getActiveCamera()->getProjectionMatrix() * renderer->getActiveCamera()->getViewMatrix() * getTransformMatrix();
+  glm::mat4 modelViewMatrix = renderer->getActiveCamera()->getViewMatrix() * getWorldTransformMatrix();
+  glm::mat4 modelViewProjectionMatrix = renderer->getActiveCamera()->getProjectionMatrix() * renderer->getActiveCamera()->getViewMatrix() * getWorldTransformMatrix();
 
   glDisable(GL_BLEND);
   glEnable(GL_CULL_FACE);
@@ -469,11 +469,11 @@ void kit::EditorTerrain::renderDeferred(kit::Renderer * renderer)
   renderGeometry();
 }
 
-void kit::EditorTerrain::renderShadows(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
+void kit::EditorTerrain::renderShadows(glm::mat4 const & viewMatrix, glm::mat4 const & projectionMatrix)
 {
   glDisable(GL_CULL_FACE);
   m_shadowProgram->use();
-  m_shadowProgram->setUniformMat4("uniform_mvpMatrix", projectionMatrix * viewMatrix * getTransformMatrix());
+  m_shadowProgram->setUniformMat4("uniform_mvpMatrix", projectionMatrix * viewMatrix * getWorldTransformMatrix());
   renderGeometry();
 }
 
@@ -489,7 +489,7 @@ void kit::EditorTerrain::renderForward(kit::Renderer * renderer)
     return;
   }
 
-  glm::mat4 modelViewProjectionMatrix = renderer->getActiveCamera()->getProjectionMatrix() * renderer->getActiveCamera()->getViewMatrix() * getTransformMatrix();
+  glm::mat4 modelViewProjectionMatrix = renderer->getActiveCamera()->getProjectionMatrix() * renderer->getActiveCamera()->getViewMatrix() * getWorldTransformMatrix();
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_ONE, GL_ONE);
@@ -1345,8 +1345,8 @@ kit::Texture * kit::EditorTerrain::getHeightmap()
 void kit::EditorTerrain::renderPickbuffer(kit::Camera * cam)
 {
 
-  glm::mat4 modelViewProjectionMatrix = cam->getProjectionMatrix() * cam->getViewMatrix() * getTransformMatrix();
-  glm::mat4 modelViewMatrix = cam->getViewMatrix() * getTransformMatrix();
+  glm::mat4 modelViewProjectionMatrix = cam->getProjectionMatrix() * cam->getViewMatrix() * getWorldTransformMatrix();
+  glm::mat4 modelViewMatrix = cam->getViewMatrix() * getWorldTransformMatrix();
 
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);

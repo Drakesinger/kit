@@ -28,6 +28,7 @@ namespace kit
       ~Skybox();
 
       void render(kit::Renderer * renderer);
+      void renderReflection(kit::Renderer * renderer, glm::mat4 const & rotationMatrix);
       void renderGeometry();
       
       kit::Cubemap * getTexture();

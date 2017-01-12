@@ -6,6 +6,7 @@
 #include "Kit/Timer.hpp"
 
 #include <vector>
+#include <queue>
 
 namespace kit 
 {
@@ -51,8 +52,6 @@ namespace kit
     
     RenderPayload();
 
-    void assertSorted();
-
     std::vector<kit::Renderable*> & getRenderables();
     void addRenderable(kit::Renderable* renderable);
     void removeRenderable(kit::Renderable* renderable);
@@ -65,7 +64,6 @@ namespace kit
   private:
     std::vector<kit::Light*> m_lights;
     std::vector<kit::Renderable*> m_renderables;
-    bool m_isSorted = false;
   };
 
   class KITAPI Renderer
@@ -91,11 +89,15 @@ namespace kit
 
     /// Renders the payload and composes a fully rendered frame, the result is retreivable using getBuffer()
     void renderFrame();
+    
+    kit::Light * findIBLLight();
 
     /// Gets a pointer to a texture containing the rendered payload
     kit::Texture * getBuffer();
 
     kit::PixelBuffer * getAccumulationCopy();
+    
+    kit::PixelBuffer * getPositionBuffer();
 
     /// Sets the relative-to-framebuffer resolution for the geometry buffer, light buffer and composition buffer
     void setInternalResolution(float size);
@@ -187,7 +189,14 @@ namespace kit
     
     kit::Texture * getIntegratedBRDF();
     
+    void updatePositionBuffer();
+    void updateAccumulationCopy();
+    
+    void renderReflections(float planarHeight = 0.0f);
+    kit::Texture * getReflectionMap();
+    
   private:
+    
     /// Called on every resize
     void onResize();
     
@@ -197,6 +206,7 @@ namespace kit
     void forwardPass();
     void hdrPass();
     void postFXPass();
+    
     
     void renderFrameWithMetrics();
     void renderFrameWithoutMetrics();
@@ -259,8 +269,13 @@ namespace kit
     kit::PixelBuffer *       m_accumulationBuffer = nullptr;   // Light passes, forward pass goes here           Linear
     kit::DoubleBuffer *      m_compositionBuffer = nullptr;    // HDR->LDR pass, post effects goes here          Linear
     
-    kit::PixelBuffer *       m_accumulationCopy = nullptr; // Holds a copy of the depth buffer for forward renderables who need it
-
+    kit::PixelBuffer *       m_accumulationCopy = nullptr; // Holds a copy of the accumulation buffer for forward renderables who need it
+    kit::PixelBuffer *       m_positionBuffer = nullptr;  // Recreates worldpositions from the depth buffer, for forward renderables who need it
+    kit::Program     *       m_programPosition = nullptr;
+    
+    kit::PixelBuffer *       m_reflectionBuffer = nullptr;
+    
+    
     // Light rendering
     kit::Texture *           m_integratedBRDF = nullptr;
     kit::Program *           m_programEmissive = nullptr;

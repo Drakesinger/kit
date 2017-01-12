@@ -9,7 +9,7 @@ kit::Application::Application() : kit::Scriptable()
 {
   kit::Window::Args args;
   args.mode = kit::Window::Windowed;
-  args.resolution = glm::uvec2(1366, 768);
+  args.resolution = glm::uvec2(1280, 720);
   args.resizable = true;
   args.title = "Kit Application";
   

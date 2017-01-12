@@ -219,41 +219,76 @@ void kit::Model::update(const double & ms)
 
 void kit::Model::renderDeferred(kit::Renderer* renderer)
 {
-  std::vector<glm::mat4> skinTransform;
-  std::vector<glm::mat4> instanceTransform;
+  kit::Mesh::RenderConfig conf;
+ 
+  auto camera = renderer->getActiveCamera();
+  conf.viewMatrix = camera->getViewMatrix();
+  conf.projectionMatrix =  camera->getProjectionMatrix();
+  conf.modelMatrix = getWorldTransformMatrix();
+  conf.renderPass = kit::Mesh::RenderPass::Deferred;
+  conf.renderer = renderer;
   
   if(m_skeleton)
   {
-    skinTransform = m_skeleton->getSkin();
+    conf.skinTransform = m_skeleton->getSkin();
   }
   
   if(m_instanced)
   {
-    instanceTransform = m_instanceTransform;
+    conf.instanceTransform = m_instanceTransform;
   }
+  
+  m_mesh->render(conf);
+}
 
-  m_mesh->render(renderer->getActiveCamera(), getTransformMatrix(), false, skinTransform, instanceTransform);
+void kit::Model::renderReflection(Renderer * renderer, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix)
+{
+  kit::Mesh::RenderConfig conf;
+  
+  conf.viewMatrix = viewMatrix;
+  conf.projectionMatrix = projectionMatrix;
+  conf.modelMatrix = getWorldTransformMatrix();
+  conf.renderPass = kit::Mesh::RenderPass::Reflection;
+  conf.renderer = renderer;
+  
+  if(m_skeleton)
+  {
+    conf.skinTransform = m_skeleton->getSkin();
+  }
+  
+  if(m_instanced)
+  {
+    conf.instanceTransform = m_instanceTransform;
+  }
+  
+  m_mesh->render(conf);
 }
 
 void kit::Model::renderForward(kit::Renderer* renderer)
 {
-  std::vector<glm::mat4> skinTransform;
-  std::vector<glm::mat4> instanceTransform;
+  kit::Mesh::RenderConfig conf;
+ 
+  auto camera = renderer->getActiveCamera();
+  conf.viewMatrix = camera->getViewMatrix();
+  conf.projectionMatrix =  camera->getProjectionMatrix();
+  conf.modelMatrix = getWorldTransformMatrix();
+  conf.renderPass = kit::Mesh::RenderPass::Forward;
+  conf.renderer = renderer;
   
   if(m_skeleton)
   {
-    skinTransform = m_skeleton->getSkin();
+    conf.skinTransform = m_skeleton->getSkin();
   }
   
   if(m_instanced)
   {
-    instanceTransform = m_instanceTransform;
+    conf.instanceTransform = m_instanceTransform;
   }
-
-  m_mesh->render(renderer->getActiveCamera(), getTransformMatrix(), true, skinTransform, instanceTransform);
+  
+  m_mesh->render(conf);
 }
 
-void kit::Model::renderShadows(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
+void kit::Model::renderShadows(glm::mat4 const & viewMatrix, glm::mat4 const & projectionMatrix)
 {
   for (auto &currSubmeshIndex : m_mesh->getSubmeshEntries())
   {
@@ -281,7 +316,7 @@ void kit::Model::renderShadows(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
 
     auto currProgram = kit::Model::getShadowProgram(S, O, I);
 
-    currProgram->setUniformMat4("uniform_mvpMatrix", projectionMatrix * viewMatrix * getTransformMatrix());
+    currProgram->setUniformMat4("uniform_mvpMatrix", projectionMatrix * viewMatrix * getWorldTransformMatrix());
 
     if(O)
     {
@@ -343,7 +378,7 @@ glm::vec3 kit::Model::getBoneWorldPosition(const std::string&bone)
     return glm::vec3();
   }
 
-  return glm::vec3( getTransformMatrix() * currBone->m_globalTransform * glm::vec4(0.0, 0.0, 0.0, 1.0));
+  return glm::vec3( getWorldTransformMatrix() * currBone->m_globalTransform * glm::vec4(0.0, 0.0, 0.0, 1.0));
 }
 
 glm::quat kit::Model::getBoneWorldRotation(const std::string&bone)
@@ -366,5 +401,5 @@ glm::quat kit::Model::getBoneWorldRotation(const std::string&bone)
   fodderFix = glm::rotate(fodderFix, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
   //fodderFix = glm::rotate(fodderFix, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
-  return glm::quat_cast(getTransformMatrix() * currBone->m_globalTransform) * fodderFix;
+  return glm::quat_cast(getWorldTransformMatrix() * currBone->m_globalTransform) * fodderFix;
 }

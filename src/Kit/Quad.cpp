@@ -101,7 +101,8 @@ kit::Quad::~Quad()
 
 void kit::Quad::prepareProgram(kit::Program * customprogram)
 {
-  
+  glEnable(GL_CULL_FACE);
+  glCullFace(GL_BACK);
   if(customprogram != nullptr)
   {
     customprogram->setUniform2f("uniform_size", m_size);

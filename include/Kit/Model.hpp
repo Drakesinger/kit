@@ -31,8 +31,9 @@ namespace kit
       void update(double const & ms);
       void renderDeferred(kit::Renderer * renderer) override;
       void renderForward(kit::Renderer * renderer) override;
-      void renderShadows(glm::mat4 v, glm::mat4 p) override;
+      void renderShadows(glm::mat4 const & viewMatrix, glm::mat4 const & projectionMatrix) override;
       void renderGeometry() override;
+      void renderReflection(Renderer *, const glm::mat4 & viewMatrix, const glm::mat4 & projectionMatrix) override;
       
       virtual std::vector<glm::mat4> getSkin() override;
       virtual bool isSkinned() override;

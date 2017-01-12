@@ -91,7 +91,7 @@ namespace kit
       void renderDeferred(kit::Renderer * renderer) override;
       void renderForward(kit::Renderer * renderer) override;
       void renderGeometry() override;
-      void renderShadows(glm::mat4 v, glm::mat4 p) override;
+      void renderShadows(glm::mat4 const & viewMatrix, glm::mat4 const & projectionMatrix) override;
 
       void renderPickbuffer(kit::Camera * camera);
       

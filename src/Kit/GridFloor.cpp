@@ -230,7 +230,7 @@ void kit::GridFloor::renderForward(kit::Renderer * renderer)
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glEnable(GL_DEPTH_TEST);
   
-  glm::mat4 modelViewProjectionMatrix = renderer->getActiveCamera()->getProjectionMatrix() * renderer->getActiveCamera()->getViewMatrix() * getTransformMatrix();
+  glm::mat4 modelViewProjectionMatrix = renderer->getActiveCamera()->getProjectionMatrix() * renderer->getActiveCamera()->getViewMatrix() * getWorldTransformMatrix();
   
   kit::GridFloor::m_program->setUniformMat4("uniform_mvpMatrix", modelViewProjectionMatrix);
   kit::GridFloor::m_program->setUniform1f("uniform_whitepoint", renderer->getActiveCamera()->getWhitepoint());

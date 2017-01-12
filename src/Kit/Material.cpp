@@ -7,7 +7,9 @@
 #include "Kit/Program.hpp"
 #include "Kit/PixelBuffer.hpp"
 #include "Kit/Camera.hpp"
-#include <Kit/Quad.hpp>
+#include "Kit/Quad.hpp"
+#include "Kit/Renderer.hpp"
+#include "Kit/Light.hpp"
 
 #include <glm/gtx/transform.hpp>
 #include <sstream>
@@ -17,6 +19,8 @@ uint32_t kit::Material::m_instanceCount = 0;
 kit::Program * kit::Material::m_cacheProgram = nullptr;
 std::map<std::string, std::weak_ptr<kit::Material>> kit::Material::m_cache = std::map<std::string,std::weak_ptr<kit::Material>>();
 std::map<kit::Material::ProgramFlags, kit::Program*> kit::Material::m_programCache = std::map<kit::Material::ProgramFlags, kit::Program*>();
+
+kit::Program * kit::Material::m_reflectiveProgram = nullptr;
 
 static const char * glslVersion = "#version 430 core\n";
 
@@ -410,6 +414,8 @@ void kit::Material::allocateShared()
   
   delete vertexShader;
   delete pixelShader;  
+  
+  m_reflectiveProgram = new kit::Program({"reflective.vert"}, {"reflective.frag"}, kit::DataSource::Static);
 }
 
 void kit::Material::releaseShared()
@@ -421,6 +427,8 @@ void kit::Material::releaseShared()
     if(t.second) delete t.second;
   }
   m_programCache.clear();
+  
+  delete m_reflectiveProgram;
 }
 
 void kit::Material::renderARCache()
@@ -922,16 +930,16 @@ kit::Program * kit::Material::getProgram(kit::Material::ProgramFlags flags)
       if (flags.m_dynamicAR)
       {
         pixelsource << "  vec4 albedoData = texture(uniform_albedoMap, in_texCoords).rgba;" << std::endl;
-        pixelsource << "  vec3 in_albedo = albedoData.rgb * uniform_albedo;" << std::endl;
+        pixelsource << "  vec3 in_albedo = albedoData.rgb;" << std::endl;
       }
       else
       {
-        pixelsource << "  vec3 in_albedo = ARData.rgb * uniform_albedo;" << std::endl;
+        pixelsource << "  vec3 in_albedo = ARData.rgb;" << std::endl;
       }
     }
     else
     {
-      pixelsource << "  vec3  in_albedo     = uniform_albedo;" << std::endl;
+      pixelsource << "  vec3  in_albedo = uniform_albedo;" << std::endl;
     }
 
     // Roughness
@@ -963,11 +971,11 @@ kit::Program * kit::Material::getProgram(kit::Material::ProgramFlags flags)
     {
       if (flags.m_dynamicEO)
       {
-        pixelsource << "  vec3 in_emissiveColor = texture(uniform_emissiveMap, in_texCoords).rgb * uniform_emissiveColor;" << std::endl;
+        pixelsource << "  vec3 in_emissiveColor = texture(uniform_emissiveMap, in_texCoords).rgb;" << std::endl;
       }
       else
       {
-        pixelsource << "  vec3 in_emissiveColor = EOData.rgb * uniform_emissiveColor;" << std::endl;
+        pixelsource << "  vec3 in_emissiveColor = EOData.rgb;" << std::endl;
       }
     }
     else
@@ -1158,7 +1166,62 @@ void kit::Material::assertCache()
   }
 }
 
-void kit::Material::use(kit::Camera * cam, const glm::mat4 & modelMatrix, const std::vector<glm::mat4> & skinTransform, const std::vector<glm::mat4> & instanceTransform)
+void kit::Material::useReflective(kit::Renderer * renderer, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::mat4& modelMatrix, const std::vector<glm::mat4>& skinTransform, const std::vector<glm::mat4>& instanceTransform) 
+{
+  assertCache();
+  kit::Material::ProgramFlags flags = getFlags(skinTransform.size() > 0, instanceTransform.size() > 0);
+  m_reflectiveProgram->setUniformTexture("uniform_arCache", m_arCache->getColorAttachment(0));
+  m_reflectiveProgram->setUniformTexture("uniform_eoCache", m_eoCache->getColorAttachment(0));
+  m_reflectiveProgram->setUniformTexture("uniform_nmCache", m_nmCache->getColorAttachment(0));
+  m_reflectiveProgram->setUniform1f("uniform_emissiveStrength", m_emissiveStrength);
+  
+  glm::mat4 modelViewMatrix = viewMatrix * modelMatrix;
+  glm::mat4 modelViewProjectionMatrix = projectionMatrix * viewMatrix * modelMatrix;
+  glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelViewMatrix)));
+  glm::mat4 invViewMatrix = glm::inverse(viewMatrix);
+  
+  m_reflectiveProgram->setUniformMat4("uniform_mMatrix", modelMatrix);
+  m_reflectiveProgram->setUniformMat4("uniform_invViewMatrix", invViewMatrix);
+  m_reflectiveProgram->setUniformMat4("uniform_mvMatrix", modelViewMatrix);
+  m_reflectiveProgram->setUniformMat4("uniform_mvpMatrix", modelViewProjectionMatrix);
+  m_reflectiveProgram->setUniformMat3("uniform_normalMatrix", normalMatrix);
+  
+  
+  auto light = renderer->findIBLLight();
+  if(light)
+  {
+    m_reflectiveProgram->setUniform3f("uniform_lightColor", light->getColor());
+    m_reflectiveProgram->setUniformCubemap("uniform_lightIrradiance", light->getIrradianceMap());
+    m_reflectiveProgram->setUniformCubemap("uniform_lightRadiance", light->getRadianceMap());
+    m_reflectiveProgram->setUniformTexture("uniform_brdf", renderer->getIntegratedBRDF());
+        
+  }
+
+  if(flags.m_skinned)
+  {
+    m_reflectiveProgram->setUniformMat4v("uniform_bones", skinTransform);
+    m_reflectiveProgram->setUniform1i("uniform_isSkinned", 1);
+  }
+  else
+  {
+    m_reflectiveProgram->setUniform1i("uniform_isSkinned", 0);
+  }
+  
+  if(flags.m_instanced)
+  {
+    m_reflectiveProgram->setUniformMat4v("uniform_instanceTransform", instanceTransform);
+    m_reflectiveProgram->setUniform1i("uniform_isInstanced", 1);
+  }
+  else 
+  {
+    m_reflectiveProgram->setUniform1i("uniform_isInstanced", 0);
+  }
+  
+  m_reflectiveProgram->use();
+  
+}
+
+void kit::Material::use(glm::mat4 const & viewMatrix, glm::mat4 const & projectionMatrix, const glm::mat4 & modelMatrix, const std::vector<glm::mat4> & skinTransform, const std::vector<glm::mat4> & instanceTransform)
 {
   assertCache();
   kit::Material::ProgramFlags flags = getFlags(skinTransform.size() > 0, instanceTransform.size() > 0);
@@ -1170,7 +1233,10 @@ void kit::Material::use(kit::Camera * cam, const glm::mat4 & modelMatrix, const 
   if(!flags.m_skinned && flags.m_instanced) currProgram = m_iProgram;
   if(!flags.m_skinned && !flags.m_instanced) currProgram = m_program;
 
-  currProgram->setUniform3f("uniform_albedo", m_albedo);
+  if(!flags.m_albedoMap)
+  {
+    currProgram->setUniform3f("uniform_albedo", m_albedo);
+  }
   
   if(flags.m_albedoMap || flags.m_roughnessMap)
   {
@@ -1190,7 +1256,11 @@ void kit::Material::use(kit::Camera * cam, const glm::mat4 & modelMatrix, const 
     currProgram->setUniform1f("uniform_roughness", m_roughness);
   }
   
-  currProgram->setUniform3f("uniform_emissiveColor", m_emissiveColor);
+  if(!flags.m_emissiveMap)
+  {
+    currProgram->setUniform3f("uniform_emissiveColor", m_emissiveColor);
+  }
+  
   currProgram->setUniform1f("uniform_emissiveStrength", m_emissiveStrength);
   
   if (flags.m_emissiveMap || flags.m_occlusionMap)
@@ -1245,8 +1315,6 @@ void kit::Material::use(kit::Camera * cam, const glm::mat4 & modelMatrix, const 
     currProgram->setUniformMat4v("uniform_instanceTransform", instanceTransform);
   }
   
-  glm::mat4 viewMatrix = cam->getViewMatrix();
-  glm::mat4 projectionMatrix = cam->getProjectionMatrix();
   glm::mat4 modelViewMatrix = viewMatrix * modelMatrix;
   glm::mat4 modelViewProjectionMatrix = projectionMatrix * viewMatrix * modelMatrix;
   

@@ -5,6 +5,7 @@
 #include "Kit/Camera.hpp"
 #include "Kit/Material.hpp"
 #include "Kit/ConvexHull.hpp"
+#include "Kit/Renderer.hpp"
 
 #include <fstream>
 
@@ -77,23 +78,30 @@ kit::Mesh::SubmeshEntry* kit::Mesh::getSubmeshEntry(const std::string&name)
   return &m_submeshEntries.at(name);
 }
 
-void kit::Mesh::render(kit::Camera * camera, const glm::mat4 & modelMatrix, bool isForwardPass, const std::vector<glm::mat4> & skinTransform, const std::vector<glm::mat4> & instanceTransform)
+void kit::Mesh::render(kit::Mesh::RenderConfig const & conf)
 {
   for(auto & currSubmesh : m_submeshEntries)
   {
     if (m_submeshesEnabled.at(currSubmesh.first))
     {
-      bool materialForward = currSubmesh.second.m_material->getFlags(skinTransform.size() > 0, instanceTransform.size() > 0).m_forward;
-      if(isForwardPass != materialForward)
+      bool materialForward = currSubmesh.second.m_material->getFlags(conf.skinTransform.size() > 0, conf.instanceTransform.size() > 0).m_forward;
+      if(((conf.renderPass == RenderPass::Forward) != materialForward) || (materialForward && (conf.renderPass == RenderPass::Reflection)) )
       {
         continue;
       }
 
-      currSubmesh.second.m_material->use(camera, modelMatrix, skinTransform, instanceTransform);
-      
-      if(instanceTransform.size() > 0)
+      if(conf.renderPass == RenderPass::Reflection)
       {
-        currSubmesh.second.m_submesh->renderGeometryInstanced(instanceTransform.size());
+        currSubmesh.second.m_material->useReflective(conf.renderer, conf.viewMatrix, conf.projectionMatrix, conf.modelMatrix, conf.skinTransform, conf.instanceTransform);
+      }
+      else
+      {
+        currSubmesh.second.m_material->use(conf.viewMatrix, conf.projectionMatrix, conf.modelMatrix, conf.skinTransform, conf.instanceTransform);
+      }
+      
+      if(conf.instanceTransform.size() > 0)
+      {
+        currSubmesh.second.m_submesh->renderGeometryInstanced(conf.instanceTransform.size());
       }
       else
       {

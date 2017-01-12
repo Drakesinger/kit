@@ -97,7 +97,7 @@ kit::Skybox::Skybox(std::string name)
   
   m_strength = 1.0f;
   m_color = glm::vec3(2.0f/255.0f, 3.0f/255.0f, 4.0f/255.0f);
-  m_texture = kit::Cubemap::loadIrradianceMap(name);
+  m_texture = kit::Cubemap::loadSkybox(name);
 }
 
 kit::Skybox::Skybox(glm::vec3 color, float strength)
@@ -133,7 +133,29 @@ void kit::Skybox::renderGeometry()
 
 void kit::Skybox::render(kit::Renderer* renderer)
 {
-  glm::mat4 rotProjMatrix = renderer->getActiveCamera()->getProjectionMatrix() * glm::inverse(renderer->getActiveCamera()->getRotationMatrix());
+  glm::mat4 rotProjMatrix = renderer->getActiveCamera()->getProjectionMatrix() * glm::inverse(renderer->getActiveCamera()->getWorldRotationMatrix());
+  if (m_texture)
+  {
+    kit::Skybox::m_program->use();
+    kit::Skybox::m_program->setUniformMat4("uniform_rotProjMatrix", rotProjMatrix);
+    kit::Skybox::m_program->setUniform1f("uniform_farclip", renderer->getActiveCamera()->getClipRange().y);
+    kit::Skybox::m_program->setUniformCubemap("uniform_texture", m_texture);
+    kit::Skybox::m_program->setUniform1f("uniform_strength", m_strength);
+  }
+  else
+  {
+    kit::Skybox::m_programNoTexture->use();
+    kit::Skybox::m_programNoTexture->setUniformMat4("uniform_rotProjMatrix", rotProjMatrix);
+    kit::Skybox::m_programNoTexture->setUniform1f("uniform_farclip", renderer->getActiveCamera()->getClipRange().y);
+    kit::Skybox::m_programNoTexture->setUniform4f("uniform_color", glm::vec4(m_color.x, m_color.y, m_color.z, m_strength));
+  }
+
+  renderGeometry();
+}
+
+void kit::Skybox::renderReflection(kit::Renderer* renderer, glm::mat4 const & rotationMatrix)
+{
+  glm::mat4 rotProjMatrix = renderer->getActiveCamera()->getProjectionMatrix() * glm::inverse(rotationMatrix);
   if (m_texture)
   {
     kit::Skybox::m_program->use();

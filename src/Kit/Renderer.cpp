@@ -18,6 +18,7 @@
 #include "Kit/Cone.hpp"
 
 #include <algorithm>
+#include <queue>
 #include <sstream>
 #include <iomanip>
 #include <glm/gtx/transform.hpp>
@@ -51,7 +52,6 @@ void kit::RenderPayload::addRenderable(kit::Renderable * renderable)
   }
   
   m_renderables.push_back(renderable);
-  m_isSorted = false;
 }
 
 void kit::RenderPayload::removeRenderable(kit::Renderable * renderable)
@@ -134,6 +134,8 @@ kit::Renderer::Renderer(glm::uvec2 resolution)
   m_pointGeometry = new kit::Sphere(32, 24);
  
   m_programIBL->setUniformTexture("uniform_brdf", m_integratedBRDF);
+  
+  m_programPosition = new kit::Program({"position.vert"}, {"position.frag"}, kit::DataSource::Static);
   
   // Setup buffers
   updateBuffers();
@@ -221,6 +223,8 @@ kit::Renderer::~Renderer()
     if(m_accumulationBuffer) delete m_accumulationBuffer;
     if(m_compositionBuffer) delete m_compositionBuffer; 
     if(m_accumulationCopy) delete m_accumulationCopy;
+    if(m_positionBuffer) delete m_positionBuffer; 
+    if(m_programPosition) delete m_programPosition; 
     if(m_integratedBRDF) delete m_integratedBRDF;
     if(m_programEmissive) delete m_programEmissive;
     if(m_programIBL) delete m_programIBL;
@@ -271,7 +275,7 @@ void kit::Renderer::releaseShared()
 void kit::Renderer::renderLight(kit::Light * currLight)
 {
   kit::Camera * c = m_activeCamera;
-  glm::mat4 m = currLight->getTransformMatrix();
+  glm::mat4 m = currLight->getWorldTransformMatrix();
   glm::mat4 v = c->getViewMatrix();
   glm::mat4 p = c->getProjectionMatrix();
   glm::mat4 mv = v * m;
@@ -291,7 +295,7 @@ void kit::Renderer::renderLight(kit::Light * currLight)
     {
       currProgram = m_programDirectional;
       currProgram->setUniformTexture("uniform_shadowmap", currLight->getShadowBuffer()->getDepthAttachment());
-      currProgram->setUniformMat4("uniform_lightViewProjMatrix", currLight->getDirectionalProjectionMatrix() * currLight->getDirectionalViewMatrix() * currLight->getDirectionalModelMatrix(c->getPosition(), c->getForward()));
+      currProgram->setUniformMat4("uniform_lightViewProjMatrix", currLight->getDirectionalProjectionMatrix() * currLight->getDirectionalViewMatrix() * currLight->getDirectionalModelMatrix(c->getWorldPosition(), c->getWorldForward()));
     }
     else
     {
@@ -299,7 +303,7 @@ void kit::Renderer::renderLight(kit::Light * currLight)
     }
     
     currProgram->setUniform3f("uniform_lightColor", currLight->getColor());
-    currProgram->setUniform3f("uniform_lightDir", normalize(glm::vec3(v * glm::vec4(currLight->getForward(), 0.0f))));
+    currProgram->setUniform3f("uniform_lightDir", glm::normalize(glm::vec3(v * glm::vec4(currLight->getWorldForward(), 0.0f))));
 
     currProgram->setUniform2f("uniform_projConst", glm::vec2(px, py));
     
@@ -325,8 +329,8 @@ void kit::Renderer::renderLight(kit::Light * currLight)
     }
     
     currProgram->setUniform3f("uniform_lightColor", currLight->getColor());
-    currProgram->setUniform3f("uniform_lightPosition", glm::vec3(v * glm::vec4(currLight->getPosition(), 1.0f)));
-    currProgram->setUniform3f("uniform_lightDirection", glm::vec3(v * glm::vec4(currLight->getForward(), 0.0f)));
+    currProgram->setUniform3f("uniform_lightPosition", glm::vec3(v * glm::vec4(currLight->getWorldPosition(), 1.0f)));
+    currProgram->setUniform3f("uniform_lightDirection", glm::vec3(v * glm::vec4(currLight->getWorldForward(), 0.0f)));
     currProgram->setUniform4f("uniform_lightFalloff", currLight->getAttenuation());
     currProgram->setUniform2f("uniform_coneAngle", glm::vec2(glm::cos(glm::radians(currLight->getConeAngle().x) * 0.5f), glm::cos(glm::radians(currLight->getConeAngle().y) * 0.5f)));
     currProgram->setUniformMat4("uniform_MVPMatrix", mvp);
@@ -357,7 +361,7 @@ void kit::Renderer::renderLight(kit::Light * currLight)
     currProgram->setUniform3f("uniform_lightColor", currLight->getColor());
     currProgram->setUniformMat4("uniform_MVPMatrix", mvp);
     //currProgram->setUniform1f("uniform_lightRadius", currLight->getRadius());
-    currProgram->setUniform3f("uniform_lightPosition", glm::vec3(v * glm::vec4(currLight->getPosition(), 1.0f)));    
+    currProgram->setUniform3f("uniform_lightPosition", glm::vec3(v * glm::vec4(currLight->getWorldPosition(), 1.0f)));    
     currProgram->setUniform4f("uniform_lightFalloff", currLight->getAttenuation());
     
     currProgram->setUniformMat4("uniform_MVMatrix", mv);
@@ -396,16 +400,6 @@ void kit::Renderer::setSkybox(kit::Skybox * skybox)
 
 kit::RenderPayload::RenderPayload()
 {
-}
-
-void kit::RenderPayload::assertSorted()
-{
-  if (!m_isSorted)
-  {
-    // Sort payload by render priority
-    std::sort(m_renderables.begin(), m_renderables.end(), [](kit::Renderable * const & a, kit::Renderable * const & b) {return a->getRenderPriority() < b->getRenderPriority(); });
-    m_isSorted = true;
-  }
 }
 
 void kit::Renderer::registerPayload(kit::RenderPayload * payload)
@@ -602,6 +596,36 @@ void kit::Renderer::renderFrameWithMetrics()
 
 void kit::Renderer::geometryPass()
 {
+  // Sorts by renderpriority, then front to back to cull as many fragments as possible
+  // Inverted because its pushed to a queue
+  auto sorter = [&](kit::Renderable* & lhs, kit::Renderable* & rhs)
+  {
+    glm::vec3 cwp = glm::vec3(m_activeCamera->getWorldTransformMatrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+    glm::vec3 lwp = glm::vec3(lhs->getWorldTransformMatrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+    glm::vec3 rwp = glm::vec3(rhs->getWorldTransformMatrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+    
+    float ld = glm::distance(cwp, lwp);
+    float rd = glm::distance(cwp, rwp);
+    
+    float lp = lhs->getRenderPriority();
+    float rp = rhs->getRenderPriority();
+    
+    if(lp != rp)
+      return lp > rp;
+    else
+      return ld > rd;
+  };
+  
+  std::priority_queue<kit::Renderable*, std::vector<kit::Renderable*>, decltype(sorter)> workPayload(sorter);
+  
+  for (auto & currPayload : m_payload)
+  {
+    for (auto & currRenderable : currPayload->getRenderables())
+    {
+      workPayload.push(currRenderable);
+    }
+  }
+  
   glDisable(GL_BLEND);
 
   glDepthMask(GL_TRUE);
@@ -610,17 +634,10 @@ void kit::Renderer::geometryPass()
   // Clear and bind the geometry buffer
   m_geometryBuffer->clear({ glm::vec4(0.0, 0.0, 0.0, 0.0), glm::vec4(0.0, 0.0, 0.0, 0.0), glm::vec4(0.0, 0.0, 0.0, 0.0) }, 1.0f);
 
-  // For each payload ...
-  for (auto & currPayload : m_payload)
+  while(!workPayload.empty())
   {
-    currPayload->assertSorted();
-
-    // For each renderable in current payload ...
-    for (auto & currRenderable : currPayload->getRenderables())
-    {
-      // Render the renderable in deferred mode
-      currRenderable->renderDeferred(this);
-    }
+    workPayload.top()->renderDeferred(this);
+    workPayload.pop();
   }
 }
 
@@ -628,19 +645,46 @@ void kit::Renderer::shadowPass()
 {
   if (!m_shadowsEnabled) return;
 
+  std::vector<kit::Renderable*> renderables;
+  std::queue<kit::Light*> lights;
+  for (auto currPayload : m_payload)
+  {
+    for (auto currRenderable : currPayload->getRenderables())
+    {
+      renderables.push_back(currRenderable);
+    }
+    
+    for(auto currLight : currPayload->getLights())
+    {
+      lights.push(currLight);
+    }
+  }
+  
   glDepthMask(GL_TRUE);
   glEnable(GL_DEPTH_TEST);
   glDisable(GL_BLEND);
 
-  // For each payload ...
-  // (note that all payloads are isolated from each other in terms of shadows)
-  for (kit::RenderPayload * & currPayload : m_payload)
+  // For each light in current payload ...
+  while(!lights.empty())
   {
-    // For each light in current payload ...
-    for (kit::Light * & currLight : currPayload->getLights())
+    auto currLight = lights.front();
+    lights.pop();
+    
+    // Ignore light if its not shadowmapped
+    if (!currLight->isShadowMapped())
     {
-      // Ignore light if its not shadowmapped
-      if (!currLight->isShadowMapped())
+      continue;
+    }
+
+    // Ignore light if its not inside camera frustum
+    // If spotcone || pointsphere !inside camerafrustum continue
+    
+    currLight->getShadowBuffer()->clearDepth(1.0f);
+    
+    for(auto currRenderable : renderables)
+    {
+      // Ignore renderable if its not a shadowcaster
+      if (!currRenderable->isShadowCaster())
       {
         continue;
       }
@@ -648,50 +692,20 @@ void kit::Renderer::shadowPass()
       // If light is a spotlight..
       if (currLight->getType() == Light::Spot)
       {
-        // Setup spotshadow program and buffers
-        currLight->getShadowBuffer()->clearDepth(1.0f);
-
-        // For each renderable in current payload ...
-        for (kit::Renderable * & currRenderable : currPayload->getRenderables())
-        {
-          // Ignore renderable if its not a shadowcaster
-          if (!currRenderable->isShadowCaster())
-          {
-            continue;
-          }
-
-          // Render the renderable to the shadowmap
-          currRenderable->renderShadows(currLight->getSpotViewMatrix(), currLight->getSpotProjectionMatrix());
-        }
+        // If currRenderable !inside spotfrustum continue
+        // Render the renderable to the shadowmap
+        currRenderable->renderShadows(currLight->getSpotViewMatrix(), currLight->getSpotProjectionMatrix());
       }
 
       // If light is directional
       if (currLight->getType() == Light::Directional)
       {
-        // Setup directional program and buffers
-        currLight->getShadowBuffer()->clearDepth(1.0f);
-
-        // For each renderable in current payload ...
-        for (kit::Renderable * & currRenderable : currPayload->getRenderables())
-        {
-          // Ignore renderable if its not a shadowcaster
-          if (!currRenderable->isShadowCaster())
-          {
-            continue;
-          }
-
-          // Render the renderable to the shadowmap
-          currRenderable->renderShadows(currLight->getDirectionalViewMatrix() * currLight->getDirectionalModelMatrix(m_activeCamera->getPosition(), m_activeCamera->getForward()), currLight->getDirectionalProjectionMatrix());
-        }
+        // Render the renderable to the shadowmap
+        currRenderable->renderShadows(currLight->getDirectionalViewMatrix() * currLight->getDirectionalModelMatrix(m_activeCamera->getWorldPosition(), m_activeCamera->getWorldForward()), currLight->getDirectionalProjectionMatrix());
       }
-
-      // Point light shadows are not implemented yet
-      //else if (currLight->getType() == Light::Point)
-      //{
-      //  
-      //}
     }
   }
+
 }
 
 void kit::Renderer::lightPass()
@@ -730,6 +744,36 @@ void kit::Renderer::lightPass()
 
 void kit::Renderer::forwardPass()
 {
+  // Sorts by renderpriority, then back to front to render forward stuff as correctly as possible
+  // Inverted because its pushed to a queue
+  auto sorter = [&](kit::Renderable* & lhs, kit::Renderable* & rhs)
+  {
+    glm::vec3 cwp = m_activeCamera->getWorldPosition();
+    glm::vec3 lwp = lhs->getWorldPosition();
+    glm::vec3 rwp = rhs->getWorldPosition();
+    
+    float ld = glm::distance(cwp, lwp);
+    float rd = glm::distance(cwp, rwp);
+    
+    float lp = lhs->getRenderPriority();
+    float rp = rhs->getRenderPriority();
+    
+    if(lp != rp)
+      return lp > rp;
+    else
+      return ld < rd;
+  };
+  
+  std::priority_queue<kit::Renderable*, std::vector<kit::Renderable*>, decltype(sorter)> workPayload(sorter);
+  
+  for (auto & currPayload : m_payload)
+  {
+    for (auto & currRenderable : currPayload->getRenderables())
+    {
+      workPayload.push(currRenderable);
+    }
+  }
+  
   glDepthMask(GL_TRUE);
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
@@ -746,30 +790,31 @@ void kit::Renderer::forwardPass()
     m_skybox->render(this);
   }
 
-  // For each payload ...
-  for (auto & currPayload : m_payload)
+  while(!workPayload.empty())
   {
-    currPayload->assertSorted();
-
-    // For each renderable in current payload ...
-    for (auto & currRenderable : currPayload->getRenderables())
+    if(workPayload.top()->requestAccumulationCopy())
     {
-      if (currRenderable->requestAccumulationCopy())
-      {
-       // std::cout << "Handle " << m_accumulationBuffer->getHandle() << ": " << m_accumulationBuffer->getResolution().x << "x" << m_accumulationBuffer->getResolution().y << " to " << m_depthCopyBuffer->getHandle() << ": " << m_depthCopyBuffer->getResolution().x << "x" << m_depthCopyBuffer->getResolution().y << std::endl;
-        glBlitNamedFramebuffer(
-          m_accumulationBuffer->getHandle(), 
-          m_accumulationCopy->getHandle(), 
-          0, 0, m_accumulationBuffer->getResolution().x, m_accumulationBuffer->getResolution().y,
-          0, 0, m_accumulationCopy->getResolution().x, m_accumulationCopy->getResolution().y,
-          GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT, GL_NEAREST
-        );
-      }
-
-      // Render current renderable in forward mode
-      currRenderable->renderForward(this);
+      updateAccumulationCopy();
     }
+    
+    if(workPayload.top()->requestPositionBuffer())
+    {
+      updatePositionBuffer();
+      
+      glDepthMask(GL_TRUE);
+      glEnable(GL_DEPTH_TEST);
+      glEnable(GL_BLEND);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+      // Bind the accumulation buffer
+      m_accumulationBuffer->bind();
+    }
+    
+    
+    workPayload.top()->renderForward(this);
+    workPayload.pop();
   }
+  
 }
 
 void kit::Renderer::hdrPass()
@@ -1316,32 +1361,67 @@ void kit::Renderer::updateBuffers()
   m_accumulationCopy->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) }, 1.0f);
   m_accumulationCopy->getColorAttachment(0)->setEdgeSamplingMode(kit::Texture::EdgeSamplingMode::ClampToEdge);
 
+  if(m_positionBuffer)
+    delete m_positionBuffer;
+  
+  m_positionBuffer = new kit::PixelBuffer(
+    effectiveResolution,
+    {
+      kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA16F)
+    }
+  );
+  m_positionBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+  m_positionBuffer->getColorAttachment(0)->setEdgeSamplingMode(kit::Texture::EdgeSamplingMode::ClampToEdge);
+
+  
+  if(m_reflectionBuffer)
+    delete m_reflectionBuffer;
+  
+  m_reflectionBuffer = new kit::PixelBuffer(
+    glm::uvec2((float)effectiveResolution.x * 1.0f, (float)effectiveResolution.y * 1.0f),
+    {
+      kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA8)
+    },
+    kit::PixelBuffer::AttachmentInfo(kit::Texture::DepthComponent24)
+  );
+  m_reflectionBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) }, 1.0f);
+  m_reflectionBuffer->getColorAttachment(0)->setEdgeSamplingMode(kit::Texture::EdgeSamplingMode::ClampToEdge);
+
+  
   if(m_bloomBrightBuffer)
     delete m_bloomBrightBuffer;
   
   m_bloomBrightBuffer = new kit::DoubleBuffer(effectiveResolution, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
   m_bloomBrightBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
-
+  m_bloomBrightBuffer->getFrontBuffer()->getColorAttachment(0)->setEdgeSamplingMode(kit::Texture::EdgeSamplingMode::ClampToEdge);
+  m_bloomBrightBuffer->getBackBuffer()->getColorAttachment(0)->setEdgeSamplingMode(kit::Texture::EdgeSamplingMode::ClampToEdge);
+  
   if(m_bloomBlurBuffer2)
     delete m_bloomBlurBuffer2;
   
   glm::uvec2 bloom2Res(uint32_t(float(effectiveResolution.x) * (1.0f / 2.0f)), uint32_t(float(effectiveResolution.y) * (1.0f / 2.0f)));
   m_bloomBlurBuffer2 = new kit::DoubleBuffer(bloom2Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
   m_bloomBlurBuffer2->clear({glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)});
-
+  m_bloomBlurBuffer2->getFrontBuffer()->getColorAttachment(0)->setEdgeSamplingMode(kit::Texture::EdgeSamplingMode::ClampToEdge);
+  m_bloomBlurBuffer2->getBackBuffer()->getColorAttachment(0)->setEdgeSamplingMode(kit::Texture::EdgeSamplingMode::ClampToEdge);
+  
   if(m_bloomBlurBuffer4)
     delete m_bloomBlurBuffer4;
   
   glm::uvec2 bloom4Res(uint32_t(float(effectiveResolution.x) * (1.0f / 4.0f)), uint32_t(float(effectiveResolution.y) * (1.0f / 4.0f)));
   m_bloomBlurBuffer4 = new kit::DoubleBuffer(bloom4Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
   m_bloomBlurBuffer4->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
-
+  m_bloomBlurBuffer4->getFrontBuffer()->getColorAttachment(0)->setEdgeSamplingMode(kit::Texture::EdgeSamplingMode::ClampToEdge);
+  m_bloomBlurBuffer4->getBackBuffer()->getColorAttachment(0)->setEdgeSamplingMode(kit::Texture::EdgeSamplingMode::ClampToEdge);
+  
   if(m_bloomBlurBuffer8)
     delete m_bloomBlurBuffer8;
   
   glm::uvec2 bloom8Res(uint32_t(float(effectiveResolution.x) * (1.0f / 8.0f)), uint32_t(float(effectiveResolution.y) * (1.0f / 8.0f)));
   m_bloomBlurBuffer8 = new kit::DoubleBuffer(bloom8Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
   m_bloomBlurBuffer8->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+  m_bloomBlurBuffer8->getFrontBuffer()->getColorAttachment(0)->setEdgeSamplingMode(kit::Texture::EdgeSamplingMode::ClampToEdge);
+  m_bloomBlurBuffer8->getBackBuffer()->getColorAttachment(0)->setEdgeSamplingMode(kit::Texture::EdgeSamplingMode::ClampToEdge);
 
   if(m_bloomBlurBuffer16)
     delete m_bloomBlurBuffer16;
@@ -1349,6 +1429,8 @@ void kit::Renderer::updateBuffers()
   glm::uvec2 bloom16Res(uint32_t(float(effectiveResolution.x) * (1.0f / 16.0f)), uint32_t(float(effectiveResolution.y) * (1.0f / 16.0f)));
   m_bloomBlurBuffer16 = new kit::DoubleBuffer(bloom16Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
   m_bloomBlurBuffer16->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+  m_bloomBlurBuffer16->getFrontBuffer()->getColorAttachment(0)->setEdgeSamplingMode(kit::Texture::EdgeSamplingMode::ClampToEdge);
+  m_bloomBlurBuffer16->getBackBuffer()->getColorAttachment(0)->setEdgeSamplingMode(kit::Texture::EdgeSamplingMode::ClampToEdge);
 
   if(m_bloomBlurBuffer32)
     delete m_bloomBlurBuffer32;
@@ -1356,6 +1438,8 @@ void kit::Renderer::updateBuffers()
   glm::uvec2 bloom32Res(uint32_t(float(effectiveResolution.x) * (1.0f / 32.0f)), uint32_t(float(effectiveResolution.y) * (1.0f / 32.0f)));
   m_bloomBlurBuffer32 = new kit::DoubleBuffer(bloom32Res, { kit::PixelBuffer::AttachmentInfo(kit::Texture::RGB8) });
   m_bloomBlurBuffer32->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
+  m_bloomBlurBuffer32->getFrontBuffer()->getColorAttachment(0)->setEdgeSamplingMode(kit::Texture::EdgeSamplingMode::ClampToEdge);
+  m_bloomBlurBuffer32->getBackBuffer()->getColorAttachment(0)->setEdgeSamplingMode(kit::Texture::EdgeSamplingMode::ClampToEdge);
 
   m_programDirectional->setUniformTexture("uniform_textureA", m_geometryBuffer->getColorAttachment(0));
   m_programDirectional->setUniformTexture("uniform_textureB", m_geometryBuffer->getColorAttachment(1));
@@ -1386,6 +1470,8 @@ void kit::Renderer::updateBuffers()
   m_programIBL->setUniformTexture("uniform_textureC", m_geometryBuffer->getColorAttachment(2));
   m_programIBL->setUniformTexture("uniform_textureDepth", m_geometryBuffer->getDepthAttachment());
   m_programEmissive->setUniformTexture("uniform_textureB", m_geometryBuffer->getColorAttachment(1));
+  
+  m_programPosition->setUniformTexture("uniform_textureDepth", m_geometryBuffer->getDepthAttachment());
 }
 
 kit::Skybox * kit::Renderer::getSkybox()
@@ -1412,3 +1498,142 @@ void kit::Renderer::setSRGBEnabled(const bool& v)
 {
   m_srgbEnabled = v;
 }
+
+void kit::Renderer::updateAccumulationCopy()
+{
+  glBlitNamedFramebuffer(
+    m_accumulationBuffer->getHandle(), 
+    m_accumulationCopy->getHandle(), 
+    0, 0, m_accumulationBuffer->getResolution().x, m_accumulationBuffer->getResolution().y,
+    0, 0, m_accumulationCopy->getResolution().x, m_accumulationCopy->getResolution().y,
+    GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT, GL_NEAREST
+  );
+}
+
+
+void kit::Renderer::updatePositionBuffer()
+{
+  glDisable(GL_BLEND);
+  glDisable(GL_DEPTH_TEST);
+  glDepthMask(GL_FALSE);
+  
+  kit::Camera * c = m_activeCamera;
+  glm::mat4 p = c->getProjectionMatrix();
+
+  //D
+  glm::vec2 clip = c->getClipRange();
+  float znear = clip.x;
+  float zfar = clip.y;
+  float px = (-zfar * znear ) / ( zfar - znear );//D
+  float py = zfar / ( zfar - znear ) ;//D
+  
+  m_positionBuffer->bind();
+  m_positionBuffer->clear({glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)});
+  m_programPosition->setUniform2f("uniform_projConst", glm::vec2(px, py));
+  
+  m_programPosition->setUniformMat4("uniform_invProjMatrix", glm::inverse(p));
+  
+  m_programPosition->use(); 
+  
+  m_screenQuad->render(m_programPosition);
+  
+  m_accumulationBuffer->bind();
+}
+
+kit::PixelBuffer * kit::Renderer::getPositionBuffer()
+{
+  return m_positionBuffer;
+}
+
+kit::Texture * kit::Renderer::getReflectionMap()
+{
+  return m_reflectionBuffer->getColorAttachment(0);
+}
+
+void kit::Renderer::renderReflections(float planarHeight)
+{
+  // Sorts by renderpriority, then front to back to cull as many fragments as possible
+  // Inverted because its pushed to a queue
+  auto sorter = [&](kit::Renderable* & lhs, kit::Renderable* & rhs)
+  {
+    glm::vec3 cwp = m_activeCamera->getWorldPosition();
+    glm::vec3 lwp = lhs->getWorldPosition();
+    glm::vec3 rwp = rhs->getWorldPosition();
+    
+    float ld = glm::distance(cwp, lwp);
+    float rd = glm::distance(cwp, rwp);
+    
+    float lp = lhs->getRenderPriority();
+    float rp = rhs->getRenderPriority();
+    
+    if(lp != rp)
+      return lp > rp;
+    else
+      return ld > rd;
+  };
+  
+  std::priority_queue<kit::Renderable*, std::vector<kit::Renderable*>, decltype(sorter)> workPayload(sorter);
+  
+  for (auto & currPayload : m_payload)
+  {
+    for (auto & currRenderable : currPayload->getRenderables())
+    {
+      workPayload.push(currRenderable);
+    }
+  }
+  
+  glDisable(GL_BLEND);
+  glDepthMask(GL_TRUE);
+  glEnable(GL_DEPTH_TEST);
+  
+  glDisable(GL_CULL_FACE);
+  //glCullFace(GL_FRONT);
+
+  glm::mat4 viewMatrix = m_activeCamera->getViewMatrix();
+  glm::mat4 projectionMatrix = m_activeCamera->getProjectionMatrix();
+  
+  viewMatrix = glm::scale(viewMatrix, glm::vec3(1.0f, -1.0f, 1.0f));
+  viewMatrix = glm::translate(viewMatrix, glm::vec3(0.0f, planarHeight, 0.0f));
+  
+  glm::mat4 rotationMatrix = glm::scale(glm::mat4(), glm::vec3(1.0f, -1.0f, 1.0f)) * m_activeCamera->getWorldRotationMatrix(); 
+  
+  // Clear and bind the geometry buffer
+  m_reflectionBuffer->clear({glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)}, 1.0f);
+  m_reflectionBuffer->bind();
+  
+  if(m_skybox)
+  {
+    //glDisable(GL_CULL_FACE);
+    // Render the skybox
+    m_skybox->renderReflection(this, rotationMatrix);
+    //glEnable(GL_CULL_FACE);
+  }
+  
+  while(!workPayload.empty())
+  {
+    workPayload.top()->renderReflection(this, viewMatrix, projectionMatrix);
+    workPayload.pop();
+  }
+}
+
+kit::Light * kit::Renderer::findIBLLight()
+{
+ for(auto & currPayload : m_payload)
+ {
+   for(auto & light : currPayload->getLights())
+   {
+     if(light->getType() == kit::Light::Type::IBL)
+     {
+       return light;
+     }
+   }
+   
+   return nullptr;
+ }
+}
+
+kit::Texture * kit::Renderer::getIntegratedBRDF()
+{
+  return m_integratedBRDF;
+}
+

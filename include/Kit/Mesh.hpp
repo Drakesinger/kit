@@ -17,6 +17,8 @@ namespace kit
   
   class Camera;
 
+  class Renderer;
+  
   class KITAPI Mesh 
   {
     public:
@@ -26,12 +28,33 @@ namespace kit
         std::shared_ptr<kit::Submesh>  m_submesh;
         std::shared_ptr<kit::Material> m_material;
       };
+
+      enum class RenderPass : uint8_t
+      {
+        Deferred,
+        Forward,
+        Reflection
+      };
+      
+      struct RenderConfig
+      {
+        glm::mat4 viewMatrix;
+        glm::mat4 projectionMatrix;
+        glm::mat4 modelMatrix;
+        
+        RenderPass renderPass;
+        Renderer * renderer;
+
+        std::vector<glm::mat4> skinTransform;
+        std::vector<glm::mat4> instanceTransform;
+      };
       
       ~Mesh();
       Mesh();
       Mesh(const std::string& filename);
       
-      void render(kit::Camera* camera, const glm::mat4 & modelMatrix, bool isForwardPass, const std::vector<glm::mat4> & skinTransform = std::vector<glm::mat4>(), const std::vector<glm::mat4> & instanceTransform = std::vector<glm::mat4>());
+      void render(RenderConfig const & config);
+      
       void renderGeometry();
 
       void addSubmeshEntry(const std::string& name, std::shared_ptr<kit::Submesh> geometry, std::shared_ptr<kit::Material> material);

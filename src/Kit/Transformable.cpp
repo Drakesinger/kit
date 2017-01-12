@@ -5,11 +5,7 @@
 
 kit::Transformable::Transformable()
 {
-  m_transformMatrix = glm::mat4(1.0);
-  m_transformMatrixDirty = true;
-  m_position = glm::vec3(0.0, 0.0, 0.0);
-  m_rotation = glm::quat();
-  m_scale = glm::vec3(1.0, 1.0, 1.0);
+
 }
 
 void kit::Transformable::attachTo(kit::Transformable * parent)
@@ -23,55 +19,79 @@ kit::Transformable * kit::Transformable::getParent()
 }
 
 
-glm::mat4 kit::Transformable::getTransformMatrix()
+glm::mat4 kit::Transformable::getWorldTransformMatrix()
+{
+  // Calling getLocalTransformMatrix instead of using m_transformMatrix makes sure it is up to date
+  glm::mat4 localTransform = getLocalTransformMatrix();
+  if (m_parent != nullptr)
+  {
+    return m_parent->getWorldTransformMatrix() * localTransform;
+  }
+
+  return localTransform;
+}
+
+glm::mat4 kit::Transformable::getLocalTransformMatrix()
 {
   if(m_transformMatrixDirty)
   {   
     glm::mat4 translationMatrix = glm::translate(m_position);
-    glm::mat4 rotationMatrix = glm::toMat4(getRotation());
+    glm::mat4 rotationMatrix = glm::toMat4(m_rotation);
     glm::mat4 scaleMatrix = glm::scale(m_scale);
     
     m_transformMatrix = translationMatrix * rotationMatrix * scaleMatrix;
     m_transformMatrixDirty = false;
   }
   
-  if (m_parent != nullptr)
-  {
-    return m_parent->getTransformMatrix() * m_transformMatrix;
-  }
-
   return m_transformMatrix;
 }
 
-glm::mat4 kit::Transformable::getRotationMatrix()
+glm::mat4 kit::Transformable::getWorldRotationMatrix()
 {
-  return glm::toMat4(getRotation());
+  return glm::toMat4(getWorldRotation());
 }
 
-void kit::Transformable::setPosition(glm::vec3 pos)
+glm::mat4 kit::Transformable::getLocalRotationMatrix()
+{
+  return glm::toMat4(getLocalRotation());
+}
+
+void kit::Transformable::setPosition(glm::vec3 const & pos)
 {
   m_position = pos;
   m_transformMatrixDirty = true;
 }
 
-glm::vec3 kit::Transformable::getPosition()
-{ 
+glm::vec3 kit::Transformable::getWorldPosition()
+{
+  return getWorldTransformMatrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+}
+
+const glm::vec3 & kit::Transformable::getLocalPosition()
+{
   return m_position;
 }
 
-void kit::Transformable::translate(glm::vec3 offset)
+
+void kit::Transformable::translate(glm::vec3 const & offset)
 {
   m_position += offset;
   m_transformMatrixDirty = true;
 }
 
-glm::vec3 kit::Transformable::getEuler()
+glm::vec3 kit::Transformable::getLocalEuler()
 {
-  auto e = glm::eulerAngles(getRotation());
+  auto e = glm::eulerAngles(getLocalRotation());
   return glm::degrees(e);
 }
 
-void kit::Transformable::setEuler(glm::vec3 r, kit::Transformable::RotationOrder rotationOrder)
+glm::vec3 kit::Transformable::getWorldEuler()
+{
+  auto e = glm::eulerAngles(getWorldRotation());
+  return glm::degrees(e);
+}
+
+void kit::Transformable::setEuler(glm::vec3 const & r, kit::Transformable::RotationOrder rotationOrder)
 {
   m_rotation = glm::quat();
 
@@ -119,12 +139,22 @@ void kit::Transformable::setEuler(glm::vec3 r, kit::Transformable::RotationOrder
   m_transformMatrixDirty = true;
 }
 
-glm::quat kit::Transformable::getRotation()
+glm::quat const & kit::Transformable::getLocalRotation()
 {
   return m_rotation;
 }
 
-void kit::Transformable::setDirection(glm::vec3 d)
+glm::quat kit::Transformable::getWorldRotation()
+{
+  if(m_parent)
+  {
+    return m_parent->getWorldRotation() * m_rotation;
+  }
+  
+  return m_rotation;
+}
+
+void kit::Transformable::setDirection(glm::vec3 const & d)
 {
   if(d == glm::vec3(0.0, 0.0, 0.0))
   {
@@ -167,59 +197,74 @@ void kit::Transformable::setDirection(glm::vec3 d)
   m_transformMatrixDirty = true;
 }
 
-void kit::Transformable::setRotation(glm::quat quat)
+void kit::Transformable::setRotation(glm::quat const & quat)
 {
   m_rotation = quat;
   m_transformMatrixDirty = true;
 }
 
-void kit::Transformable::rotateX(float degrees)
+void kit::Transformable::rotateX(float const & degrees)
 {
-  m_rotation = glm::rotate(getRotation(), glm::radians(degrees), glm::vec3(1.0, 0.0, 0.0));
+  m_rotation = glm::rotate(getLocalRotation(), glm::radians(degrees), glm::vec3(1.0, 0.0, 0.0));
   m_transformMatrixDirty = true;
 }
 
-void kit::Transformable::rotateY(float degrees)
+void kit::Transformable::rotateY(float const & degrees)
 {
-  m_rotation = glm::rotate(getRotation(), glm::radians(degrees), glm::vec3(0.0, 1.0, 0.0));
+  m_rotation = glm::rotate(getLocalRotation(), glm::radians(degrees), glm::vec3(0.0, 1.0, 0.0));
   m_transformMatrixDirty = true;
 }
 
-void kit::Transformable::rotateZ(float degrees)
+void kit::Transformable::rotateZ(float const & degrees)
 {
-  m_rotation = glm::rotate(getRotation(), glm::radians(degrees), glm::vec3(0.0, 0.0, 1.0));
+  m_rotation = glm::rotate(getLocalRotation(), glm::radians(degrees), glm::vec3(0.0, 0.0, 1.0));
   m_transformMatrixDirty = true;
 }
 
 
-glm::vec3 kit::Transformable::getScale()
+glm::vec3 const & kit::Transformable::getScale()
 {
   return m_scale;
 }
 
-void kit::Transformable::setScale(glm::vec3 s)
+void kit::Transformable::setScale(glm::vec3 const & s)
 {
   m_scale = s;
   m_transformMatrixDirty = true;
 }
 
-void kit::Transformable::scale(glm::vec3 s)
+void kit::Transformable::scale(glm::vec3 const & s)
 {
   m_scale += s;
   m_transformMatrixDirty = true;
 }
 
-glm::vec3 kit::Transformable::getForward()
+glm::vec3 kit::Transformable::getWorldForward()
 {
-  return getRotation() * glm::vec3(0.0f, 0.0f, -1.0f);
+  return getWorldRotation() * glm::vec3(0.0f, 0.0f, -1.0f);
 }
 
-glm::vec3 kit::Transformable::getRight()
+glm::vec3 kit::Transformable::getWorldRight()
 {
-  return getRotation() * glm::vec3(1.0f, 0.0f, 0.0f);
+  return getWorldRotation() * glm::vec3(1.0f, 0.0f, 0.0f);
 }
 
-glm::vec3 kit::Transformable::getUp()
+glm::vec3 kit::Transformable::getWorldUp()
 {
-  return getRotation() * glm::vec3(0.0f, 1.0f, 0.0f);
+  return getWorldRotation() * glm::vec3(0.0f, 1.0f, 0.0f);
+}
+
+glm::vec3 kit::Transformable::getLocalForward()
+{
+  return getLocalRotation() * glm::vec3(0.0f, 0.0f, -1.0f);
+}
+
+glm::vec3 kit::Transformable::getLocalRight()
+{
+  return getLocalRotation() * glm::vec3(1.0f, 0.0f, 0.0f);
+}
+
+glm::vec3 kit::Transformable::getLocalUp()
+{
+  return getLocalRotation() * glm::vec3(0.0f, 1.0f, 0.0f);
 }
