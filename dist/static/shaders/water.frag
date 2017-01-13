@@ -10,8 +10,6 @@ uniform sampler2D uniform_positionmap;
 uniform sampler2D uniform_colormap;
 uniform mat4 uniform_invViewMatrix;
 uniform mat4 uniform_viewMatrix;
-uniform vec3 uniform_camerawp;
-uniform vec3 uniform_camerafwd;
 
 
 // Normal and height
@@ -43,7 +41,7 @@ uniform vec3 uniform_deepColor = vec3(0.1, 0.45, 0.4) * 0.25;
 uniform float uniform_deepDepth = 50.0;
 uniform float uniform_deepClarity = 0.0;
 
-uniform float uniform_refractionStrength = 50.0;
+uniform float uniform_refractionStrength = 20.0;
 
 void main()
 {
@@ -71,7 +69,9 @@ void main()
   vec3 normalA = ((texture(uniform_normalmapA, waveUvA).rbg * 2.0) - 1.0);
   vec3 normalB = ((texture(uniform_normalmapB, waveUvB).rbg * 2.0) - 1.0);
   //vec3 worldNormal = normalize(mix(normalA, normalB, sin(uniform_time * 0.001)));
-  vec3 worldNormal = normalize(normalA + normalB);
+  vec3 worldNormal =normalA + normalB;
+  worldNormal.xz *= 2.0;
+  worldNormal = normalize(worldNormal);
   //vec3 worldNormal = normalize(normalB);
 
  
@@ -90,7 +90,8 @@ void main()
   vec3 waterWP = vec3(uniform_invViewMatrix * in_vertexPos);
   float waterHeight = waterWP.y;
   
-  float cameraHeight = uniform_camerawp.y;
+  vec3 cameraWp = (uniform_invViewMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+  float cameraHeight = cameraWp.y;
   
   float oldDepth = distance(waterHeight, oldHeight);
   float refOldDepth = distance(waterHeight, refOldHeight);
@@ -132,7 +133,7 @@ void main()
   vec3 viewNormal = vec3(uniform_viewMatrix * vec4(worldNormal, 0.0));
   vec3 viewDir = -normalize(vec3(in_vertexPos));
   float refCoeff = 1.0 - clamp(dot(viewDir, viewNormal), 0.0, 1.0);
-  result += reflection * (refCoeff * 0.5 + 0.5);
+  result += reflection * (refCoeff * 0.2);
   
   //out_color = vec4(worldNormal / 2.0 + 0.5, 1.0);
   out_color = vec4(result, 1.0);

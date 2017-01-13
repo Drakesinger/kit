@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <queue>
+#include <memory>
 
 namespace kit 
 {
@@ -70,8 +71,6 @@ namespace kit
   {
   public:
 
-    
-
     enum KITAPI  BloomQuality
     {
       Low,
@@ -90,6 +89,7 @@ namespace kit
     /// Renders the payload and composes a fully rendered frame, the result is retreivable using getBuffer()
     void renderFrame();
     
+    // Finds the first IBL light it can find, or nullptr if none
     kit::Light * findIBLLight();
 
     /// Gets a pointer to a texture containing the rendered payload
@@ -100,67 +100,64 @@ namespace kit
     kit::PixelBuffer * getPositionBuffer();
 
     /// Sets the relative-to-framebuffer resolution for the geometry buffer, light buffer and composition buffer
-    void setInternalResolution(float size);
+    void setInternalResolution(float const & size);
     float const & getInternalResolution();
 
     /// Enables or disables shadows
-    void setShadows(bool enabled);
+    void setShadows(bool const & enabled);
     bool const & getShadows();
 
     /// Sets the active cameras exposure
-    void setExposure(float exposure);
-    float getExposure();
+    void setExposure(float const & exposure);
+    float const & getExposure();
 
     /// Sets the active cameras whitepoint
-    void setWhitepoint(float whitepoint);
-    float getWhitepoint();
+    void setWhitepoint(float const & whitepoint);
+    float const & getWhitepoint();
 
     /// Enables or disables FXAA
-    void setFXAA(bool enabled);
+    void setFXAA(bool const & enabled);
     bool const & getFXAA();
 
     /// Enables or disables HDR bloom 
-    void setBloom(bool enabled);
+    void setBloom(bool const & enabled);
     bool const & getBloom();
 
     /// Enables or disables color correction
-    void setColorCorrection(bool enabled);
+    void setColorCorrection(bool const & enabled);
     bool const & getColorCorrection();
 
     /// Sets the lookup table for color correction
-    void setCCLookupTable(kit::Texture * lut);
-    void loadCCLookupTable(const std::string& name);
-    kit::Texture * getCCLookupTable();
+    void setCCLookupTable(std::string const & name);
 
     /// Sets bloom quality 
-    void setBloomQuality(BloomQuality q);
+    void setBloomQuality(BloomQuality const & q);
     BloomQuality const & getBloomQuality();
 
     /// Sets bloom treshold bias - tweaks the treshold value for the brightpass (whitepoint+bias)
-    void setBloomTresholdBias(float t);
+    void setBloomTresholdBias(float const & t);
     float const & getBloomTresholdBias();
 
     /// Specifies the different bloom blur levels
-    void setBloomBlurLevels(uint32_t b2, uint32_t b4, uint32_t b8, uint32_t b16, uint32_t b32);
+    void setBloomBlurLevels(uint32_t const & b2, uint32_t const & b4, uint32_t const & b8, uint32_t const & b16, uint32_t const & b32);
     
     /// Set bloom dirt mask
-    void setBloomDirtMask(kit::Texture * m);
-    kit::Texture * getBloomDirtMask();
+    void setBloomDirtMask(std::shared_ptr<kit::Texture> m);
 
     /// Set bloom dirt mask multiplier
-    void setBloomDirtMaskMultiplier(float m);
+    void setBloomDirtMaskMultiplier(float const & m);
     float const & getBloomDirtMaskMultiplier();
 
     /// Enables or disables scene fringe
-    void setSceneFringe(bool enabled);
+    void setSceneFringe(bool const & enabled);
     bool const & getSceneFringe();
 
     /// Sets scene fringe exponential, how much it spreads out with its radius
-    void setSceneFringeExponential(float e);
+    void setSceneFringeExponential(float const & e);
     float const & getSceneFringeExponential();
 
     /// Sets scene fringe scale
-    void setSceneFringeScale(float s);
+    void setSceneFringeScale(float const & s);
     float  const & getSceneFringeScale();
 
     /// Adds a payload to renderer
@@ -170,16 +167,26 @@ namespace kit
     void unregisterPayload(kit::RenderPayload * payload);
 
     /// Set resolution
-    void setResolution(glm::uvec2 resolution);
+    void setResolution(glm::uvec2 const & resolution);
     glm::uvec2 const & getResolution();
     
     /// Enables/disables GPU metrics
-    void setGPUMetrics(bool enabled);
+    void setGPUMetrics(bool const & enabled);
     bool const & getGPUMetrics();
+   
+    void setReflections(bool const & enabled);
+    bool const & getReflections();
+    
+    void renderReflections(float const & planarHeight = 0.0f);
+    kit::Texture * getReflectionMap();
+    
+    void setReflectionResolutionScale(float const & scale);
+    float const & getReflectionResolutionScale();
+    
     
     kit::Text * getMetricsText();
 
-    Renderer(glm::uvec2 resolution);
+    Renderer(glm::uvec2 const & resolution);
     ~Renderer();
     
     kit::PixelBuffer * getGeometryBuffer();
@@ -192,8 +199,7 @@ namespace kit
     void updatePositionBuffer();
     void updateAccumulationCopy();
     
-    void renderReflections(float planarHeight = 0.0f);
-    kit::Texture * getReflectionMap();
+
     
   private:
     
@@ -271,9 +277,12 @@ namespace kit
     
     kit::PixelBuffer *       m_accumulationCopy = nullptr; // Holds a copy of the accumulation buffer for forward renderables who need it
     kit::PixelBuffer *       m_positionBuffer = nullptr;  // Recreates worldpositions from the depth buffer, for forward renderables who need it
-    kit::Program     *       m_programPosition = nullptr;
+    kit::Program     *       m_programPosition = nullptr; // Program for above m_positionBuffer
     
+    // Reflections
     kit::PixelBuffer *       m_reflectionBuffer = nullptr;
+    float                    m_reflectionResolutionScale = 1.0;
+    bool                     m_reflectionsEnabled = true;
     
     
     // Light rendering
@@ -303,7 +312,7 @@ namespace kit
     float                       m_bloomTresholdBias = 0.0f;
     kit::Program *             m_bloomBrightProgram = nullptr;
     kit::Program *             m_bloomBlurProgram = nullptr;
-    kit::Texture *             m_bloomDirtTexture = nullptr;
+    std::shared_ptr<kit::Texture>             m_bloomDirtTexture = nullptr;
     kit::DoubleBuffer *        m_bloomBrightBuffer = nullptr;
     kit::DoubleBuffer *        m_bloomBlurBuffer2 = nullptr;
     kit::DoubleBuffer *        m_bloomBlurBuffer4 = nullptr;
@@ -338,7 +347,7 @@ namespace kit
     kit::Program *               m_ccProgram = nullptr;
     kit::Texture *               m_ccLookupTable = nullptr;
 
-    // sRGB conversion ???
+    // sRGB conversion ??? Seems to be the best bet since sRGB framebuffers can be tedious in certain frameworks
     kit::Program *               m_srgbProgram = nullptr;
     bool                          m_srgbEnabled = true;
 

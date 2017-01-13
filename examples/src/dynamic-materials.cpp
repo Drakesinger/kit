@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
   renderer->setActiveCamera(camera);                               // <- The active camera, so it knows what camera to use
   renderer->setSceneFringe(true);                                  // <- Enable scene fringe
   renderer->setColorCorrection(true);                              // <- Enable color correction 
-  renderer->loadCCLookupTable("example.tga");                      // <- Load LUT for the cc
+  renderer->setCCLookupTable("example.tga");                      // <- Load LUT for the cc
   renderer->setBloomDirtMask(kit::Texture::load("lensdirt.tga"));  // <- Set a dirtmask for our bloom
   renderer->setBloomDirtMaskMultiplier(3.0f);
   renderer->setGPUMetrics(false);
@@ -171,28 +171,28 @@ int main(int argc, char *argv[])
     // Update keyboard movement
     if(win->isKeyDown(kit::W))
     {
-      camera->translate(camera->getForward() * float(frametime) * 0.001f);
+      camera->translate(camera->getWorldForward() * float(frametime) * 0.001f);
     }
     
     if(win->isKeyDown(kit::S))
     {
-      camera->translate(-camera->getForward() * float(frametime) * 0.001f);
+      camera->translate(-camera->getWorldForward() * float(frametime) * 0.001f);
     }
     
     if(win->isKeyDown(kit::D))
     {
-      camera->translate(camera->getRight() * float(frametime) * 0.001f);
+      camera->translate(camera->getWorldRight() * float(frametime) * 0.001f);
     }
     
     if(win->isKeyDown(kit::A))
     {
-      camera->translate(-camera->getRight() * float(frametime) * 0.001f);
+      camera->translate(-camera->getWorldRight() * float(frametime) * 0.001f);
     }
     
     
     // Update scanner animation 
-    scanner->setPosition(camera->getPosition());
-    scanner->setRotation(camera->getRotation());
+    scanner->setPosition(camera->getWorldPosition());
+    scanner->setRotation(camera->getWorldRotation());
     scanner->update(frametime);
     
     // Rotate the spheres in our array

@@ -95,7 +95,7 @@ void kit::RenderPayload::removeLight(kit::Light * lightptr)
   m_lights.erase(std::remove(m_lights.begin(), m_lights.end(), lightptr), m_lights.end());
 }
 
-kit::Renderer::Renderer(glm::uvec2 resolution)
+kit::Renderer::Renderer(glm::uvec2 const & resolution)
 {
   kit::Renderer::m_instanceCount++;
   if(kit::Renderer::m_instanceCount == 1)
@@ -174,13 +174,13 @@ kit::Renderer::Renderer(glm::uvec2 resolution)
   m_hdrTonemapBloomHighDirt->setUniform1f("uniform_exposure", 1.0f);
   m_hdrTonemapBloomHighDirt->setUniform1f("uniform_whitepoint", 1.0f);
   m_hdrTonemapBloomHighDirt->setUniform1f("uniform_bloomDirtMultiplier", m_bloomDirtMultiplier);
-  m_hdrTonemapBloomHighDirt->setUniformTexture("uniform_bloomDirtTexture", m_bloomDirtTexture);
+  //m_hdrTonemapBloomHighDirt->setUniformTexture("uniform_bloomDirtTexture", m_bloomDirtTexture.get());
   m_hdrTonemapBloomLow->setUniform1f("uniform_exposure", 1.0f);
   m_hdrTonemapBloomLow->setUniform1f("uniform_whitepoint", 1.0f);
   m_hdrTonemapBloomLowDirt->setUniform1f("uniform_exposure", 1.0f);
   m_hdrTonemapBloomLowDirt->setUniform1f("uniform_whitepoint", 1.0f);
   m_hdrTonemapBloomLowDirt->setUniform1f("uniform_bloomDirtMultiplier", m_bloomDirtMultiplier);
-  m_hdrTonemapBloomLowDirt->setUniformTexture("uniform_bloomDirtTexture", m_bloomDirtTexture);
+  //m_hdrTonemapBloomLowDirt->setUniformTexture("uniform_bloomDirtTexture", m_bloomDirtTexture.get());
   
   // --- Setup FXAA
   m_fxaaEnabled = true;
@@ -189,7 +189,7 @@ kit::Renderer::Renderer(glm::uvec2 resolution)
   // --- Setup color correction
   m_ccEnabled = false;
   m_ccProgram = new kit::Program({ "screenquad.vert" }, { "cc.frag" }, kit::DataSource::Static);
-  m_ccLookupTable = nullptr; // kit::Texture::create3DFromFile("./data/luts/test.tga", kit::Texture::RGB8);
+  //m_ccLookupTable = ; // kit::Texture::create3DFromFile("./data/luts/test.tga", kit::Texture::RGB8);
 
   // --- Setup sRGB correction
   m_srgbProgram = new kit::Program({ "screenquad.vert" }, { "srgb.frag" }, kit::DataSource::Static);
@@ -254,6 +254,7 @@ kit::Renderer::~Renderer()
     if(m_srgbProgram) delete m_srgbProgram;
     if(m_metrics) delete m_metrics;
     if(m_metricsTimer) delete m_metricsTimer;
+    if(m_ccLookupTable) delete m_ccLookupTable;
   
   kit::Renderer::m_instanceCount--;
   if(kit::Renderer::m_instanceCount == 0)
@@ -1076,23 +1077,18 @@ kit::Camera * kit::Renderer::getActiveCamera()
   return m_activeCamera;
 }
 
-void kit::Renderer::setCCLookupTable(kit::Texture * tex)
+void kit::Renderer::setCCLookupTable(const std::string&name)
 {
-  m_ccLookupTable = tex;
-}
-
-void kit::Renderer::loadCCLookupTable(const std::string&name)
-{
+  if(m_ccLookupTable)
+    delete m_ccLookupTable;
+  
   m_ccLookupTable = new kit::Texture("./data/luts/" + name, Texture::RGB8, 1, Texture::Texture3D);
   m_ccLookupTable->setEdgeSamplingMode(Texture::ClampToEdge);
+  
+  m_ccProgram->setUniformTexture("uniform_lut", m_ccLookupTable);
 }
 
-kit::Texture * kit::Renderer::getCCLookupTable()
-{
-  return m_ccLookupTable;
-}
-
-void kit::Renderer::setExposure(float exposure)
+void kit::Renderer::setExposure(float const & exposure)
 {
   if (!m_activeCamera)
   {
@@ -1108,13 +1104,19 @@ void kit::Renderer::setExposure(float exposure)
   m_bloomBrightProgram->setUniform1f("uniform_exposure", exposure);
 }
 
-float kit::Renderer::getExposure()
+float const & kit::Renderer::getExposure()
 {
-  if (m_activeCamera == nullptr) return 0.0;
-  return m_activeCamera->getExposure();
+  static float defaultValue = 0.0;
+  
+  if (m_activeCamera)
+  {
+    return m_activeCamera->getExposure();
+  }
+  
+  return defaultValue;
 }
 
-void kit::Renderer::setWhitepoint(float whitepoint)
+void kit::Renderer::setWhitepoint(float const & whitepoint)
 {
   if (!m_activeCamera)
   {
@@ -1130,13 +1132,19 @@ void kit::Renderer::setWhitepoint(float whitepoint)
   m_bloomBrightProgram->setUniform1f("uniform_whitepoint", whitepoint);
 }
 
-float kit::Renderer::getWhitepoint()
+float const & kit::Renderer::getWhitepoint()
 {
-  if (m_activeCamera == nullptr) return 0.0;
-  return m_activeCamera->getWhitepoint();
+  static float defaultValue = 0.0;
+  
+  if (m_activeCamera)
+  {
+    return m_activeCamera->getWhitepoint();
+  }
+  
+  return defaultValue;
 }
 
-void kit::Renderer::setBloom(bool enabled)
+void kit::Renderer::setBloom(bool const & enabled)
 {
   m_bloomEnabled = enabled;
 }
@@ -1146,7 +1154,7 @@ bool const & kit::Renderer::getBloom()
   return m_bloomEnabled;
 }
 
-void kit::Renderer::setFXAA(bool enabled)
+void kit::Renderer::setFXAA(bool const & enabled)
 {
   m_fxaaEnabled = enabled;
 }
@@ -1156,7 +1164,7 @@ bool const & kit::Renderer::getFXAA()
   return m_fxaaEnabled;
 }
 
-void kit::Renderer::setInternalResolution(float size)
+void kit::Renderer::setInternalResolution(float const & size)
 {
   m_internalResolution = size;
   onResize();
@@ -1167,7 +1175,7 @@ float const & kit::Renderer::getInternalResolution()
   return m_internalResolution;
 }
 
-void kit::Renderer::setResolution(glm::uvec2 resolution)
+void kit::Renderer::setResolution(glm::uvec2 const & resolution)
 {
   m_resolution = resolution;
   onResize();
@@ -1178,7 +1186,7 @@ glm::uvec2 const & kit::Renderer::getResolution()
   return m_resolution;
 }
 
-void kit::Renderer::setShadows(bool enabled)
+void kit::Renderer::setShadows(bool const & enabled)
 {
   m_shadowsEnabled = enabled;
 }
@@ -1188,7 +1196,7 @@ bool const & kit::Renderer::getShadows()
   return m_shadowsEnabled;
 }
 
-void kit::Renderer::setSceneFringe(bool enabled)
+void kit::Renderer::setSceneFringe(bool const & enabled)
 {
   m_fringeEnabled = enabled;
 }
@@ -1198,7 +1206,7 @@ bool const & kit::Renderer::getSceneFringe()
   return m_fringeEnabled;
 }
 
-void kit::Renderer::setSceneFringeExponential(float e)
+void kit::Renderer::setSceneFringeExponential(float const & e)
 {
   m_fringeExponential = e;
   m_fringeProgram->setUniform1f("uniform_exponential", e);
@@ -1209,7 +1217,7 @@ float const & kit::Renderer::getSceneFringeExponential()
   return m_fringeExponential;
 }
 
-void kit::Renderer::setSceneFringeScale(float s)
+void kit::Renderer::setSceneFringeScale(float const & s)
 {
   m_fringeScale = s;
   m_fringeProgram->setUniform1f("uniform_scale", s);
@@ -1220,7 +1228,7 @@ float const & kit::Renderer::getSceneFringeScale()
   return m_fringeScale;
 }
 
-void kit::Renderer::setBloomQuality(kit::Renderer::BloomQuality q)
+void kit::Renderer::setBloomQuality(kit::Renderer::BloomQuality const & q)
 {
   m_bloomQuality = q;
 }
@@ -1230,7 +1238,7 @@ kit::Renderer::BloomQuality const & kit::Renderer::getBloomQuality()
   return m_bloomQuality;
 }
 
-void kit::Renderer::setBloomBlurLevels(uint32_t b2, uint32_t b4, uint32_t b8, uint32_t b16, uint32_t b32)
+void kit::Renderer::setBloomBlurLevels(uint32_t const & b2, uint32_t const & b4, uint32_t const & b8, uint32_t const & b16, uint32_t const & b32)
 {
   m_bloomBlurLevel2 = b2;
   m_bloomBlurLevel4 = b4;
@@ -1239,16 +1247,14 @@ void kit::Renderer::setBloomBlurLevels(uint32_t b2, uint32_t b4, uint32_t b8, ui
   m_bloomBlurLevel32 = b32;
 }
 
-void kit::Renderer::setBloomDirtMask(kit::Texture * m)
+void kit::Renderer::setBloomDirtMask(std::shared_ptr<kit::Texture> m)
 {
   m_bloomDirtTexture = m;
-  m_hdrTonemapBloomHighDirt->setUniformTexture("uniform_bloomDirtTexture", m_bloomDirtTexture);
-  m_hdrTonemapBloomLowDirt->setUniformTexture("uniform_bloomDirtTexture", m_bloomDirtTexture);
-}
-
-kit::Texture * kit::Renderer::getBloomDirtMask()
-{
-  return m_bloomDirtTexture;
+  if(m_bloomDirtTexture)
+  {
+    m_hdrTonemapBloomHighDirt->setUniformTexture("uniform_bloomDirtTexture", m_bloomDirtTexture.get());
+    m_hdrTonemapBloomLowDirt->setUniformTexture("uniform_bloomDirtTexture", m_bloomDirtTexture.get());
+  }
 }
 
 bool const & kit::Renderer::getColorCorrection()
@@ -1256,16 +1262,19 @@ bool const & kit::Renderer::getColorCorrection()
   return m_ccEnabled;
 }
 
-void kit::Renderer::setColorCorrection(bool b)
+void kit::Renderer::setColorCorrection(bool const & b)
 {
   m_ccEnabled = b;
 }
 
-void kit::Renderer::setBloomDirtMaskMultiplier(float m)
+void kit::Renderer::setBloomDirtMaskMultiplier(float const & m)
 {
   m_bloomDirtMultiplier = m;
   m_hdrTonemapBloomHighDirt->setUniform1f("uniform_bloomDirtMultiplier", m_bloomDirtMultiplier);
-  m_hdrTonemapBloomLowDirt->setUniformTexture("uniform_bloomDirtTexture", m_bloomDirtTexture);
+  if(m)
+  {
+    m_hdrTonemapBloomLowDirt->setUniformTexture("uniform_bloomDirtTexture", m_bloomDirtTexture.get());
+  }
 }
 
 float const & kit::Renderer::getBloomDirtMaskMultiplier()
@@ -1273,7 +1282,7 @@ float const & kit::Renderer::getBloomDirtMaskMultiplier()
   return m_bloomDirtMultiplier;
 }
 
-void kit::Renderer::setBloomTresholdBias(float t)
+void kit::Renderer::setBloomTresholdBias(float const & t)
 {
   m_bloomTresholdBias = t;
   m_bloomBrightProgram->setUniform1f("uniform_tresholdBias", m_bloomTresholdBias);
@@ -1289,7 +1298,7 @@ kit::Text * kit::Renderer::getMetricsText()
   return m_metrics;
 }
 
-void kit::Renderer::setGPUMetrics(bool enabled)
+void kit::Renderer::setGPUMetrics(bool const & enabled)
 {
   m_metricsEnabled = enabled;
   if (!m_metricsEnabled)
@@ -1318,7 +1327,12 @@ void kit::Renderer::updateBuffers()
     }
   );
   m_compositionBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
-
+  m_compositionBuffer->getFrontBuffer()->getColorAttachment(0)->setEdgeSamplingMode(kit::Texture::EdgeSamplingMode::ClampToEdge);
+  m_compositionBuffer->getBackBuffer()->getColorAttachment(0)->setEdgeSamplingMode(kit::Texture::EdgeSamplingMode::ClampToEdge);
+  m_compositionBuffer->getFrontBuffer()->getColorAttachment(0)->setMinFilteringMode(kit::Texture::FilteringMode::Nearest);
+  m_compositionBuffer->getFrontBuffer()->getColorAttachment(0)->setMagFilteringMode(kit::Texture::FilteringMode::Nearest);
+  m_compositionBuffer->getBackBuffer()->getColorAttachment(0)->setMinFilteringMode(kit::Texture::FilteringMode::Nearest);
+  m_compositionBuffer->getBackBuffer()->getColorAttachment(0)->setMagFilteringMode(kit::Texture::FilteringMode::Nearest);
   
   if(m_geometryBuffer)
     delete m_geometryBuffer;
@@ -1334,6 +1348,8 @@ void kit::Renderer::updateBuffers()
     );
   m_geometryBuffer->clear({ glm::vec4(0.0, 0.0, 0.0, 0.0), glm::vec4(0.0, 0.0, 0.0, 0.0), glm::vec4(0.0, 0.0, 0.0, 0.0) }, 1.0f);
   m_geometryBuffer->getColorAttachment(0)->setEdgeSamplingMode(kit::Texture::EdgeSamplingMode::ClampToEdge);
+  m_geometryBuffer->getColorAttachment(0)->setMinFilteringMode(kit::Texture::FilteringMode::Nearest);
+  m_geometryBuffer->getColorAttachment(0)->setMagFilteringMode(kit::Texture::FilteringMode::Nearest);
 
   if(m_accumulationBuffer)
     delete m_accumulationBuffer;
@@ -1347,7 +1363,9 @@ void kit::Renderer::updateBuffers()
     );
   m_accumulationBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) }, 1.0f);
   m_accumulationBuffer->getColorAttachment(0)->setEdgeSamplingMode(kit::Texture::EdgeSamplingMode::ClampToEdge);
-
+  m_accumulationBuffer->getColorAttachment(0)->setMinFilteringMode(kit::Texture::FilteringMode::Nearest);
+  m_accumulationBuffer->getColorAttachment(0)->setMagFilteringMode(kit::Texture::FilteringMode::Nearest);
+  
   if(m_accumulationCopy)
     delete m_accumulationCopy;
   
@@ -1360,7 +1378,9 @@ void kit::Renderer::updateBuffers()
   );
   m_accumulationCopy->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) }, 1.0f);
   m_accumulationCopy->getColorAttachment(0)->setEdgeSamplingMode(kit::Texture::EdgeSamplingMode::ClampToEdge);
-
+  m_accumulationCopy->getColorAttachment(0)->setMinFilteringMode(kit::Texture::FilteringMode::Nearest);
+  m_accumulationCopy->getColorAttachment(0)->setMagFilteringMode(kit::Texture::FilteringMode::Nearest);
+  
   if(m_positionBuffer)
     delete m_positionBuffer;
   
@@ -1372,13 +1392,14 @@ void kit::Renderer::updateBuffers()
   );
   m_positionBuffer->clear({ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
   m_positionBuffer->getColorAttachment(0)->setEdgeSamplingMode(kit::Texture::EdgeSamplingMode::ClampToEdge);
-
+  m_positionBuffer->getColorAttachment(0)->setMinFilteringMode(kit::Texture::FilteringMode::Nearest);
+  m_positionBuffer->getColorAttachment(0)->setMagFilteringMode(kit::Texture::FilteringMode::Nearest);
   
   if(m_reflectionBuffer)
     delete m_reflectionBuffer;
   
   m_reflectionBuffer = new kit::PixelBuffer(
-    glm::uvec2((float)effectiveResolution.x * 1.0f, (float)effectiveResolution.y * 1.0f),
+    glm::uvec2((float)effectiveResolution.x * m_reflectionResolutionScale, (float)effectiveResolution.y * m_reflectionResolutionScale),
     {
       kit::PixelBuffer::AttachmentInfo(kit::Texture::RGBA8)
     },
@@ -1550,8 +1571,14 @@ kit::Texture * kit::Renderer::getReflectionMap()
   return m_reflectionBuffer->getColorAttachment(0);
 }
 
-void kit::Renderer::renderReflections(float planarHeight)
+void kit::Renderer::renderReflections(float const & planarHeight)
 {
+  if(!m_reflectionsEnabled)
+  {
+    m_reflectionBuffer->clear({glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)}, 1.0f);
+    return;
+  }
+  
   // Sorts by renderpriority, then front to back to cull as many fragments as possible
   // Inverted because its pushed to a queue
   auto sorter = [&](kit::Renderable* & lhs, kit::Renderable* & rhs)
@@ -1627,13 +1654,34 @@ kit::Light * kit::Renderer::findIBLLight()
        return light;
      }
    }
-   
-   return nullptr;
  }
+ 
+  return nullptr;
 }
 
 kit::Texture * kit::Renderer::getIntegratedBRDF()
 {
   return m_integratedBRDF;
+}
+
+const float & kit::Renderer::getReflectionResolutionScale()
+{
+  return m_reflectionResolutionScale;
+}
+
+void kit::Renderer::setReflectionResolutionScale(const float& scale)
+{
+  m_reflectionResolutionScale = scale;
+  updateBuffers();
+}
+
+const bool & kit::Renderer::getReflections()
+{
+  return m_reflectionsEnabled;
+}
+
+void kit::Renderer::setReflections(const bool& enabled)
+{
+  m_reflectionsEnabled = enabled;
 }
 

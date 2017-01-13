@@ -64,7 +64,7 @@ int main(int argc, char **argv)
   renderer->setActiveCamera(camera);                               // <- The active camera, so it knows what camera to use
   renderer->setSceneFringe(true);                                  // <- Enable scene fringe
   renderer->setColorCorrection(true);                              // <- Enable color correction 
-  renderer->loadCCLookupTable("example.tga");                      // <- Load LUT for the cc
+  renderer->setCCLookupTable("example.tga");                      // <- Load LUT for the cc
   renderer->setBloomDirtMask(kit::Texture::load("lensdirt.tga"));  // <- Set a dirtmask for our bloom
   renderer->setBloomDirtMaskMultiplier(3.0f);
 

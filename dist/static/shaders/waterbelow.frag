@@ -27,18 +27,18 @@ uniform float uniform_surfaceDepth = 128.0;
 //uniform vec3 uniform_surfaceColor = vec3(1.0, 1.0, 1.0);
 
 
-uniform float uniform_refractionStrength = 10.0;
+uniform float uniform_refractionStrength = 20.0;
 
 void main()
 {
-  float waveScaleA = 32.0;
-  float waveScaleB = 64.0;
+  float waveScaleA = 128.0;
+  float waveScaleB = 128.0;
   
   float waveSpeedA = 1.0 / 1000.0 / waveScaleA;
   float waveSpeedB = 4.0 / 1000.0 / waveScaleB;
   
   vec2 waveDirA  = normalize(vec2(1.0, 1.0));
-  vec2 waveDirB  = normalize(vec2(0.25, -0.4));
+  vec2 waveDirB  = normalize(vec2(0.25, -1.0));
 
   float waveTimeA = waveSpeedA * uniform_time;
   float waveTimeB = waveSpeedB * uniform_time;
@@ -46,15 +46,19 @@ void main()
   vec2 waveUvA = (in_uv / waveScaleA) + (waveDirA * waveTimeA);
   vec2 waveUvB = (in_uv / waveScaleB) + (waveDirB * waveTimeB);
   
+  
   //float heightA = texture(uniform_heightmapA, waveUvA).r;
   //float heightB = texture(uniform_heightmapB, waveUvB).r;
   
   //float height = mix(heightA, heightB, 0.5);
  
  // World-space normal
-  vec3 normalTex = ((texture(uniform_normalmapA, waveUvA).rgb * 2.0) - 1.0);
-  normalTex += ((texture(uniform_normalmapB, waveUvB).rgb * 2.0) - 1.0);
-  normalTex = normalize(normalTex);
+  vec3 normalA = ((texture(uniform_normalmapA, waveUvA).rbg * 2.0) - 1.0);
+  vec3 normalB = ((texture(uniform_normalmapB, waveUvB).rbg * 2.0) - 1.0);
+  //vec3 worldNormal = normalize(mix(normalA, normalB, sin(uniform_time * 0.001)));
+  vec3 worldNormal =normalA + normalB;
+  worldNormal.xz *= 2.0;
+  worldNormal = normalize(worldNormal);
  
  /*
   mat3 normalRotation = mat3(mat3(vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0), vec3(0.0, -1.0, 0.0)));
@@ -67,7 +71,7 @@ void main()
  
   vec2 texStep = vec2(1.0) / textureSize(uniform_depthmap, 0);
   vec2 texCoord = gl_FragCoord.xy * texStep;
-  vec2 refCoord = texCoord + texStep * normalTex.xy * uniform_refractionStrength;
+  vec2 refCoord = texCoord + texStep * worldNormal.xz * uniform_refractionStrength;
   
   //vec3 oldVP = texture(uniform_positionmap, texCoord).rgb;
   //vec3 oldWP = vec3(uniform_invViewMatrix * vec4(oldVP, 1.0));

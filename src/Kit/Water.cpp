@@ -183,8 +183,8 @@ void kit::Water::renderForward(kit::Renderer* renderer)
     m_program->setUniformTexture("uniform_positionmap", renderer->getPositionBuffer()->getColorAttachment(0));
     m_program->setUniformMat4("uniform_invViewMatrix", invViewMatrix);
     m_program->setUniformMat4("uniform_viewMatrix", viewMatrix);
-    m_program->setUniform3f("uniform_camerawp", renderer->getActiveCamera()->getWorldPosition());
-    m_program->setUniform3f("uniform_camerafwd", renderer->getActiveCamera()->getWorldForward());
+    //m_program->setUniform3f("uniform_camerawp", renderer->getActiveCamera()->getWorldPosition());
+    //m_program->setUniform3f("uniform_camerafwd", renderer->getActiveCamera()->getWorldForward());
 
     
     

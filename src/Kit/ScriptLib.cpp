@@ -460,6 +460,10 @@ chaiscript::ModulePtr kit::getScriptLibrary()
         {chaiscript::fun(&kit::Renderer::setBloomQuality), "setBloomQuality"},
         {chaiscript::fun(&kit::Renderer::setGPUMetrics), "setGPUMetrics" },
         {chaiscript::fun(&kit::Renderer::getResolution), "getResolution" },
+        {chaiscript::fun(&kit::Renderer::getReflectionResolutionScale), "getReflectionResolutionScale" },
+        {chaiscript::fun(&kit::Renderer::setReflectionResolutionScale), "setReflectionResolutionScale" },
+        {chaiscript::fun(&kit::Renderer::setReflections), "setReflections" },
+        {chaiscript::fun(&kit::Renderer::getReflections), "getReflections" },
      
       }
     );

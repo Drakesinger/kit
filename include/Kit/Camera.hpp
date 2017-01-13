@@ -19,7 +19,7 @@ namespace kit
       /// \param aspect_ratio Aspect ratio
       /// \param cliprange Cliprange. near in x, far in y.
       ///
-      Camera(float fov, float aspect_ratio, glm::vec2 cliprange);
+      Camera(float const & fov, float const & aspect_ratio, glm::vec2 const & cliprange);
 
       ///
       /// \brief Destructor
@@ -34,62 +34,62 @@ namespace kit
       ///
       /// \returns The projection matrix
       ///
-      const glm::mat4 & getProjectionMatrix();
+      glm::mat4 const & getProjectionMatrix();
 
       ///
       /// \brief Set the vertical field of view
       /// \param fov The new vertical field of view
       ///
-      void setFov(float fov);
+      void setFov(float const & fov);
 
       ///
       /// \returns The vertical field of view
       ///
-      float getFov();
+      float const & getFov();
 
       ///
       /// \brief Set the aspect ratio
       /// \param aspect The new aspect ratio
       ///
-      void setAspectRatio(float aspect);
+      void setAspectRatio(float const & aspect);
 
       ///
       /// \returns The aspect ratio
       ///
-      float getAspectRatio();
+      float const & getAspectRatio();
 
       ///
       /// \brief Set the cliprange
       /// \param cliprange The new cliprange. near in x, far in y.
       ///
-      void setClipRange(glm::vec2 cliprange);
+      void setClipRange(glm::vec2 const & cliprange);
 
       ///
       /// \returns The cliprange. near in x, far in y.
       ///
-      glm::vec2 getClipRange();
+      glm::vec2 const & getClipRange();
 
       ///
       /// \brief Set the exposure
       /// \param exposure The new exposure value
       ///
-      void setExposure(float exposure);
+      void setExposure(float const & exposure);
 
       ///
       /// \returns The exposure
       ///
-      float getExposure();
+      float const & getExposure();
 
       ///
       /// \brief Set the whitepoint
       /// \param whitepoint The new whitepoint value
       ///
-      void setWhitepoint(float whitepoint);
+      void setWhitepoint(float const & whitepoint);
 
       ///
       /// \returns The whitepoint
       ///
-      float getWhitepoint();
+      float const & getWhitepoint();
 
     protected:
       void              rebuildProjectionMatrix();
